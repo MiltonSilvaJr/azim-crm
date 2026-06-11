@@ -12,8 +12,8 @@
 | 4 | tenant-administration | Generic | [X] | [X] | [X] |
 | 5 | organization | Supporting | [X] | [X] | [X] |
 | 6 | account-management | Supporting | [X] | [X] | [X] |
-| 7 | partner-management | Supporting | [ ] | [ ] | [ ] |
-| 8 | activity-management | Supporting | [ ] | [ ] | [ ] |
+| 7 | partner-management | Supporting | [X] | [X] | [X] |
+| 8 | activity-management | Supporting | [X] | [X] | [X] |
 | 9 | goal-forecast | Supporting | [ ] | [ ] | [ ] |
 | 10 | data-migration | Supporting | [ ] | [ ] | [ ] |
 | 11 | digest | Supporting | [ ] | [ ] | [ ] |
