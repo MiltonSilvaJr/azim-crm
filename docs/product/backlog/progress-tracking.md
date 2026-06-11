@@ -1,9 +1,28 @@
 # Backlog Progress Tracking — Azim CRM
 
-- **Última atualização:** 2026-06-11T03:00:00Z
-- **Última ação executada:** Geração de sprint-14 e sprint-15 — backlog markdown COMPLETO (15 sprints, todos os 13 módulos cobertos)
-- **Próxima ação:** Sincronizar com Jira (projeto `Azim`, board Scrum) quando MCP Atlassian estiver autenticado — ver §2
-- **Status geral:** Markdown completo — Sync Jira pendente
+- **Última atualização:** 2026-06-11 (sync Jira em andamento)
+- **Última ação executada:** Sync Jira — 13 épicos criados (AZIM-1..AZIM-13)
+- **Próxima ação:** criar 82 user stories (parent = épico) → 321 subtasks (parent = story) → 15 sprints + atribuições
+- **Status geral:** Sync Jira PARCIAL — épicos OK; stories/tasks/sprints pendentes
+- **Projeto Jira:** `AZIM` (id 10314, team-managed/next-gen, cloudId e1b6371c-f985-4363-b691-818ac8f6c6fc, site prod-fintech.atlassian.net). Tipos: Epic=10418, User story=10420, Tarefa=10421, Bug=10422, Subtask=10419.
+
+### Mapeamento de épicos (Local → Jira)
+
+| Local | Jira | Módulo |
+|---|---|---|
+| EP-001 | AZIM-1 | audit-log |
+| EP-002 | AZIM-2 | notification-delivery |
+| EP-003 | AZIM-3 | authentication |
+| EP-004 | AZIM-4 | tenant-administration |
+| EP-005 | AZIM-5 | organization |
+| EP-006 | AZIM-6 | account-management |
+| EP-007 | AZIM-7 | partner-management |
+| EP-008 | AZIM-8 | activity-management |
+| EP-009 | AZIM-9 | goal-forecast |
+| EP-010 | AZIM-10 | data-migration |
+| EP-011 | AZIM-11 | digest |
+| EP-012 | AZIM-12 | reporting |
+| EP-013 | AZIM-13 | opportunity-pipeline |
 
 ---
 
@@ -31,27 +50,13 @@
 
 ## 2. Operações pendentes de sincronização com Jira
 
-| Timestamp | Operação | Alvo local | Erro reportado pelo MCP | Retry sugerido |
-|---|---|---|---|---|
-| 2026-06-11T00:00:00Z | Criar projeto Scrum `Azim` | — | MCP Atlassian não conectado nesta sessão | Executar quando MCP autenticado |
-| 2026-06-11T00:00:00Z | Criar épico EP-001 (audit-log) | product-backlog.md §5 | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Criar épico EP-002 (notification-delivery) | product-backlog.md §5 | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Criar épico EP-003 (authentication) | product-backlog.md §5 | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Criar épico EP-004 (tenant-administration) | product-backlog.md §5 | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Criar épico EP-005 (organization) | product-backlog.md §5 | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Criar épico EP-006 (account-management) | product-backlog.md §5 | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Criar épico EP-007 (partner-management) | product-backlog.md §5 | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Criar épico EP-008 (activity-management) | product-backlog.md §5 | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Criar épico EP-009 (goal-forecast) | product-backlog.md §5 | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Criar épico EP-010 (data-migration) | product-backlog.md §5 | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Criar épico EP-011 (digest) | product-backlog.md §5 | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Criar épico EP-012 (reporting) | product-backlog.md §5 | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Criar épico EP-013 (opportunity-pipeline) | product-backlog.md §5 | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Criar 82 user stories (US-001 a US-082) | product-backlog.md §2 | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Criar 321 tasks (TASK-NN por módulo) | product-backlog.md §3 | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Configurar board `Azim` (4 colunas: TO DO / IN PROGRESS / IN REVIEW / DONE) | — | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Criar 15 sprints no Jira (Sprint 1 a Sprint 15) | sprints-planning.md | MCP Atlassian não conectado | idem |
-| 2026-06-11T00:00:00Z | Atribuir stories/tasks a sprints | sprint-N-*.md | MCP Atlassian não conectado | idem |
+| Timestamp | Operação | Alvo local | Status |
+|---|---|---|---|
+| 2026-06-11 | Criar projeto `Azim` (AZIM) | — | ✅ existia (criado pelo usuário) |
+| 2026-06-11 | Criar 13 épicos (EP-001..013 → AZIM-1..13) | product-backlog.md §5 | ✅ FEITO |
+| 2026-06-11 | Criar 82 user stories (US-001..082, parent = épico) | product-backlog.md §2 | ⏳ pendente |
+| 2026-06-11 | Criar 321 subtasks (TASK-NN, parent = story) | product-backlog.md §3 | ⏳ pendente |
+| 2026-06-11 | Criar/ativar 15 sprints + atribuir issues | sprints-planning.md | ⏳ pendente |
 
 **Procedimento de retomada:**
 1. Autenticar MCP Atlassian (`mcp__atlassian__atlassianUserInfo`)
