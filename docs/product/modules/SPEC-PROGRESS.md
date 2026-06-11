@@ -18,6 +18,6 @@
 | 10 | data-migration | Supporting | [X] | [X] | [X] |
 | 11 | digest | Supporting | [X] | [X] | [X] |
 | 12 | reporting | Supporting | [X] | [X] | [X] |
-| 13 | opportunity-pipeline | Core | [ ] | [ ] | [ ] |
+| 13 | opportunity-pipeline | Core | [X] | [X] | [X] |
 
 **Nota:** `azim-web` (frontend SPA) fora deste lote — especificação de UX/frontend é tratada à parte, não pelo trio requirements/design/tasks de backend.
