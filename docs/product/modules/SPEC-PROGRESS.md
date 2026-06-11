@@ -14,8 +14,8 @@
 | 6 | account-management | Supporting | [X] | [X] | [X] |
 | 7 | partner-management | Supporting | [X] | [X] | [X] |
 | 8 | activity-management | Supporting | [X] | [X] | [X] |
-| 9 | goal-forecast | Supporting | [ ] | [ ] | [ ] |
-| 10 | data-migration | Supporting | [ ] | [ ] | [ ] |
+| 9 | goal-forecast | Supporting | [X] | [X] | [X] |
+| 10 | data-migration | Supporting | [X] | [X] | [X] |
 | 11 | digest | Supporting | [ ] | [ ] | [ ] |
 | 12 | reporting | Supporting | [ ] | [ ] | [ ] |
 | 13 | opportunity-pipeline | Core | [ ] | [ ] | [ ] |
