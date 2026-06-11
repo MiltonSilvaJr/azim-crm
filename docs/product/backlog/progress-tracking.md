@@ -1,9 +1,9 @@
 # Backlog Progress Tracking — Azim CRM
 
-- **Última atualização:** 2026-06-11 (sync Jira — épicos + user stories concluídos)
-- **Última ação executada:** Sync Jira — 82 user stories criadas (AZIM-14..AZIM-95)
-- **Próxima ação:** criar 321 subtasks (TASK-NN, parent = story AZIM-key) → 15 sprints + atribuições
-- **Status geral:** Sync Jira PARCIAL — épicos OK; stories OK; tasks/sprints pendentes
+- **Última atualização:** 2026-06-11 (sync Jira — 88 implementation tasks dos 4 módulos Generic concluídas)
+- **Última ação executada:** Sync Jira — 88 Tarefas criadas para audit-log, notification-delivery, authentication, tenant-administration (AZIM-96..AZIM-183)
+- **Próxima ação:** criar tasks de implementação dos 9 módulos Core/Supporting restantes (233 tasks) → sprints + atribuições
+- **Status geral:** Sync Jira PARCIAL — épicos OK; stories OK; tasks Generic(4) OK; tasks Core/Supporting(9) pendentes; sprints pendentes
 - **Projeto Jira:** `AZIM` (id 10314, team-managed/next-gen, cloudId e1b6371c-f985-4363-b691-818ac8f6c6fc, site prod-fintech.atlassian.net). Tipos: Epic=10418, User story=10420, Tarefa=10421, Bug=10422, Subtask=10419.
 
 ### Mapeamento de épicos (Local → Jira)
@@ -111,6 +111,31 @@
 | US-081 | AZIM-94 | transversal Resend (parent: notification-delivery AZIM-2) |
 | US-082 | AZIM-95 | transversal LGPD (parent: audit-log AZIM-1) |
 
+### Mapeamento de implementation tasks — módulos Generic (Local → Jira)
+
+| Módulo | TASK range | Jira range | Parent épico | Status |
+|---|---|---|---|---|
+| audit-log | TASK-01..20 (20 tasks) | AZIM-96..AZIM-115 | AZIM-1 | COMPLETO |
+| notification-delivery | TASK-01..21 (21 tasks) | AZIM-116..AZIM-136 | AZIM-2 | COMPLETO |
+| authentication | TASK-01..25 (25 tasks) | AZIM-137..AZIM-161 | AZIM-3 | COMPLETO |
+| tenant-administration | TASK-01..22 (22 tasks) | AZIM-162..AZIM-183 | AZIM-4 | COMPLETO |
+
+**Subtotal Generic:** 88 tasks sincronizadas (AZIM-96..AZIM-183)
+
+### Mapeamento de implementation tasks — módulos Core/Supporting (pendente)
+
+| Módulo | TASK range estimado | Jira range | Parent épico | Status |
+|---|---|---|---|---|
+| organization | TASK-01..N | pendente | AZIM-5 | pendente |
+| account-management | TASK-01..N | pendente | AZIM-6 | pendente |
+| partner-management | TASK-01..N | pendente | AZIM-7 | pendente |
+| activity-management | TASK-01..N | pendente | AZIM-8 | pendente |
+| goal-forecast | TASK-01..N | pendente | AZIM-9 | pendente |
+| data-migration | TASK-01..N | pendente | AZIM-10 | pendente |
+| digest | TASK-01..N | pendente | AZIM-11 | pendente |
+| reporting | TASK-01..N | pendente | AZIM-12 | pendente |
+| opportunity-pipeline | TASK-01..N | pendente | AZIM-13 | pendente |
+
 ---
 
 ## 1. Estado por Sprint
@@ -142,7 +167,8 @@
 | 2026-06-11 | Criar projeto `Azim` (AZIM) | — | ✅ existia (criado pelo usuário) |
 | 2026-06-11 | Criar 13 épicos (EP-001..013 → AZIM-1..13) | product-backlog.md §5 | ✅ FEITO |
 | 2026-06-11 | Criar 82 user stories (US-001..082, parent = épico) | product-backlog.md §2 | ✅ FEITO (AZIM-14..AZIM-95) |
-| 2026-06-11 | Criar 321 subtasks (TASK-NN, parent = story) | product-backlog.md §3 | ⏳ pendente |
+| 2026-06-11 | Criar 88 implementation tasks — 4 módulos Generic (TASK-NN, parent = épico) | product-backlog.md §3 | ✅ FEITO (AZIM-96..AZIM-183) |
+| 2026-06-11 | Criar 233 implementation tasks — 9 módulos Core/Supporting (TASK-NN, parent = épico) | product-backlog.md §3 | ⏳ pendente |
 | 2026-06-11 | Criar/ativar 15 sprints + atribuir issues | sprints-planning.md | ⏳ pendente |
 
 **Procedimento de retomada:**
@@ -181,6 +207,11 @@
 | 2026-06-11T04:00:00Z | Sincronização Jira — user stories (lote 12: US-066..US-071) | OK | AZIM-79..AZIM-84 criados |
 | 2026-06-11T04:00:00Z | Sincronização Jira — user stories (lote 13: US-072..US-082, incl. transversais) | OK | AZIM-85..AZIM-95 criados |
 | 2026-06-11T04:00:00Z | Sincronização Jira — 82 user stories COMPLETO | OK | US-001..US-082 → AZIM-14..AZIM-95; product-backlog.md §5 + progress-tracking.md atualizados |
+| 2026-06-11T05:00:00Z | Sincronização Jira — implementation tasks audit-log (TASK-01..20) | OK | AZIM-96..AZIM-115 criados (parent AZIM-1) |
+| 2026-06-11T05:00:00Z | Sincronização Jira — implementation tasks notification-delivery (TASK-01..21) | OK | AZIM-116..AZIM-136 criados (parent AZIM-2) |
+| 2026-06-11T05:00:00Z | Sincronização Jira — implementation tasks authentication (TASK-01..25) | OK | AZIM-137..AZIM-161 criados (parent AZIM-3) |
+| 2026-06-11T05:00:00Z | Sincronização Jira — implementation tasks tenant-administration (TASK-01..22) | OK | AZIM-162..AZIM-183 criados (parent AZIM-4) |
+| 2026-06-11T05:00:00Z | Sincronização Jira — 88 implementation tasks Generic COMPLETO | OK | audit-log TASK-01..20→AZIM-96..115; notification-delivery TASK-01..21→AZIM-116..136; authentication TASK-01..25→AZIM-137..161; tenant-administration TASK-01..22→AZIM-162..183 |
 
 ## 4. Retomada
 
