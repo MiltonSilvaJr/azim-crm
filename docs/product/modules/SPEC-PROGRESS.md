@@ -9,8 +9,8 @@
 | 1 | audit-log | Generic | [X] | [X] | [X] |
 | 2 | notification-delivery | Generic | [X] | [X] | [X] |
 | 3 | authentication | Generic | [X] | [X] | [X] |
-| 4 | tenant-administration | Generic | [ ] | [ ] | [ ] |
-| 5 | organization | Supporting | [ ] | [ ] | [ ] |
+| 4 | tenant-administration | Generic | [X] | [X] | [X] |
+| 5 | organization | Supporting | [X] | [X] | [X] |
 | 6 | account-management | Supporting | [ ] | [ ] | [ ] |
 | 7 | partner-management | Supporting | [ ] | [ ] | [ ] |
 | 8 | activity-management | Supporting | [ ] | [ ] | [ ] |
