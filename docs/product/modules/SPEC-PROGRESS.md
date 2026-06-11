@@ -16,8 +16,8 @@
 | 8 | activity-management | Supporting | [X] | [X] | [X] |
 | 9 | goal-forecast | Supporting | [X] | [X] | [X] |
 | 10 | data-migration | Supporting | [X] | [X] | [X] |
-| 11 | digest | Supporting | [ ] | [ ] | [ ] |
-| 12 | reporting | Supporting | [ ] | [ ] | [ ] |
+| 11 | digest | Supporting | [X] | [X] | [X] |
+| 12 | reporting | Supporting | [X] | [X] | [X] |
 | 13 | opportunity-pipeline | Core | [ ] | [ ] | [ ] |
 
 **Nota:** `azim-web` (frontend SPA) fora deste lote — especificação de UX/frontend é tratada à parte, não pelo trio requirements/design/tasks de backend.
