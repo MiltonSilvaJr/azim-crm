@@ -15,7 +15,7 @@
 - Outros contextos consomem dados via API, eventos, read models ou views controladas.
 - Não há escrita cruzada entre contextos.
 - Joins diretos entre tabelas de contextos diferentes devem ser evitados — usar read models ou views projetadas.
-- Todos os valores monetários são armazenados como centavos inteiros (integer cents) em BRL (DEC-011, LAC-05 — multimoeda fora do MVP).
+- Todos os valores monetários são armazenados como centavos inteiros (integer cents) acompanhados de moeda ISO-4217 (DEC-011; multimoeda aprovada — ADR-0008). Objeto de valor Money = `amount_cents` (BIGINT) + `currency` (CHAR(3)). Moedas pré-cadastradas: BRL, USD, EUR.
 - Toda tabela de entidade de negócio carrega `tenant_id UUID NOT NULL` como coluna obrigatória para RLS.
 - `created_at` e `updated_at` são obrigatórios em toda tabela; `deleted_at` para soft-delete quando aplicável.
 
@@ -60,7 +60,7 @@
 | OpportunityStageTransition | Entity | Registro de cada transição de estágio com ator e timestamp | opportunity_stage_transitions |
 | OpportunityPartnerCommission | Entity | Comissão por componente; snapshot imutável ao ganhar | opportunity_partner_commissions |
 | OpportunityNumber | Value Object | Número sequencial AZ-NNNN | Campo em opportunities |
-| Money | Value Object | Valor em centavos inteiros BRL | Campos de valor em opportunities e commissions |
+| Money | Value Object | Valor em centavos inteiros + moeda ISO-4217 (BRL/USD/EUR) | Campos de valor em opportunities, commissions e goals (ADR-0008) |
 | CommissionCalculation | Value Object | Resultado calculado de comissão | Campo calculado; persiste o resultado em commissions |
 
 **Schema principal — tabela `opportunities`:**
@@ -77,7 +77,8 @@ opportunities (
   origin_channel_id UUID NOT NULL REFERENCES origin_channels(id),
   opportunity_number VARCHAR(10) NOT NULL,          -- RN-001: AZ-NNNN imutável; unicidade por tenant (ver UNIQUE composta abaixo)
   title           TEXT NOT NULL,
-  valor_setup     BIGINT NOT NULL DEFAULT 0,        -- DEC-011: centavos
+  currency        CHAR(3) NOT NULL DEFAULT 'BRL',   -- ISO-4217 (ADR-0008): BRL/USD/EUR
+  valor_setup     BIGINT NOT NULL DEFAULT 0,        -- DEC-011: centavos na moeda da oportunidade
   valor_mensal    BIGINT NOT NULL DEFAULT 0,        -- centavos
   duracao_meses   INTEGER NOT NULL DEFAULT 0,
   valor_total     BIGINT GENERATED ALWAYS AS        -- RN-005: calculado
@@ -105,6 +106,7 @@ opportunity_partner_commissions (
   tenant_id           UUID NOT NULL,
   opportunity_id      UUID NOT NULL REFERENCES opportunities(id),
   partner_id          UUID NOT NULL REFERENCES partners(id),
+  currency            CHAR(3) NOT NULL DEFAULT 'BRL', -- ISO-4217 (ADR-0008): herda da oportunidade
   pct_setup           NUMERIC(5,2) NOT NULL DEFAULT 0,
   pct_recorrente      NUMERIC(5,2) NOT NULL DEFAULT 0,
   valor_fixo          BIGINT NOT NULL DEFAULT 0,
@@ -131,8 +133,11 @@ opportunity_partner_commissions (
 accounts (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id       UUID NOT NULL,
-  name            TEXT NOT NULL,
+  name            TEXT NOT NULL,                    -- nome de exibição da conta
   normalized_name TEXT NOT NULL,                    -- RN-014: dedupe
+  cnpj            VARCHAR(14),                       -- PII mantida (decisão HITL #1)
+  razao_social    TEXT,                              -- PII mantida (decisão HITL #1)
+  nome_fantasia   TEXT,                              -- PII mantida (decisão HITL #1)
   website         TEXT,
   notes           TEXT,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -219,6 +224,7 @@ goals (
   owner_id        UUID REFERENCES users(id),           -- nullable (pode ser por BU)
   year            SMALLINT NOT NULL,
   month           SMALLINT NOT NULL CHECK (month BETWEEN 1 AND 12),
+  currency        CHAR(3) NOT NULL DEFAULT 'BRL',    -- ISO-4217 (ADR-0008)
   valor_meta      BIGINT NOT NULL,                   -- centavos inteiros (DEC-011)
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -416,7 +422,7 @@ audit_logs (
 
 ## 7. Pontos a Validar
 
-- VAL-05: Suporte a multimoeda — se necessário antes do schema freeze, adicionar campo `currency` (CHAR(3)) em opportunities e commissions
+- ~~VAL-05~~ **RESOLVIDO (ADR-0008):** multimoeda aprovada; campo `currency` (CHAR(3), ISO-4217) adicionado em `opportunities`, `opportunity_partner_commissions` e `goals`. Moedas pré-cadastradas: BRL, USD, EUR. Conversão entre moedas fora do MVP (cada oportunidade/meta tem moeda única; relatórios consolidam por moeda).
 - VAL-08: Política de retenção de audit_logs e contacts (PII) sob LGPD — confirmar com equipe jurídica antes do go-live
 - DDD-VAL-01: Se Activity Management se tornar módulo do Opportunity Pipeline, a tabela activities pode ser consolidada no schema do Pipeline
 - Índices obrigatórios de performance: (tenant_id, bu_id, stage_id) em opportunities; (tenant_id, opportunity_id, completed_at) em activities; (tenant_id, entity_type, entity_id) em audit_logs

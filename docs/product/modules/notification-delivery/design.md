@@ -5,7 +5,7 @@
 - Data: 2026-06-11
 - Status: Rascunho para revisão
 - Referência base: docs/product/modules/notification-delivery/requirements.md v0.1.0
-- ADRs aplicáveis: ADR-0005 (provider de e-mail transacional Postmark vs SendGrid via IEmailSender — Fase 0, a formalizar após spike); ADR-0007 (stack de observabilidade GCP Cloud Logging/Monitoring/Trace, a formalizar — VAL-TRD-07)
+- ADRs aplicáveis: ADR-0005 (provider de e-mail transacional = **Resend**, decisão aprovada, via IEmailSender); ADR-0007 (stack de observabilidade GCP Cloud Logging/Monitoring/Trace)
 - Rules aplicáveis: `.forge/rules/architecture/clean-architecture.md`, `.forge/rules/architecture/api-and-contracts.md`, `.forge/rules/architecture/security-and-secrets.md`, `.forge/rules/architecture/security-and-compliance.md`, `.forge/rules/architecture/observability.md`, `.forge/rules/architecture/ddd.md`, `.forge/rules/conventions/language-policy.md`, `.forge/rules/conventions/naming.md`, `.forge/rules/conventions/document-versioning.md`, `.forge/rules/testing/tdd.md`, `.forge/rules/testing/quality-gates.md`
 
 ## Histórico de Versões
@@ -526,17 +526,17 @@ Ver seção 4.5 (máquina de estados do `SendResult`).
 
 ## 17. Decisões Inline
 
-### DD-001 - Provedor primário Postmark com SendGrid pronto atrás da interface
+### DD-001 - Provedor primário Resend atrás da interface IEmailSender (decisão aprovada)
 
-**Contexto:** VAL-NOTIF-01 / LAC-03 / VAL-TRD-01 — a escolha definitiva do provedor depende de spike de entregabilidade (custo, SPF/DKIM/DMARC), a ser formalizada na ADR-0005 na Fase 0.
+**Contexto:** VAL-NOTIF-01 / LAC-03 / VAL-TRD-01 estavam abertos. **Decisão de produto aprovada no HITL #1 (11/06/2026): o provedor de e-mail transacional é o Resend** (não Postmark, não SendGrid). Formalizada em ADR-0005.
 
-**Decisão:** adotar **Postmark como provedor primário candidato** (DEC-008, TRD §11.1) e implementar `SendGridEmailSender` como alternativa intercambiável atrás de `IEmailSender`, com seleção por configuração. A decisão final do primário fica condicionada ao resultado do spike (ADR-0005).
+**Decisão:** adotar **Resend como provedor primário** via `ResendEmailSender` implementando `IEmailSender`. A interface ACL permanece provider-agnóstica — qualquer outro provedor (ex.: SendGrid) pode ser adicionado como implementação alternativa atrás da mesma interface, por configuração, sem impacto no domínio. As referências a `PostmarkEmailSender`/`SendGridEmailSender` nas seções de exemplo deste design devem ser lidas como o padrão de adapter; a implementação concreta de Fase 1 é `ResendEmailSender`.
 
-**Justificativa:** a interface `IEmailSender` torna a escolha reversível sem impacto no domínio (RNF 1); manter ambas as implementações prontas mitiga RISK-NOTIF-01/RISK-TRD-06 (provedor recusado por spam no go-live).
+**Justificativa:** a interface `IEmailSender` torna a escolha reversível sem impacto no domínio (RNF 1); Resend escolhido pela equipe; SPF/DKIM/DMARC no domínio de envio permanecem gate de go-live.
 
-**Alternativas:** (a) comprometer-se com um único provedor antes do spike — rejeitada por risco de retrabalho e de entregabilidade; (b) abstração genérica de e-mail sem implementações concretas — rejeitada por não atender Req 4.
+**Alternativas:** Postmark e SendGrid — não escolhidos; permanecem como possíveis implementações alternativas atrás da ACL.
 
-**Impacto:** a seleção é configuração + DI; troca estimada ≤ 1 sprint (RNF-1.3). Pendência registrada até a publicação da ADR-0005.
+**Impacto:** a seleção é configuração + DI. SDK/HTTP API do Resend encapsulados em `IEmailProviderClient`. Pendência VAL-NOTIF-01 **resolvida**.
 
 ### DD-002 - notification-delivery como biblioteca compartilhada (não microservice)
 

@@ -8,7 +8,7 @@
 - ADRs aplicáveis: ADR-0001 (isolamento multi-tenant — Aceito); ADR-0002 (snapshot imutável — a formalizar); ADR-0003 (unicidade opportunity_number — a formalizar); ADR-0004 (Outbox + idempotência de consumers — a formalizar)
 - Rules aplicáveis: `.forge/rules/architecture/clean-architecture.md`, `.forge/rules/architecture/ddd.md`, `.forge/rules/architecture/api-and-contracts.md`, `.forge/rules/architecture/observability.md`, `.forge/rules/architecture/security-and-compliance.md`, `.forge/rules/architecture/jwt-authentication.md`, `.forge/rules/architecture/mtls-internal-services.md`, `.forge/rules/domain/money-as-cents.md`, `.forge/rules/domain/nbr-5891-rounding.md`, `.forge/rules/domain/audit-immutability.md`, `.forge/rules/conventions/database-naming.md`, `.forge/rules/conventions/language-policy.md`, `.forge/rules/conventions/document-versioning.md`
 
-> **AVISO — Rascunho condicionado a VAL-07:** este plano é rascunho para revisão. A pendência **VAL-07** (ganho com comissão em branco: alerta vs. bloqueio — DD-007) é **pré-condição bloqueante** para promoção a "Aprovado para desenvolvimento". As TASKs que implementam `WinOpportunityCommand` (TASK-10) e `trg_block_snapshot_mutation` (TASK-14) devem aguardar a decisão de Produto antes de execução definitiva.
+> **VAL-07 RESOLVIDA (decisão de produto, HITL #1, 11/06/2026):** ao mover para **Ganho** com parceiro vinculado e percentuais de comissão em branco, o sistema **alerta com confirmação** (não bloqueia). `WinOpportunityCommand` (TASK-10) implementa o ponto de extensão `commission_required_on_win = false` (default: snapshot com comissão zero permitido após confirmação explícita do usuário). Deixa de ser pré-condição bloqueante para "Aprovado para desenvolvimento".
 
 ## Histórico de Versões
 
@@ -1125,7 +1125,7 @@ O módulo `opportunity-pipeline` é considerado pronto para produção quando:
 - eventos `.v1` publicados via Outbox com consistência transacional verificada
 - SLO Kanban p95 ≤ 2.000 ms e SLO escrita p95 ≤ 500 ms documentados
 - observabilidade: logs sem PII, 6 métricas, traces, health checks em produção
-- **VAL-07 (DD-007) resolvida por Produto** — pré-condição inviolável para "Aprovado para desenvolvimento" e para início da Onda 3 em produção
+- **VAL-07 (DD-007) RESOLVIDA por Produto (11/06/2026): alertar com confirmação** — `commission_required_on_win = false`; Onda 3 liberada
 
 ---
 
