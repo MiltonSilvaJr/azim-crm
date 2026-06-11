@@ -225,22 +225,105 @@ As tasks são identificadas pelo ID canônico `TASK-NN` dentro de cada módulo. 
 
 ## 5. Mapeamento Local ↔ Jira
 
-> Tabela pendente de sincronização. MCP Atlassian não conectado nesta sessão. Todas as operações registradas em `progress-tracking.md §2`.
+> Épicos (EP-001..EP-013) e User Stories (US-001..US-082) sincronizados em 2026-06-11.
+> Sprints e subtasks (tasks) ainda pendentes de sincronização.
 
 | ID Local | Issue Key Jira | Sincronizado em | Última sync |
 |---|---|---|---|
-| EP-001 | pendente (Azim-?) | — | — |
-| EP-002 | pendente | — | — |
-| EP-003 | pendente | — | — |
-| EP-004 | pendente | — | — |
-| EP-005 | pendente | — | — |
-| EP-006 | pendente | — | — |
-| EP-007 | pendente | — | — |
-| EP-008 | pendente | — | — |
-| EP-009 | pendente | — | — |
-| EP-010 | pendente | — | — |
-| EP-011 | pendente | — | — |
-| EP-012 | pendente | — | — |
-| EP-013 | pendente | — | — |
-| US-001 a US-082 | pendente | — | — |
+| EP-001 | AZIM-1 | 2026-06-11 | OK |
+| EP-002 | AZIM-2 | 2026-06-11 | OK |
+| EP-003 | AZIM-3 | 2026-06-11 | OK |
+| EP-004 | AZIM-4 | 2026-06-11 | OK |
+| EP-005 | AZIM-5 | 2026-06-11 | OK |
+| EP-006 | AZIM-6 | 2026-06-11 | OK |
+| EP-007 | AZIM-7 | 2026-06-11 | OK |
+| EP-008 | AZIM-8 | 2026-06-11 | OK |
+| EP-009 | AZIM-9 | 2026-06-11 | OK |
+| EP-010 | AZIM-10 | 2026-06-11 | OK |
+| EP-011 | AZIM-11 | 2026-06-11 | OK |
+| EP-012 | AZIM-12 | 2026-06-11 | OK |
+| EP-013 | AZIM-13 | 2026-06-11 | OK |
+| US-001 | AZIM-14 | 2026-06-11 | OK |
+| US-002 | AZIM-15 | 2026-06-11 | OK |
+| US-003 | AZIM-16 | 2026-06-11 | OK |
+| US-004 | AZIM-17 | 2026-06-11 | OK |
+| US-005 | AZIM-18 | 2026-06-11 | OK |
+| US-006 | AZIM-19 | 2026-06-11 | OK |
+| US-007 | AZIM-20 | 2026-06-11 | OK |
+| US-008 | AZIM-21 | 2026-06-11 | OK |
+| US-009 | AZIM-22 | 2026-06-11 | OK |
+| US-010 | AZIM-23 | 2026-06-11 | OK |
+| US-011 | AZIM-24 | 2026-06-11 | OK |
+| US-012 | AZIM-25 | 2026-06-11 | OK |
+| US-013 | AZIM-26 | 2026-06-11 | OK |
+| US-014 | AZIM-27 | 2026-06-11 | OK |
+| US-015 | AZIM-28 | 2026-06-11 | OK |
+| US-016 | AZIM-29 | 2026-06-11 | OK |
+| US-017 | AZIM-30 | 2026-06-11 | OK |
+| US-018 | AZIM-31 | 2026-06-11 | OK |
+| US-019 | AZIM-32 | 2026-06-11 | OK |
+| US-020 | AZIM-33 | 2026-06-11 | OK |
+| US-021 | AZIM-34 | 2026-06-11 | OK |
+| US-022 | AZIM-35 | 2026-06-11 | OK |
+| US-023 | AZIM-36 | 2026-06-11 | OK |
+| US-024 | AZIM-37 | 2026-06-11 | OK |
+| US-025 | AZIM-38 | 2026-06-11 | OK |
+| US-026 | AZIM-39 | 2026-06-11 | OK |
+| US-027 | AZIM-40 | 2026-06-11 | OK |
+| US-028 | AZIM-41 | 2026-06-11 | OK |
+| US-029 | AZIM-42 | 2026-06-11 | OK |
+| US-030 | AZIM-43 | 2026-06-11 | OK |
+| US-031 | AZIM-44 | 2026-06-11 | OK |
+| US-032 | AZIM-45 | 2026-06-11 | OK |
+| US-033 | AZIM-46 | 2026-06-11 | OK |
+| US-034 | AZIM-47 | 2026-06-11 | OK |
+| US-035 | AZIM-48 | 2026-06-11 | OK |
+| US-036 | AZIM-49 | 2026-06-11 | OK |
+| US-037 | AZIM-50 | 2026-06-11 | OK |
+| US-038 | AZIM-51 | 2026-06-11 | OK |
+| US-039 | AZIM-52 | 2026-06-11 | OK |
+| US-040 | AZIM-53 | 2026-06-11 | OK |
+| US-041 | AZIM-54 | 2026-06-11 | OK |
+| US-042 | AZIM-55 | 2026-06-11 | OK |
+| US-043 | AZIM-56 | 2026-06-11 | OK |
+| US-044 | AZIM-57 | 2026-06-11 | OK |
+| US-045 | AZIM-58 | 2026-06-11 | OK |
+| US-046 | AZIM-59 | 2026-06-11 | OK |
+| US-047 | AZIM-60 | 2026-06-11 | OK |
+| US-048 | AZIM-61 | 2026-06-11 | OK |
+| US-049 | AZIM-62 | 2026-06-11 | OK |
+| US-050 | AZIM-63 | 2026-06-11 | OK |
+| US-051 | AZIM-64 | 2026-06-11 | OK |
+| US-052 | AZIM-65 | 2026-06-11 | OK |
+| US-053 | AZIM-66 | 2026-06-11 | OK |
+| US-054 | AZIM-67 | 2026-06-11 | OK |
+| US-055 | AZIM-68 | 2026-06-11 | OK |
+| US-056 | AZIM-69 | 2026-06-11 | OK |
+| US-057 | AZIM-70 | 2026-06-11 | OK |
+| US-058 | AZIM-71 | 2026-06-11 | OK |
+| US-059 | AZIM-72 | 2026-06-11 | OK |
+| US-060 | AZIM-73 | 2026-06-11 | OK |
+| US-061 | AZIM-74 | 2026-06-11 | OK |
+| US-062 | AZIM-75 | 2026-06-11 | OK |
+| US-063 | AZIM-76 | 2026-06-11 | OK |
+| US-064 | AZIM-77 | 2026-06-11 | OK |
+| US-065 | AZIM-78 | 2026-06-11 | OK |
+| US-066 | AZIM-79 | 2026-06-11 | OK |
+| US-067 | AZIM-80 | 2026-06-11 | OK |
+| US-068 | AZIM-81 | 2026-06-11 | OK |
+| US-069 | AZIM-82 | 2026-06-11 | OK |
+| US-070 | AZIM-83 | 2026-06-11 | OK |
+| US-071 | AZIM-84 | 2026-06-11 | OK |
+| US-072 | AZIM-85 | 2026-06-11 | OK |
+| US-073 | AZIM-86 | 2026-06-11 | OK |
+| US-074 | AZIM-87 | 2026-06-11 | OK |
+| US-075 | AZIM-88 | 2026-06-11 | OK |
+| US-076 | AZIM-89 | 2026-06-11 | OK |
+| US-077 | AZIM-90 | 2026-06-11 | OK |
+| US-078 | AZIM-91 | 2026-06-11 | OK |
+| US-079 | AZIM-92 | 2026-06-11 | OK |
+| US-080 | AZIM-93 | 2026-06-11 | OK |
+| US-081 | AZIM-94 | 2026-06-11 | OK |
+| US-082 | AZIM-95 | 2026-06-11 | OK |
 | Sprint 1 a 15 | pendente | — | — |
+| TASK-001 a TASK-321 | pendente | — | — |

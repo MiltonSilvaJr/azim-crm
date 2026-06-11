@@ -1,9 +1,9 @@
 # Backlog Progress Tracking — Azim CRM
 
-- **Última atualização:** 2026-06-11 (sync Jira em andamento)
-- **Última ação executada:** Sync Jira — 13 épicos criados (AZIM-1..AZIM-13)
-- **Próxima ação:** criar 82 user stories (parent = épico) → 321 subtasks (parent = story) → 15 sprints + atribuições
-- **Status geral:** Sync Jira PARCIAL — épicos OK; stories/tasks/sprints pendentes
+- **Última atualização:** 2026-06-11 (sync Jira — épicos + user stories concluídos)
+- **Última ação executada:** Sync Jira — 82 user stories criadas (AZIM-14..AZIM-95)
+- **Próxima ação:** criar 321 subtasks (TASK-NN, parent = story AZIM-key) → 15 sprints + atribuições
+- **Status geral:** Sync Jira PARCIAL — épicos OK; stories OK; tasks/sprints pendentes
 - **Projeto Jira:** `AZIM` (id 10314, team-managed/next-gen, cloudId e1b6371c-f985-4363-b691-818ac8f6c6fc, site prod-fintech.atlassian.net). Tipos: Epic=10418, User story=10420, Tarefa=10421, Bug=10422, Subtask=10419.
 
 ### Mapeamento de épicos (Local → Jira)
@@ -23,6 +23,93 @@
 | EP-011 | AZIM-11 | digest |
 | EP-012 | AZIM-12 | reporting |
 | EP-013 | AZIM-13 | opportunity-pipeline |
+
+### Mapeamento de user stories (Local → Jira)
+
+| Local | Jira | Módulo (épico pai) |
+|---|---|---|
+| US-001 | AZIM-14 | audit-log (AZIM-1) |
+| US-002 | AZIM-15 | audit-log (AZIM-1) |
+| US-003 | AZIM-16 | audit-log (AZIM-1) |
+| US-004 | AZIM-17 | audit-log (AZIM-1) |
+| US-005 | AZIM-18 | audit-log (AZIM-1) |
+| US-006 | AZIM-19 | audit-log (AZIM-1) |
+| US-007 | AZIM-20 | notification-delivery (AZIM-2) |
+| US-008 | AZIM-21 | notification-delivery (AZIM-2) |
+| US-009 | AZIM-22 | notification-delivery (AZIM-2) |
+| US-010 | AZIM-23 | notification-delivery (AZIM-2) |
+| US-011 | AZIM-24 | notification-delivery (AZIM-2) |
+| US-012 | AZIM-25 | authentication (AZIM-3) |
+| US-013 | AZIM-26 | authentication (AZIM-3) |
+| US-014 | AZIM-27 | authentication (AZIM-3) |
+| US-015 | AZIM-28 | authentication (AZIM-3) |
+| US-016 | AZIM-29 | authentication (AZIM-3) |
+| US-017 | AZIM-30 | authentication (AZIM-3) |
+| US-018 | AZIM-31 | authentication (AZIM-3) |
+| US-019 | AZIM-32 | tenant-administration (AZIM-4) |
+| US-020 | AZIM-33 | tenant-administration (AZIM-4) |
+| US-021 | AZIM-34 | tenant-administration (AZIM-4) |
+| US-022 | AZIM-35 | tenant-administration (AZIM-4) |
+| US-023 | AZIM-36 | tenant-administration (AZIM-4) |
+| US-024 | AZIM-37 | organization (AZIM-5) |
+| US-025 | AZIM-38 | organization (AZIM-5) |
+| US-026 | AZIM-39 | organization (AZIM-5) |
+| US-027 | AZIM-40 | organization (AZIM-5) |
+| US-028 | AZIM-41 | organization (AZIM-5) |
+| US-029 | AZIM-42 | organization (AZIM-5) |
+| US-030 | AZIM-43 | account-management (AZIM-6) |
+| US-031 | AZIM-44 | account-management (AZIM-6) |
+| US-032 | AZIM-45 | account-management (AZIM-6) |
+| US-033 | AZIM-46 | account-management (AZIM-6) |
+| US-034 | AZIM-47 | account-management (AZIM-6) |
+| US-035 | AZIM-48 | partner-management (AZIM-7) |
+| US-036 | AZIM-49 | partner-management (AZIM-7) |
+| US-037 | AZIM-50 | partner-management (AZIM-7) |
+| US-038 | AZIM-51 | partner-management (AZIM-7) |
+| US-039 | AZIM-52 | activity-management (AZIM-8) |
+| US-040 | AZIM-53 | activity-management (AZIM-8) |
+| US-041 | AZIM-54 | activity-management (AZIM-8) |
+| US-042 | AZIM-55 | activity-management (AZIM-8) |
+| US-043 | AZIM-56 | activity-management (AZIM-8) |
+| US-044 | AZIM-57 | goal-forecast (AZIM-9) |
+| US-045 | AZIM-58 | goal-forecast (AZIM-9) |
+| US-046 | AZIM-59 | goal-forecast (AZIM-9) |
+| US-047 | AZIM-60 | goal-forecast (AZIM-9) |
+| US-048 | AZIM-61 | goal-forecast (AZIM-9) |
+| US-049 | AZIM-62 | goal-forecast (AZIM-9) |
+| US-050 | AZIM-63 | data-migration (AZIM-10) |
+| US-051 | AZIM-64 | data-migration (AZIM-10) |
+| US-052 | AZIM-65 | data-migration (AZIM-10) |
+| US-053 | AZIM-66 | data-migration (AZIM-10) |
+| US-054 | AZIM-67 | data-migration (AZIM-10) |
+| US-055 | AZIM-68 | digest (AZIM-11) |
+| US-056 | AZIM-69 | digest (AZIM-11) |
+| US-057 | AZIM-70 | digest (AZIM-11) |
+| US-058 | AZIM-71 | digest (AZIM-11) |
+| US-059 | AZIM-72 | digest (AZIM-11) |
+| US-060 | AZIM-73 | reporting (AZIM-12) |
+| US-061 | AZIM-74 | reporting (AZIM-12) |
+| US-062 | AZIM-75 | reporting (AZIM-12) |
+| US-063 | AZIM-76 | reporting (AZIM-12) |
+| US-064 | AZIM-77 | reporting (AZIM-12) |
+| US-065 | AZIM-78 | reporting (AZIM-12) |
+| US-066 | AZIM-79 | opportunity-pipeline (AZIM-13) |
+| US-067 | AZIM-80 | opportunity-pipeline (AZIM-13) |
+| US-068 | AZIM-81 | opportunity-pipeline (AZIM-13) |
+| US-069 | AZIM-82 | opportunity-pipeline (AZIM-13) |
+| US-070 | AZIM-83 | opportunity-pipeline (AZIM-13) |
+| US-071 | AZIM-84 | opportunity-pipeline (AZIM-13) |
+| US-072 | AZIM-85 | opportunity-pipeline (AZIM-13) |
+| US-073 | AZIM-86 | opportunity-pipeline (AZIM-13) |
+| US-074 | AZIM-87 | opportunity-pipeline (AZIM-13) |
+| US-075 | AZIM-88 | opportunity-pipeline (AZIM-13) |
+| US-076 | AZIM-89 | opportunity-pipeline (AZIM-13) |
+| US-077 | AZIM-90 | opportunity-pipeline (AZIM-13) |
+| US-078 | AZIM-91 | opportunity-pipeline (AZIM-13) |
+| US-079 | AZIM-92 | transversal ADRs (parent: authentication AZIM-3) |
+| US-080 | AZIM-93 | transversal SPF/DKIM (parent: notification-delivery AZIM-2) |
+| US-081 | AZIM-94 | transversal Resend (parent: notification-delivery AZIM-2) |
+| US-082 | AZIM-95 | transversal LGPD (parent: audit-log AZIM-1) |
 
 ---
 
@@ -54,7 +141,7 @@
 |---|---|---|---|
 | 2026-06-11 | Criar projeto `Azim` (AZIM) | — | ✅ existia (criado pelo usuário) |
 | 2026-06-11 | Criar 13 épicos (EP-001..013 → AZIM-1..13) | product-backlog.md §5 | ✅ FEITO |
-| 2026-06-11 | Criar 82 user stories (US-001..082, parent = épico) | product-backlog.md §2 | ⏳ pendente |
+| 2026-06-11 | Criar 82 user stories (US-001..082, parent = épico) | product-backlog.md §2 | ✅ FEITO (AZIM-14..AZIM-95) |
 | 2026-06-11 | Criar 321 subtasks (TASK-NN, parent = story) | product-backlog.md §3 | ⏳ pendente |
 | 2026-06-11 | Criar/ativar 15 sprints + atribuir issues | sprints-planning.md | ⏳ pendente |
 
@@ -79,7 +166,21 @@
 | 2026-06-11T03:00:00Z | Geração de sprint-14-reporting-api-pipeline-domain.md | OK | 46 pts — reporting API + goal-forecast multimoeda + op-pipeline domain |
 | 2026-06-11T03:00:00Z | Geração de sprint-15-pipeline-api-hitl-golive.md | OK | 64 pts — op-pipeline infra+API+hardening + HITL#1 go-live (SPF/DKIM/DMARC, LGPD) |
 | 2026-06-11T03:00:00Z | Backlog markdown Fase 1 COMPLETO | OK | 13 épicos, 82 stories, 321 tasks, 15 sprints — todos os arquivos criados |
-| 2026-06-11T03:00:00Z | Sincronização Jira | PENDENTE | MCP Atlassian não conectado — ver §2 |
+| 2026-06-11T03:00:00Z | Sincronização Jira — épicos | OK | 13 épicos criados (AZIM-1..AZIM-13) — MCP Atlassian sessão anterior |
+| 2026-06-11T04:00:00Z | Sincronização Jira — user stories (lote 1: US-002..US-011) | OK | AZIM-15..AZIM-24 criados (parent = épico correspondente) |
+| 2026-06-11T04:00:00Z | Sincronização Jira — user stories (lote 2: US-012..US-018) | OK | AZIM-25..AZIM-31 criados |
+| 2026-06-11T04:00:00Z | Sincronização Jira — user stories (lote 3: US-019..US-023) | OK | AZIM-32..AZIM-36 criados |
+| 2026-06-11T04:00:00Z | Sincronização Jira — user stories (lote 4: US-024..US-029) | OK | AZIM-37..AZIM-42 criados |
+| 2026-06-11T04:00:00Z | Sincronização Jira — user stories (lote 5: US-030..US-034) | OK | AZIM-43..AZIM-47 criados |
+| 2026-06-11T04:00:00Z | Sincronização Jira — user stories (lote 6: US-035..US-038) | OK | AZIM-48..AZIM-51 criados |
+| 2026-06-11T04:00:00Z | Sincronização Jira — user stories (lote 7: US-039..US-043) | OK | AZIM-52..AZIM-56 criados |
+| 2026-06-11T04:00:00Z | Sincronização Jira — user stories (lote 8: US-044..US-049) | OK | AZIM-57..AZIM-62 criados |
+| 2026-06-11T04:00:00Z | Sincronização Jira — user stories (lote 9: US-050..US-054) | OK | AZIM-63..AZIM-67 criados |
+| 2026-06-11T04:00:00Z | Sincronização Jira — user stories (lote 10: US-055..US-059) | OK | AZIM-68..AZIM-72 criados |
+| 2026-06-11T04:00:00Z | Sincronização Jira — user stories (lote 11: US-060..US-065) | OK | AZIM-73..AZIM-78 criados |
+| 2026-06-11T04:00:00Z | Sincronização Jira — user stories (lote 12: US-066..US-071) | OK | AZIM-79..AZIM-84 criados |
+| 2026-06-11T04:00:00Z | Sincronização Jira — user stories (lote 13: US-072..US-082, incl. transversais) | OK | AZIM-85..AZIM-95 criados |
+| 2026-06-11T04:00:00Z | Sincronização Jira — 82 user stories COMPLETO | OK | US-001..US-082 → AZIM-14..AZIM-95; product-backlog.md §5 + progress-tracking.md atualizados |
 
 ## 4. Retomada
 
