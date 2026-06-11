@@ -11,7 +11,7 @@
 | 3 | authentication | Generic | [X] | [X] | [X] |
 | 4 | tenant-administration | Generic | [X] | [X] | [X] |
 | 5 | organization | Supporting | [X] | [X] | [X] |
-| 6 | account-management | Supporting | [ ] | [ ] | [ ] |
+| 6 | account-management | Supporting | [X] | [X] | [X] |
 | 7 | partner-management | Supporting | [ ] | [ ] | [ ] |
 | 8 | activity-management | Supporting | [ ] | [ ] | [ ] |
 | 9 | goal-forecast | Supporting | [ ] | [ ] | [ ] |
