@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Forge pre-push (§20.4) — runs the project's own typecheck + tests (as declared in the
+# FORGE.md frontmatter `runtime:` block) before pushing a work branch. Empty commands are
+# skipped (greenfield). Raw output goes to /tmp (context-overflow discipline §17.6).
+set -u
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+FORGE_MD="$ROOT/.forge/FORGE.md"
+[ -f "$FORGE_MD" ] || { echo "pre-push OK (sem harness)"; exit 0; }
+
+fm_field() {  # fm_field <key> — value of "  <key>:" inside the runtime: block
+  awk -v key="$1" '
+    /^runtime:/ { inblk=1; next }
+    inblk && /^[a-z_]+:/ { exit }
+    inblk && $0 ~ "^  "key":" { sub("^  "key":[[:space:]]*", ""); print; exit }
+  ' "$FORGE_MD"
+}
+
+run_check() {  # run_check <label> <cmd>
+  local label="$1" cmd="$2" log
+  [ -n "$cmd" ] || { echo "pre-push: $label não definido — skip"; return 0; }
+  log="$(mktemp /tmp/forge-prepush-XXXXXX.log)"
+  if (cd "$ROOT" && eval "$cmd") >"$log" 2>&1; then
+    echo "pre-push: $label OK"
+  else
+    echo "pre-push BLOQUEADO: $label falhou — tail:"
+    tail -20 "$log"
+    exit 1
+  fi
+}
+
+run_check "typecheck" "$(fm_field typecheck)"
+run_check "test" "$(fm_field test)"
+echo "pre-push OK"

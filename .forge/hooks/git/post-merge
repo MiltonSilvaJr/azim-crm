@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Forge post-merge (§20.4) — after a merge into the integration branch:
+#   1. prunes dead worktree refs and removes CLEAN worktrees whose branch is already merged
+#      into HEAD (mandatory cleanup, §20.4/v3.1);
+#   2. suggests promotion to staging when running on the integration branch.
+# Never fails the merge (informational hook).
+set -u
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+cd "$ROOT" || exit 0
+
+git worktree prune 2>/dev/null || true
+
+removed=0
+while IFS= read -r wt; do
+  [ -n "$wt" ] || continue
+  case "$wt" in
+    "$ROOT"/.forge/worktrees/*)
+      branch="$(git -C "$wt" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+      [ -n "$branch" ] && [ "$branch" != "HEAD" ] || continue
+      if git merge-base --is-ancestor "$branch" HEAD 2>/dev/null && [ -z "$(git -C "$wt" status --porcelain 2>/dev/null)" ]; then
+        if git worktree remove "$wt" 2>/dev/null; then
+          removed=$((removed + 1))
+          git branch -d "$branch" 2>/dev/null || true
+        fi
+      fi
+      ;;
+  esac
+done <<EOF_WT
+$(git worktree list --porcelain 2>/dev/null | awk '/^worktree /{print $2}' | tail -n +2)
+EOF_WT
+
+current="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+msg="post-merge OK (worktrees removidas: $removed)"
+[ "$current" = "develop" ] && msg="$msg — considere /forge:promote-staging quando develop estiver estável"
+echo "$msg"
+exit 0

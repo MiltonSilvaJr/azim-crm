@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Azim CRM — Module Architecture Diagrams</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #f9f9f9;
+      color: #222;
+    }
+    h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+    .subtitle { color: #555; font-size: 0.95rem; margin-bottom: 2rem; }
+    h2 { font-size: 1.1rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th { text-align: left; background: #eee; padding: 0.5rem 0.75rem; font-size: 0.85rem; }
+    td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #e5e5e5; font-size: 0.9rem; }
+    a { color: #0057b8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 3px;
+             font-size: 0.75rem; font-weight: 600; }
+    .fase1 { background: #d4edda; color: #155724; }
+    .fase2 { background: #fff3cd; color: #856404; }
+    .fase3 { background: #f8d7da; color: #721c24; }
+    .na { background: #e2e3e5; color: #383d41; }
+    .sim { background: #d4edda; color: #155724; }
+    footer { margin-top: 3rem; color: #888; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <h1>Azim CRM — Module Architecture Diagrams</h1>
+  <p class="subtitle">Versão v0.1 &mdash; 2026-06-11 &mdash; Rascunho para revisão</p>
+
+  <h2>Diagramas de Arquitetura</h2>
+  <table>
+    <thead>
+      <tr><th>Diagrama</th><th>Arquivo</th><th>Finalidade</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Arquitetura da Solução</td>
+        <td><a href="solution-architecture.md">solution-architecture.md</a></td>
+        <td>Módulos, deployables, sistemas externos e relações de alto nível</td>
+      </tr>
+      <tr>
+        <td>Dependências entre Módulos</td>
+        <td><a href="module-dependencies.md">module-dependencies.md</a></td>
+        <td>Grafo de dependências diretas entre módulos</td>
+      </tr>
+      <tr>
+        <td>Fluxos de Integração</td>
+        <td><a href="integration-flows.md">integration-flows.md</a></td>
+        <td>Digest, pipeline, migração, autenticação, provisionamento</td>
+      </tr>
+      <tr>
+        <td>Fluxos de Compliance</td>
+        <td><a href="compliance-flows.md">compliance-flows.md</a></td>
+        <td>Consolidação dos compliance aplicáveis</td>
+      </tr>
+      <tr>
+        <td>Compliance LGPD</td>
+        <td><a href="compliance-lgpd.md">compliance-lgpd.md</a></td>
+        <td>Fluxo de PII e regras LGPD por módulo</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Módulos por Fase</h2>
+  <table>
+    <thead>
+      <tr><th>Módulo</th><th>Tipo</th><th>Deployable</th><th>Fase</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a href="../audit-log/README.md">audit-log</a></td>
+        <td>Application Module (cross-cutting)</td>
+        <td>azim-api</td>
+        <td><span class="badge fase1">Fase 1</span></td>
+      </tr>
+      <tr>
+        <td><a href="../notification-delivery/README.md">notification-delivery</a></td>
+        <td>Adapter (ACL)</td>
+        <td>azim-digest-worker / azim-api</td>
+        <td><span class="badge fase1">Fase 1</span></td>
+      </tr>
+      <tr>
+        <td><a href="../authentication/README.md">authentication</a></td>
+        <td>Application Module (ACL)</td>
+        <td>azim-api</td>
+        <td><span class="badge fase1">Fase 1</span></td>
+      </tr>
+      <tr>
+        <td><a href="../tenant-administration/README.md">tenant-administration</a></td>
+        <td>Application Module</td>
+        <td>azim-api</td>
+        <td><span class="badge fase1">Fase 1</span></td>
+      </tr>
+      <tr>
+        <td><a href="../organization/README.md">organization</a></td>
+        <td>Application Module</td>
+        <td>azim-api</td>
+        <td><span class="badge fase1">Fase 1</span></td>
+      </tr>
+      <tr>
+        <td><a href="../account-management/README.md">account-management</a></td>
+        <td>Application Module</td>
+        <td>azim-api</td>
+        <td><span class="badge fase1">Fase 1</span></td>
+      </tr>
+      <tr>
+        <td><a href="../partner-management/README.md">partner-management</a></td>
+        <td>Application Module</td>
+        <td>azim-api</td>
+        <td><span class="badge fase1">Fase 1</span></td>
+      </tr>
+      <tr>
+        <td><a href="../activity-management/README.md">activity-management</a></td>
+        <td>Application Module</td>
+        <td>azim-api</td>
+        <td><span class="badge fase1">Fase 1</span></td>
+      </tr>
+      <tr>
+        <td><a href="../goal-forecast/README.md">goal-forecast</a></td>
+        <td>Application Module</td>
+        <td>azim-api</td>
+        <td><span class="badge fase1">Fase 1</span></td>
+      </tr>
+      <tr>
+        <td><a href="../opportunity-pipeline/README.md">opportunity-pipeline</a></td>
+        <td>Application Module (Core Domain)</td>
+        <td>azim-api</td>
+        <td><span class="badge fase1">Fase 1</span></td>
+      </tr>
+      <tr>
+        <td><a href="../data-migration/README.md">data-migration</a></td>
+        <td>Application Module (temporário)</td>
+        <td>azim-api</td>
+        <td><span class="badge fase1">Fase 1</span></td>
+      </tr>
+      <tr>
+        <td><a href="../digest/README.md">digest</a></td>
+        <td>Worker</td>
+        <td>azim-digest-worker</td>
+        <td><span class="badge fase1">Fase 1</span></td>
+      </tr>
+      <tr>
+        <td><a href="../reporting/README.md">reporting</a></td>
+        <td>Worker / Application Module</td>
+        <td>azim-reporting-worker / azim-api</td>
+        <td><span class="badge fase1">Fase 1/2</span></td>
+      </tr>
+      <tr>
+        <td><a href="../azim-web/README.md">azim-web</a></td>
+        <td>Frontend SPA</td>
+        <td>azim-web</td>
+        <td><span class="badge fase1">Fase 1</span></td>
+      </tr>
+      <tr>
+        <td><a href="../workflow-automation/README.md">workflow-automation</a></td>
+        <td>Worker</td>
+        <td>azim-workflow-worker</td>
+        <td><span class="badge fase2">Fase 2</span></td>
+      </tr>
+      <tr>
+        <td><a href="../ai-intelligence/README.md">ai-intelligence</a></td>
+        <td>Microservice</td>
+        <td>azim-ai-service</td>
+        <td><span class="badge fase3">Fase 3</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Compliance</h2>
+  <table>
+    <thead>
+      <tr><th>Compliance</th><th>Aplicável?</th><th>Diagrama</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>LGPD (Lei nº 13.709/2018)</td>
+        <td><span class="badge sim">Sim</span></td>
+        <td><a href="compliance-lgpd.md">compliance-lgpd.md</a></td>
+      </tr>
+      <tr>
+        <td>PCI DSS</td>
+        <td><span class="badge na">N/A</span></td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>SOX / Auditoria Financeira</td>
+        <td><span class="badge fase2">Ponto a Validar</span></td>
+        <td>—</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <footer>
+    Azim CRM &mdash; docs/product/modules/diagrams/ &mdash; v0.1 &mdash; 2026-06-11
+  </footer>
+</body>
+</html>

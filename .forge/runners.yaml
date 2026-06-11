@@ -1,0 +1,12 @@
+# Runner interface for the quality layer (eval harness, Layer 5).
+# STUB until MVP5/W5.2 — kept here so the canonical tree (§8) is stable from MVP1.
+# The eval harness is opt-in (quality.evals_enabled in FORGE.md frontmatter).
+version: 1
+default_runner: claude-code
+runners:
+  claude-code:
+    kind: cli
+    command: "claude"
+    args: ["-p", "{prompt}", "--output-format", "stream-json"]
+    captures: [tokens, duration_ms, output]
+    parallel: true

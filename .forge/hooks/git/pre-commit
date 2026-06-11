@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Forge pre-commit (§20.4) — cheap one-line gates over STAGED files only.
+# Blocks only on clear violations; anything expensive belongs to pre-push or /forge:verify.
+set -u
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+fail=0
+
+# worktree-guard: committing from a worktree is only allowed under .forge/worktrees/
+GIT_DIR="$(git rev-parse --git-dir)"
+COMMON_DIR="$(git rev-parse --git-common-dir)"
+if [ "$GIT_DIR" != "$COMMON_DIR" ]; then
+  case "$ROOT" in
+    */.forge/worktrees/*) : ;;
+    *) echo "pre-commit BLOQUEADO: worktree fora de .forge/worktrees/ (regra §20.4)"; exit 1 ;;
+  esac
+fi
+
+staged="$(git diff --cached --name-only --diff-filter=ACM)"
+[ -n "$staged" ] || { echo "pre-commit OK (nada staged)"; exit 0; }
+
+while IFS= read -r f; do
+  [ -f "$ROOT/$f" ] || continue
+  case "$f" in
+    *.DS_Store) echo "pre-commit BLOQUEADO: .DS_Store staged ($f)"; fail=1 ;;
+  esac
+  if grep -qE '^(<<<<<<<|=======$|>>>>>>>)' "$ROOT/$f" 2>/dev/null; then
+    case "$f" in
+      *.md|*.sh|*.json|*.yaml|*.yml|*.cs|*.ts|*.tsx|*.go|*.kt)
+        echo "pre-commit BLOQUEADO: marcador de conflito em $f"; fail=1 ;;
+    esac
+  fi
+  case "$f" in
+    *.sh) bash -n "$ROOT/$f" 2>/dev/null || { echo "pre-commit BLOQUEADO: $f não parseia (bash -n)"; fail=1; } ;;
+    *.json) python3 -m json.tool "$ROOT/$f" >/dev/null 2>&1 || { echo "pre-commit BLOQUEADO: $f não é JSON válido"; fail=1; } ;;
+  esac
+done <<EOF_STAGED
+$staged
+EOF_STAGED
+
+# frontmatter gate for harness artifacts (agents/commands/skills)
+harness_md="$(printf '%s\n' "$staged" | grep -E '^\.forge/(agents|commands|skills)/.*\.md$' | grep -v 'README.md' || true)"
+if [ -n "$harness_md" ]; then
+  # shellcheck disable=SC2086
+  out="$(cd "$ROOT" && .forge/scripts/validate-frontmatter.sh $harness_md 2>/dev/null | tail -1)"
+  case "$out" in
+    OK*) : ;;
+    *) echo "pre-commit BLOQUEADO: validate-frontmatter falhou ($out)"; fail=1 ;;
+  esac
+fi
+
+[ "$fail" -eq 0 ] && echo "pre-commit OK" && exit 0
+exit 1

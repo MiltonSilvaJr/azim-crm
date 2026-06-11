@@ -1,0 +1,25 @@
+# Constitution — Azim CRM
+
+> Non-negotiable principles. Everything else (rules, commands, templates) derives from these.
+> Evolve via `/forge:constitution` with human approval; never weaken silently.
+
+1. **Spec is the source of truth.** Code is a derived artifact, generated or verified against the
+   spec. Each artifact constrains the ambiguity of the next.
+2. **Minimum necessary rigor.** Use the lowest scale level that removes ambiguity from context.
+   Heavy process (full pipeline, evals) is opt-in, never default.
+3. **Determinism where possible.** Manifests, schemas and deterministic validators decide
+   lifecycle operations; LLM reviewers complement, never replace, them.
+4. **Traceable, archivable change.** All work lives as an active change, is verified, applied to
+   the baseline and archived. No silent gaps: blocked work goes to the deferral ledger and the
+   project does not close until the ledger is resolved and tested.
+5. **Language policy.** Identifiers in English; documentation and user-facing text in Português
+   Brasileiro. "Objeto de Valor" always written in full. No technology prefixes in domain names.
+6. **Financial correctness** (when the domain applies): money as integer cents, NBR 5891 rounding,
+   append-only audit. Regulated flows (PCI DSS, fintech) require explicit human approval at
+   archive time.
+7. **Security by default.** No secrets in code, repos or images; least privilege; auditability.
+8. **Human commits only.** No AI co-authorship trailers in commits or PRs. Conventional Commits.
+9. **Decisions are recorded.** Architectural decisions become ADRs; human gate decisions are
+   recorded with author, timestamp and reason in `approvals.yaml`.
+10. **Agent-agnostic by construction.** `.forge/` is the only source; every tool consumes
+    generated adapters. Switching LLM/agent must never break the flow.
