@@ -3,4 +3,4 @@ adapter: core
 files:
   - dest: AGENTS.md
     src: .forge/FORGE.md
-    sha256: sha256:5c75fe5ce405481d24774206372ce025ff66e6f8b37d3c2b27def4aa5be4190b
+    sha256: sha256:9725b7121f5800fffb809e543ac651c1083a8505346793526db2dd520ee67e37

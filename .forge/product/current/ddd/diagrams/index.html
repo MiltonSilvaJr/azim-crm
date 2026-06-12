@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagramas C4 — Azim CRM</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      margin: 0; padding: 24px; background: #f5f6f8; color: #1a1a2e;
+      line-height: 1.5;
+    }
+    header {
+      border-bottom: 2px solid #2563eb; padding-bottom: 16px; margin-bottom: 20px;
+    }
+    header h1 { margin: 0 0 4px; font-size: 1.6rem; color: #1e3a8a; }
+    .meta { color: #64748b; font-size: 0.85rem; margin: 0; }
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 12px;
+      font-size: 0.75rem; font-weight: 600; margin-left: 8px;
+    }
+    .badge-core { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .badge-draft { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
+
+    nav { margin-bottom: 0; display: flex; gap: 4px; flex-wrap: wrap; }
+    nav button {
+      padding: 10px 18px; border: 1px solid #cbd5e1;
+      background: #fff; cursor: pointer; font-size: 0.9rem;
+      border-radius: 6px 6px 0 0; color: #475569; transition: all 0.15s;
+    }
+    nav button:hover { background: #f0f9ff; color: #0284c7; }
+    nav button.active {
+      background: #2563eb; color: #fff;
+      border-color: #2563eb; font-weight: 600;
+    }
+
+    .panel-container {
+      background: #fff; border: 1px solid #cbd5e1; border-radius: 0 6px 6px 6px;
+      padding: 24px; min-height: 400px;
+    }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .panel h2 { color: #1e3a8a; margin-top: 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+    .panel p { color: #475569; font-size: 0.9rem; }
+
+    .mermaid-wrapper {
+      background: #fafafa; border: 1px solid #e2e8f0; border-radius: 6px;
+      padding: 16px; overflow-x: auto; margin: 16px 0;
+    }
+
+    .info-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px; margin: 16px 0;
+    }
+    .info-card {
+      background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;
+      padding: 12px;
+    }
+    .info-card .label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+    .info-card .value { font-size: 1rem; font-weight: 600; color: #1e3a8a; margin-top: 2px; }
+
+    footer { margin-top: 24px; color: #94a3b8; font-size: 0.8rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Diagramas C4 — Azim CRM <span class="badge badge-draft">Rascunho para revisão</span></h1>
+    <p class="meta">Gerado em 2026-06-11 &middot; Segmentação DDD v0.1 &middot; Bounded Contexts: 15</p>
+  </header>
+
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="label">Core Domain</div>
+      <div class="value">1 — Opportunity Pipeline</div>
+    </div>
+    <div class="info-card">
+      <div class="label">Supporting Subdomains</div>
+      <div class="value">10 subdomínios</div>
+    </div>
+    <div class="info-card">
+      <div class="label">Generic Subdomains</div>
+      <div class="value">4 subdomínios</div>
+    </div>
+    <div class="info-card">
+      <div class="label">Bounded Contexts</div>
+      <div class="value">15 confirmados</div>
+    </div>
+    <div class="info-card">
+      <div class="label">Deployables Fase 1</div>
+      <div class="value">4 (api, digest, reporting, web)</div>
+    </div>
+    <div class="info-card">
+      <div class="label">Tenant inicial</div>
+      <div class="value">Vellus — 108 oportunidades</div>
+    </div>
+  </div>
+
+  <nav>
+    <button data-tab="l1" class="active">Level 1 — System Context</button>
+    <button data-tab="l2">Level 2 — Containers</button>
+    <button data-tab="l3">Level 3 — Components</button>
+    <button data-tab="ctx">Context Map</button>
+  </nav>
+
+  <div class="panel-container">
+
+    <div id="l1" class="panel active">
+      <h2>Level 1 — System Context</h2>
+      <p>Mostra o Azim CRM como sistema central, os cinco tipos de atores humanos e os sistemas externos com os quais interage.</p>
+      <div class="mermaid-wrapper">
+        <div class="mermaid">
+flowchart TB
+    Vendedor["Vendedor / Executivo de Contas\nP-01\nOpera o Kanban diário\nrecebe e age pelo digest"]
+    Gestor["Gestor de BU\nP-02\nAcompanha pipeline e metas\nrecebe azimute da semana"]
+    Executivo["Executivo do Tenant\nP-03\nVisão macro consolidada"]
+    TAdmin["Administrador do Tenant\nP-04\nConfigura branding BUs usuários parceiros"]
+    PlatOp["Operador da Plataforma\nP-05\nProvisiona tenants\nmonitora a plataforma"]
+
+    AzimCRM["Azim CRM\nPlataforma SaaS multi-tenant\nde gestão comercial B2B\nPipeline com owner obrigatório\nComissão nativa\nDigest diário\nMetas e relatórios"]
+
+    GCPIdP["GCP Identity Platform\nAutenticação multi-tenant"]
+    EmailProvider["Provider de E-mail\nPostmark ou SendGrid\nE-mails transacionais e digest"]
+    CloudScheduler["Cloud Scheduler\nTrigger horário UTC do digest"]
+    GCPInfra["GCP southamerica-east1\nCloud SQL Cloud Run\nPub/Sub Secret Manager"]
+
+    Vendedor -->|Acessa via app.azim.com.br/slug| AzimCRM
+    Gestor -->|Acessa pipeline e metas da BU| AzimCRM
+    Executivo -->|Acessa visão macro e relatórios| AzimCRM
+    TAdmin -->|Configura o tenant| AzimCRM
+    PlatOp -->|Provisiona tenants via backoffice| AzimCRM
+
+    AzimCRM -->|Autentica via OIDC| GCPIdP
+    AzimCRM -->|Envia e-mails e digest| EmailProvider
+    CloudScheduler -->|Dispara job horário UTC| AzimCRM
+    AzimCRM -->|Hospedado em| GCPInfra
+
+    AzimCRM -->|Digest diario 07h00 BRT| Vendedor
+    AzimCRM -->|Azimute da semana segundas| Gestor
+    AzimCRM -->|Azimute da semana segundas| Executivo
+        </div>
+      </div>
+    </div>
+
+    <div id="l2" class="panel">
+      <h2>Level 2 — Container Diagram</h2>
+      <p>Detalha os containers do Azim CRM: frontends, serviços, workers, banco de dados, cache e mensageria.</p>
+      <div class="mermaid-wrapper">
+        <div class="mermaid">
+flowchart TB
+    Usuarios["Usuarios\nVendedor Gestor Executivo TAdmin"]
+    PlatOp["Operador da Plataforma"]
+
+    subgraph AzimCRM["Azim CRM"]
+        WebApp["azim-web\nReact SPA + TypeScript\nCloud Run\nTheming por tenant via CSS variables"]
+        ApiGateway["API Gateway\nCloud Run ingress\nResolve slug para tenant_id"]
+        AzimApi["azim-api\nASP.NET Core / .NET 10\nMonolito modular Fase 1\nRLS + EF Core Global Query Filter"]
+        DigestWorker["azim-digest-worker\nASP.NET Core / .NET 10\nCloud Run\nDigest 07h00 BRT"]
+        ReportingWorker["azim-reporting-worker\nASP.NET Core / .NET 10\nRead models assincronos"]
+        BackofficeAPI["Backoffice API\nProvisioning de tenants\nApenas Platform Operator"]
+        PubSub["Cloud Pub/Sub\nDigest audit domain-events"]
+        CloudSQL[("Cloud SQL / PostgreSQL\nMulti-tenant pooled com RLS\nsouthamerica-east1")]
+        Redis[("Memorystore Redis\nCache de sessao e RBAC\nRate-limit por tenant")]
+        SecretManager["GCP Secret Manager\nZero segredo em repositorio"]
+    end
+
+    GCPIdP["GCP Identity Platform"]
+    Postmark["Postmark ou SendGrid"]
+    CloudScheduler["Cloud Scheduler"]
+    CloudLogging["Cloud Logging\nCloud Monitoring\nCloud Trace"]
+
+    Usuarios -->|HTTPS app.azim.com.br/slug| WebApp
+    PlatOp -->|HTTPS backoffice| BackofficeAPI
+    WebApp -->|REST JSON| ApiGateway
+    ApiGateway -->|REST JSON| AzimApi
+    AzimApi --> CloudSQL
+    AzimApi --> Redis
+    AzimApi --> PubSub
+    AzimApi --> GCPIdP
+    AzimApi --> Postmark
+    AzimApi --> CloudLogging
+    AzimApi --> SecretManager
+    CloudScheduler -->|HTTP trigger| DigestWorker
+    DigestWorker --> PubSub
+    DigestWorker --> CloudSQL
+    DigestWorker --> Postmark
+    DigestWorker --> CloudLogging
+    PubSub --> ReportingWorker
+    ReportingWorker --> CloudSQL
+    ReportingWorker --> CloudLogging
+    BackofficeAPI --> CloudSQL
+    BackofficeAPI --> CloudLogging
+        </div>
+      </div>
+    </div>
+
+    <div id="l3" class="panel">
+      <h2>Level 3 — Component Diagram</h2>
+      <p>Detalha os componentes internos do <strong>azim-api</strong> (monólito modular Fase 1), com foco no Core Domain (Opportunity Pipeline) e na infraestrutura transversal.</p>
+      <div class="mermaid-wrapper">
+        <div class="mermaid">
+flowchart TB
+    WebApp["azim-web"]
+    DigestWorker["azim-digest-worker"]
+
+    subgraph AzimApi["azim-api — ASP.NET Core / .NET 10"]
+        subgraph MW["Middleware Pipeline"]
+            SlugResolver["SlugResolver\nslug para tenant_id"]
+            AuthMW["AuthMiddleware\nGCP IdP token + RBAC cache"]
+        end
+
+        subgraph Core["Opportunity Pipeline — Core Domain"]
+            OppCtrl["OpportunityController"]
+            KanbanCtrl["KanbanController"]
+            OppSvc["OpportunityApplicationService"]
+            OppDomain["OpportunityDomainService\nRN-001 a RN-028"]
+            CommSvc["CommissionService\nSnapshot imutavel RN-007"]
+            OppRepo["OpportunityRepository"]
+        end
+
+        subgraph Supporting["Supporting Subdomains — Modulos"]
+            AcctCtrl["AccountController"]
+            AcctSvc["AccountService\nDedupe 360 view"]
+            PartCtrl["PartnerController"]
+            PartSvc["PartnerService"]
+            ActCtrl["ActivityController"]
+            ActSvc["ActivityService\nEstagnacao RN-028"]
+            GoalCtrl["GoalController"]
+            GoalSvc["GoalService\nGraceful degradation"]
+            OrgCtrl["OrgController"]
+            OrgSvc["OrgService\nRBAC convites"]
+            TenCtrl["TenancyController"]
+            TenSvc["TenancyService\nSlug imutavel WCAG"]
+            MigCtrl["MigrationController"]
+            MigSvc["MigrationService\nDry-run import transacional"]
+            RepCtrl["ReportController"]
+            RepSvc["ReportService\nRead models"]
+        end
+
+        subgraph Infra["Infraestrutura Transversal"]
+            AuditSvc["AuditService\nAppend-only + PII mask"]
+            IEmail["IEmailSender ACL"]
+            EvtPub["DomainEventPublisher"]
+        end
+    end
+
+    CloudSQL[("Cloud SQL")]
+    Redis[("Redis")]
+    PubSub["Cloud Pub/Sub"]
+    GCPIdP["GCP Identity Platform"]
+    Postmark["Postmark"]
+
+    WebApp -->|REST| SlugResolver
+    DigestWorker -->|REST| SlugResolver
+    SlugResolver --> AuthMW
+    AuthMW --> Redis
+    AuthMW --> GCPIdP
+    AuthMW --> Core
+    AuthMW --> Supporting
+
+    OppCtrl --> OppSvc
+    KanbanCtrl --> OppSvc
+    OppSvc --> OppDomain
+    OppSvc --> CommSvc
+    OppSvc --> AuditSvc
+    OppSvc --> EvtPub
+    OppDomain --> OppRepo
+    CommSvc --> OppRepo
+    OppRepo --> CloudSQL
+
+    AcctCtrl --> AcctSvc --> CloudSQL
+    PartCtrl --> PartSvc --> CloudSQL
+    ActCtrl --> ActSvc --> CloudSQL
+    GoalCtrl --> GoalSvc --> CloudSQL
+    OrgCtrl --> OrgSvc --> CloudSQL
+    TenCtrl --> TenSvc --> CloudSQL
+    MigCtrl --> MigSvc --> CloudSQL
+    RepCtrl --> RepSvc --> CloudSQL
+
+    AcctSvc --> AuditSvc
+    PartSvc --> AuditSvc
+    ActSvc --> AuditSvc
+    GoalSvc --> AuditSvc
+    OrgSvc --> AuditSvc
+    AuditSvc --> CloudSQL
+
+    OrgSvc --> IEmail
+    IEmail --> Postmark
+    EvtPub --> PubSub
+        </div>
+      </div>
+    </div>
+
+    <div id="ctx" class="panel">
+      <h2>Context Map — Visão de Padrões Estratégicos</h2>
+      <p>Mostra as relações entre os 15 bounded contexts e os padrões DDD utilizados: ACL, Customer/Supplier, Conformist, Published Language e Read Model.</p>
+      <div class="mermaid-wrapper">
+        <div class="mermaid">
+flowchart TB
+    subgraph GENERIC["Generic Subdomains"]
+        IdP["GCP Identity Platform\nExterno"]
+        IA["Identity and Access\nBC-12"]
+        TB["Tenancy and Branding\nBC-13"]
+        ND["Notification Delivery\nBC-14"]
+        AL["Audit Log\nBC-15"]
+    end
+
+    subgraph INFRA["Supporting — Infraestrutura"]
+        OM["Organization Management\nBC-08"]
+        DM["Data Migration\nBC-09 Fase 1"]
+    end
+
+    subgraph CORE["Core Domain"]
+        OP["Opportunity Pipeline\nBC-01"]
+    end
+
+    subgraph DATA["Supporting — Dados"]
+        AM["Account Management\nBC-02"]
+        PM["Partner Management\nBC-03"]
+        ACT["Activity Management\nBC-04"]
+        GF["Goal and Forecast\nBC-05"]
+    end
+
+    subgraph DELIVERY["Supporting — Entrega"]
+        DG["Digest\nBC-06"]
+        REP["Reporting\nBC-07"]
+    end
+
+    subgraph FUTURE["Supporting — Futuro"]
+        WA["Workflow Automation\nBC-10 Fase 2"]
+        AII["AI Intelligence\nBC-11 Fase 3"]
+    end
+
+    IdP -->|ACL| IA
+    IA -->|Customer/Supplier| OM
+    TB -->|Conformist tenant_id| OP
+    TB -->|Customer/Supplier| OM
+    OM -->|Conformist| OP
+    AM -->|Customer/Supplier| OP
+    PM -->|Customer/Supplier| OP
+    ACT -->|Customer/Supplier| OP
+    OP -->|Published Language| AL
+    OP -->|Customer/Supplier| DG
+    OP -->|Read Model| REP
+    OP -->|Customer/Supplier realizado| GF
+    ACT -->|Customer/Supplier| DG
+    GF -->|Customer/Supplier metas| DG
+    DG -->|ACL IEmailSender| ND
+    DG -->|Published Language| AL
+    PM -->|Read Model| REP
+    GF -->|Read Model| REP
+    DM -->|Customer/Supplier bulk| OP
+    DM -->|Customer/Supplier bulk| AM
+    DM -->|Customer/Supplier bulk| PM
+    OP -->|Customer/Supplier events| WA
+    OP -->|Customer/Supplier read| AII
+        </div>
+      </div>
+
+      <h3 style="color:#1e3a8a;margin-top:24px;">Padrões Utilizados</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+        <thead>
+          <tr style="background:#f1f5f9;">
+            <th style="padding:8px;border:1px solid #e2e8f0;text-align:left;">Padrão</th>
+            <th style="padding:8px;border:1px solid #e2e8f0;text-align:left;">Onde é usado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding:8px;border:1px solid #e2e8f0;">Anti-Corruption Layer</td><td style="padding:8px;border:1px solid #e2e8f0;">Identity &amp; Access → GCP IdP; Digest → Notification Delivery</td></tr>
+          <tr><td style="padding:8px;border:1px solid #e2e8f0;">Customer/Supplier</td><td style="padding:8px;border:1px solid #e2e8f0;">Pipeline ← Account, Partner, Activity; Digest ← Pipeline, Activity, Goal</td></tr>
+          <tr><td style="padding:8px;border:1px solid #e2e8f0;">Conformist</td><td style="padding:8px;border:1px solid #e2e8f0;">Todos os BCs ← tenant_id do Tenancy; Pipeline ← modelo de BU do Organization</td></tr>
+          <tr><td style="padding:8px;border:1px solid #e2e8f0;">Published Language</td><td style="padding:8px;border:1px solid #e2e8f0;">Todos os BCs de escrita → Audit Log (formato AuditEvent canônico)</td></tr>
+          <tr><td style="padding:8px;border:1px solid #e2e8f0;">Read Model</td><td style="padding:8px;border:1px solid #e2e8f0;">Reporting ← Pipeline, Partner, Goal (sem joins entre schemas de BCs)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <footer>
+    <p>Azim CRM &mdash; DDD Segmentation v0.1 &mdash; 2026-06-11 &mdash; Status: Rascunho para revisão</p>
+  </footer>
+
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+    document.querySelectorAll('nav button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+        mermaid.init(undefined, document.querySelectorAll('#' + btn.dataset.tab + ' .mermaid'));
+      });
+    });
+  </script>
+</body>
+</html>

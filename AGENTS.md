@@ -16,7 +16,7 @@ issuer:
 
 # Azim CRM — Agents Guide
 
-> Projeto Azim CRM
+> CRM da Azim (greenfield)
 >
 > Operational interface for AI coding agents (AGENTS.md standard). The rich governance source is
 > `.forge/FORGE.md`; the spec lifecycle lives under `.forge/specs/` and `.forge/product/current/`.

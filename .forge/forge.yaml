@@ -8,6 +8,8 @@ harness:
   # here are materialized. Default is claude; add others via /forge:sync-adapters --set.
   adapters:
     - claude
+    - codex
+    - qwen
 specs:
   root: .forge/specs
   active: .forge/specs/active

@@ -135,17 +135,11 @@ migrationBuilder.AddColumn<bool>(
 
 ## Multi-tenancy
 
-Isolamento em **defesa em profundidade** (decisão aprovada — ADR-0001; pooled multi-tenancy):
-
-- `tenant_id` é **obrigatório** em todas as tabelas de dados de negócio (eixo estrutural).
-- **EF Core Global Query Filter** por `tenant_id` é **obrigatório** (proteção de aplicação).
-- **RLS (Row-Level Security)** é **obrigatória** em todas as tabelas multi-tenant de domínio
-  (proteção de banco; políticas comparam `tenant_id = current_setting('app.current_tenant')::uuid`).
-- RLS só pode ser **dispensada por exceção formal documentada** (ADR/DD explícito) — nunca por omissão.
-- Pooled multi-tenancy: um banco/schema compartilhado, isolamento por `tenant_id` (não schema por tenant).
-
-Benefícios: mantém `tenant_id` como eixo estrutural; soma proteção de aplicação (EF) e de banco (RLS);
-reduz risco de bypass; padroniza todos os bounded contexts; melhora postura de segurança e auditoria.
+- `tenant_id` é **obrigatório** em todas as tabelas de dados de negócio (naming: ver acima).
+- A **estratégia de isolamento** (coluna, EF Global Query Filter, RLS) é decidida pela governança de
+  dados, não por esta rule de naming: ver `.forge/rules/data/data-config-sql.md` (SQL) e a matriz
+  transversal em `.forge/rules/data/data-governance.md`. Esta rule cobre apenas **nomenclatura**;
+  quando houver divergência sobre isolamento, a decisão de governança/ADR vence (FORGE.md §2.1).
 
 ---
 
