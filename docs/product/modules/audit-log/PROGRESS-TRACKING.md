@@ -46,9 +46,9 @@
 | TASK-05 | PiiMasker + PiiFieldPolicy + PBT-04 | backend-engineer-dotnet | [X] | `3becfe4` |
 | TASK-06 | PBT-03 Round-trip do delta | backend-engineer-dotnet | [X] | `654fe6f` |
 
-**Notas / dívida técnica:**
+**Notas:**
 - Coverage de linha Domain ≥ 95% (critério atendido); branch coverage 78.7% — diferença em branches de null-check geradas pelo compilador para `private init` do record `AuditDelta`.
-- **`AuditDelta.ForMaskedUpdate` (internal):** contorna o guard `before != after` de `ForUpdate` para o caso de PII mascarado (`[MASKED]` == `[MASKED]`), tensão entre REQ-003.4 e REQ-004.4. Decisão documentada no código. Revisitar futuramente com um wrapper `MaskedValue` para distinguir semanticamente valor mascarado de valor original.
+- ✅ **Dívida resolvida** (`ba0dc65`): bypass `AuditDelta.ForMaskedUpdate` (internal) removido. Substituído por `AuditDelta.TransformChanges(Func<...>)` — transformação pós-construção que aplica o mascaramento sobre um delta já validado, sem re-executar o guard `before != after`. O guard de "mudança real" (REQ-003.4) passa a ser avaliado sobre os valores originais, antes do mascaramento. Teste explícito adicionado para o caso PII-distintos→mesmo-marcador. 128 testes verdes.
 
 ## Última falha
 
