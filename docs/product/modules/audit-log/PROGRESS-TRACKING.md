@@ -15,8 +15,8 @@
 | 1 | Bootstrap | TASK-01, TASK-02 | `feat/audit-log/wave-01` | [X] |
 | 2 | Domínio | TASK-03..06 | `feat/audit-log/wave-02` | [X] |
 | 3 | Application | TASK-07..10 | `feat/audit-log/wave-03` | [X] |
-| 4 | Infrastructure | TASK-11..14 | `feat/audit-log/waves-4-6` | [-] |
-| 5 | API + Contracts | TASK-15..17 | `feat/audit-log/waves-4-6` | [ ] |
+| 4 | Infrastructure | TASK-11..14 | `feat/audit-log/waves-4-6` | [X] |
+| 5 | API + Contracts | TASK-15..17 | `feat/audit-log/waves-4-6` | [-] |
 | 6 | Hardening | TASK-18..20 | `feat/audit-log/waves-4-6` | [ ] |
 
 > **Estratégia (ajuste 12/06):** Waves 4-6 executadas numa branch contínua `feat/audit-log/waves-4-6`, com **um único PR ao fim da fase** (decisão de Milton). Docker confirmado rodando (Testcontainers Wave 4).
@@ -67,6 +67,28 @@
 **Abstrações introduzidas (Application):** `ITenantContext`, `IUserContext`, `IBuScopeResolver`, `IAuditMetrics`, `IEntityContextRequest`, `IAuditQuery` — implementações concretas virão nas Waves 4 (Infra) / 5 (Api).
 
 **Risco documentado — RISK-AUDIT-05:** `ListAuditLogsHandler` para `GestorBU` resolve escopo de BU iterando entidades (N+1) — aceito como MVP; Wave 4+ deve adicionar `ListAsync(entityIds)` em lote no repositório.
+
+## Wave 4 — Infrastructure (concluída ✅)
+
+🧪 253 testes verdes (Domain 95 + Application 110 + Architecture 12 + **Infrastructure 36 com Testcontainers PostgreSQL real**) · 0 ignorados.
+
+| TASK | Título | Status | Commit |
+|------|--------|--------|--------|
+| TASK-11 | AuditLogDbContext + AuditLogRepository + mapeamento EF Core | [X] | `10d5416` |
+| TASK-12 | Migration append-only (trigger + REVOKE + RLS + 3 índices) | [X] | `0b5c178` |
+| TASK-13 | PBT-01 imutabilidade + PBT-05 isolamento (Testcontainers, ≥50) | [X] | `12f97b9` |
+| TASK-14 | Integração fail-closed DD-001 + PBT-06 idempotência (≥100) | [X] | `3d528e0` |
+| — | cleanup: remove interceptor inativo | [X] | `9cf433d` |
+
+**Dívida técnica:** o aggregate `AuditLog` ganhou backing fields públicos `EntityTypePersisted`/`EntityIdPersisted` (mapeáveis pelo EF Core), com `EntityReference` virando propriedade computada — vazamento de concern de persistência no domínio (alternativa evitada: `InternalsVisibleTo`). Revisitar na fase de hardening/refino.
+
+## Wave 5 — API + Contracts (em progresso)
+
+| TASK | Título | Status | Commit |
+|------|--------|--------|--------|
+| TASK-15 | AuditLogQueryController (endpoints GET) | [-] | — |
+| TASK-16 | Catálogo de erros (AUD-ERR-001..008) + OpenAPI | [ ] | — |
+| TASK-17 | RBAC + escopo de BU (DD-008) + testes de contrato | [ ] | — |
 
 ## Última falha
 
