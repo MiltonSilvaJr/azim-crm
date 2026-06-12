@@ -3,7 +3,7 @@ name: update-changelog
 description: Atualiza o CHANGELOG.md de um componente seguindo o formato Keep a Changelog.
 arguments:
   - name: component
-    description: Caminho relativo do componente (ex: src/Server (atual), src/Domain (atual))
+    description: "Caminho relativo do componente (ex: src/Server (atual), src/Domain (atual))"
     required: true
   - name: type
     description: Tipo da mudança (added, changed, deprecated, removed, fixed, security)

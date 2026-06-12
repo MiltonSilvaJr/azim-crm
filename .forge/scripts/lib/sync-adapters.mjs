@@ -206,8 +206,8 @@ Execute exatamente as instrucoes de \`.claude/commands/forge/${name}.md\` com os
 `;
       lock.emit(join(ROOT, '.claude/commands', `${name}.md`), wrapper, src);
     }
-    const cmdReadme = join(FORGE, 'commands', 'README.md');
-    if (existsSync(cmdReadme)) lock.emit(join(ROOT, '.claude/commands/forge', 'README.md'), readFileSync(cmdReadme, 'utf8'), cmdReadme);
+    // commands/README.md is NOT projected: Claude Code registers every .md under
+    // commands/ as a slash command, so a README there becomes a phantom /forge:README.
     for (const tree of ['agents', 'skills']) {
       for (const src of walk(join(FORGE, tree))) {
         lock.emit(join(ROOT, '.claude', tree, relative(join(FORGE, tree), src)), readFileSync(src, 'utf8'), src);

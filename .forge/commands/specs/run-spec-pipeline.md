@@ -10,10 +10,10 @@ arguments:
     description: Estratégia de regeneração. `incremental` (pula fases cujos artefatos já estão aprovados) ou `full-rerun` (re-executa tudo, bumpa versões). Default `incremental`.
     required: false
   - name: --modules
-    description: Lista de módulos para Fase 7 separada por vírgula (ex.: `identity-access,transaction-processor`). Se omitido, especifica TODOS os módulos do `module-generator`. Para smoke test use 3-5 módulos do Tier 1.
+    description: "Lista de módulos para Fase 7 separada por vírgula (ex.: `identity-access,transaction-processor`). Se omitido, especifica TODOS os módulos do `module-generator`. Para smoke test use 3-5 módulos do Tier 1."
     required: false
   - name: --discovery-mode
-    description: `interactive` (Q1-Q11 com humano) ou `auto-extract` (sessão principal extrai do workspace). Default `auto-extract` se Brownfield, `interactive` se Greenfield.
+    description: "`interactive` (Q1-Q11 com humano) ou `auto-extract` (sessão principal extrai do workspace). Default `auto-extract` se Brownfield, `interactive` se Greenfield."
     required: false
 ---
 
@@ -23,7 +23,18 @@ Pipeline autônomo de especificação ponta-a-ponta. Para no `tasks.md` de cada 
 
 > **Regra inviolável:** documentos gerados por IA SEMPRE saem em status `Rascunho para revisão`. Promoção para `Aprovado para desenvolvimento` é decisão humana. Pipeline NÃO toca Jira sem aprovação humana dos tasks.md.
 
+> **Conflito de fontes é bloqueante (`conflict-handling.md` G1):** se durante o pipeline dois módulos divergirem numa decisão transversal (ex.: isolamento multi-tenant), ou uma rule contradisser um ADR aceito, **PARE** — não "registre e siga para tasks". Resolva pela precedência (FORGE.md §2.1: ADR vence rule em drift) e escale via HITL. Seguir com a inconsistência aberta é o anti-padrão que originou este guardrail.
+
 ---
+
+## Change ativo (scale 4) — operação dentro do change
+
+Se existir um change ativo em `.forge/specs/active/<change-id>/` com `scale: 4` no manifest, o pipeline amplo opera **dentro do change**, não mais em `docs/product/` direto:
+
+1. Os artefatos desta execução vão para `.forge/specs/active/<change-id>/product/` (mesma subestrutura: `prd/`, `frd-nfrd/`, `ddd/`, `trd/`, `modules/`...). Ao invocar cada agent, **declare explicitamente no payload** o path-base do change como destino de escrita.
+2. **Verificação pós-fase (obrigatória):** os agents legados têm `docs/product/` arraigado — após cada fase, confira onde o artefato foi gravado; se caiu em `docs/product/`, **mova** para o path do change e registre o desvio em uma linha. (Os agents passam a operar o baseline corretamente no MVP3.)
+3. `docs/product/` permanece como **estado vigente para leitura** (baseline provisório até o MVP3); a incorporação dos artefatos do change ao baseline acontece via `/forge:archive` (MVP3) — nunca manualmente.
+4. Sem change ativo (ou scale < 4), siga o caminho canônico legado abaixo.
 
 ## Caminho canônico
 

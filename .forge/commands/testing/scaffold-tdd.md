@@ -3,7 +3,7 @@ name: scaffold-tdd
 description: Gera o esqueleto de um teste seguindo o ciclo Red-Green-Refactor, com estrutura AAA (Arrange-Act-Assert) e placeholder de PBT quando aplicável.
 arguments:
   - name: test-name
-    description: Nome da classe testada em PascalCase (ex: Money, PaymentCommandHandler)
+    description: "Nome da classe testada em PascalCase (ex: Money, PaymentCommandHandler)"
     required: true
 ---
 

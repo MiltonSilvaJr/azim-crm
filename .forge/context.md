@@ -7,7 +7,7 @@
 
 ## Project
 
-- **What it is:** Projeto Azim CRM
+- **What it is:** CRM da Azim (greenfield)
 - **Primary stack:** _(filled by `/forge:init` scan — see FORGE.md `runtime:`)_
 - **Structure:** _(filled by `/forge:init` scan)_
 - **Identity extras:** `issuer` (JWT issuer for display/examples, when applicable): _(set by the

@@ -43,9 +43,18 @@ files:
   - dest: .claude/agents/engineering/fullstack-software-engineer.md
     src: .forge/agents/engineering/fullstack-software-engineer.md
     sha256: sha256:bb36c574bbee57ca73036890dbd8ee9187e694052e8c77f0e5c6155cd2c3569c
+  - dest: .claude/agents/graph/architecture-analyzer.md
+    src: .forge/agents/graph/architecture-analyzer.md
+    sha256: sha256:bcf839342e833f7eec317f5e0fb403e35d1144d3e9aadb0907179c3c1811149c
+  - dest: .claude/agents/graph/file-analyzer.md
+    src: .forge/agents/graph/file-analyzer.md
+    sha256: sha256:6aaf59678796452f32fd9e2e01680df47a1b74dadd9e3e7fdf97d01fd4258d95
+  - dest: .claude/agents/graph/graph-reviewer.md
+    src: .forge/agents/graph/graph-reviewer.md
+    sha256: sha256:3f9b2bb0c077dc663a51d5bccd2dfbe4de49380eef98e37810755e1eea14427f
   - dest: .claude/agents/README.md
     src: .forge/agents/README.md
-    sha256: sha256:92b174b72545d119dc016dc70028e6aaa5e262a3cd87cee7a8c6d8ba3a31f0fe
+    sha256: sha256:8f5395e330a55326f339fe162f9f0d8571de2c2b6a8d9242db024d56c9b666b2
   - dest: .claude/agents/review/arch-reviewer.md
     src: .forge/agents/review/arch-reviewer.md
     sha256: sha256:67bb916352247b2a16a4f920b61e5c6c710c9868bdc22da49adaef5cdbdabfa9
@@ -118,51 +127,114 @@ files:
   - dest: .claude/commands/deploy-wave.md
     src: .forge/commands/coding/deploy-wave.md
     sha256: sha256:a9c337781858d3f645da8b58add5ea3a91e9e741ed7eec1ecd3faf2cc0e54456
+  - dest: .claude/commands/forge/adr.md
+    src: .forge/commands/docs/adr.md
+    sha256: sha256:76859b0e79875f90ed47d9015bc64b1e23615b22b9cc76d425f838b7494cfb4a
+  - dest: .claude/commands/forge/analyze.md
+    src: .forge/commands/specs/analyze.md
+    sha256: sha256:a0087466e832a43cbca496010177430f7952ad3249b0804445321b82110a0447
+  - dest: .claude/commands/forge/archive.md
+    src: .forge/commands/specs/archive.md
+    sha256: sha256:b779eab78108356df92e65dd9b11b8c7f8174a73c9e8fd39d9f3cda667e27ef7
+  - dest: .claude/commands/forge/backlog.md
+    src: .forge/commands/docs/backlog.md
+    sha256: sha256:4b4775f9224a050d3984945abdad367a3cd8b0276eaee93faccd2ec9c5de546a
+  - dest: .claude/commands/forge/baseline-extract.md
+    src: .forge/commands/graph/baseline-extract.md
+    sha256: sha256:0742a04717bdf68bfb30a353a3a1cd0816733337b0d7a2180816761b3b0084b2
+  - dest: .claude/commands/forge/build.md
+    src: .forge/commands/graph/build.md
+    sha256: sha256:a437c878a19277f48ba682f10229072429b326c5968a4976c150e48cd56b6edf
+  - dest: .claude/commands/forge/c4.md
+    src: .forge/commands/graph/c4.md
+    sha256: sha256:4db5cf2d9d85f2311967845b27817f091d347b64c591d608e38653b284eff0e9
+  - dest: .claude/commands/forge/clarify.md
+    src: .forge/commands/specs/clarify.md
+    sha256: sha256:8c0f2c68c50e74afef9d8215a4374de828335f983f26243d10a3b5d29a67d404
+  - dest: .claude/commands/forge/close.md
+    src: .forge/commands/specs/close.md
+    sha256: sha256:8d5ec6b16dd212e2f11e4d0d81664b39088baf684017969a3c588f4d78f8046b
   - dest: .claude/commands/forge/coding-loop.md
     src: .forge/commands/coding/coding-loop.md
     sha256: sha256:19ea2374290d77472e6549a7121bc82bac246142ebea69b2784c720fd823cd25
   - dest: .claude/commands/forge/coding-status.md
     src: .forge/commands/coding/coding-status.md
     sha256: sha256:4cd98350bc12f7183195057bdd678804c8c1a0f7bfdffe9029a018aa7c2d1cff
+  - dest: .claude/commands/forge/constitution.md
+    src: .forge/commands/docs/constitution.md
+    sha256: sha256:e7fe2314bbbd343c6a37f0c69e094a558d55289d3b18367be1d69533a56992b5
   - dest: .claude/commands/forge/deploy-wave.md
     src: .forge/commands/coding/deploy-wave.md
     sha256: sha256:f74f14e7a4fc13a947a2c50cd6698d800f5529b570892fb76642d7be1511c7af
+  - dest: .claude/commands/forge/design.md
+    src: .forge/commands/specs/design.md
+    sha256: sha256:fa6e66f01554f2360109cfa756d52fcdd28fc312e8d8e7faac684f58fbf72530
   - dest: .claude/commands/forge/dev.md
     src: .forge/commands/coding/dev.md
     sha256: sha256:0f68e1c662e32da04efa35ec6840823ab8768c4a86b081fd3ce52b5fcb364389
+  - dest: .claude/commands/forge/discover.md
+    src: .forge/commands/graph/discover.md
+    sha256: sha256:3463c8fccbcb31f1aba9bc910ecb01b7125d77b8b7ca1cc5c14c83cd31a29e34
   - dest: .claude/commands/forge/doctor.md
     src: .forge/commands/harness/doctor.md
     sha256: sha256:c55580cd425494de30efc40a5a16285cdfae2d66489fb2f996416e9805107bd2
+  - dest: .claude/commands/forge/impact.md
+    src: .forge/commands/graph/impact.md
+    sha256: sha256:3119a78a8528c125922404d38d6080aa578c013cf984342038a90fe82eb5eff2
+  - dest: .claude/commands/forge/implement.md
+    src: .forge/commands/specs/implement.md
+    sha256: sha256:09389968b155cbe2047ef1d15b127b114968d9195e82ff244ba53f498d1fc74e
   - dest: .claude/commands/forge/new-adr.md
     src: .forge/commands/docs/new-adr.md
-    sha256: sha256:ed1bb88513ea58bb6dc8861c03ca5529c7bb2a1763f28258a7a86831fe1b44eb
+    sha256: sha256:106c57e36dfb1514c3c40235ff6a629c4fc79c5373cffc198b8d642863d3ba0e
+  - dest: .claude/commands/forge/onboard.md
+    src: .forge/commands/graph/onboard.md
+    sha256: sha256:9bfa96ddd02fe623166c05456af5cc4bde3bc3297650e050485f58252e1f322d
   - dest: .claude/commands/forge/prepare-pr.md
     src: .forge/commands/harness/prepare-pr.md
     sha256: sha256:99d8597e007bd7e937bb1ef0fc23107293686b668fc9900ee37b4c89d4b89b73
   - dest: .claude/commands/forge/promote-staging.md
     src: .forge/commands/harness/promote-staging.md
     sha256: sha256:bae47d3616da4feeed6315e441ab0594dded891b8eeb6b203e97aa0d95c759a8
-  - dest: .claude/commands/forge/README.md
-    src: .forge/commands/README.md
-    sha256: sha256:31a6387fc2c42cbec349bdc47ffbd96c11dac6de686646b960df8bbf8f6b042d
+  - dest: .claude/commands/forge/publish-docs.md
+    src: .forge/commands/docs/publish-docs.md
+    sha256: sha256:6a7867c923e429d576c8bc2c157b2cce850012670943bd3052490c0202e337cf
+  - dest: .claude/commands/forge/query.md
+    src: .forge/commands/graph/query.md
+    sha256: sha256:797226d37131f2f776eb8a3e6a77ea1a024146279684e5a42a1711ce91250d46
+  - dest: .claude/commands/forge/requirements.md
+    src: .forge/commands/specs/requirements.md
+    sha256: sha256:341e721e3739a8c8365ef304f30c079376c943f5b1b1d21590f3aba45300f937
   - dest: .claude/commands/forge/run-spec-pipeline.md
     src: .forge/commands/specs/run-spec-pipeline.md
-    sha256: sha256:0418596d1b03277a976ca4d21178a40369e3c7fbb2f30850e40340aa4b60e38d
+    sha256: sha256:fb148417c305b386a28ecfb5bc644e69d8de6487604514f3d4b42cbd47825d8f
   - dest: .claude/commands/forge/scaffold-tdd.md
     src: .forge/commands/testing/scaffold-tdd.md
-    sha256: sha256:e46b4d033e71338eb369e2802da89c8e7453b87f8d1cb5b9e011a970a0add235
+    sha256: sha256:56197b92b30a147b13c28a9a7309c32c141825c4bae11858048a45f1ed92026e
+  - dest: .claude/commands/forge/spec.md
+    src: .forge/commands/specs/spec.md
+    sha256: sha256:6d6ea0ff538333502066131580b0fd3b925d6d8b9f678e7df9585dfab59a1c21
   - dest: .claude/commands/forge/specs-loop.md
     src: .forge/commands/specs/specs-loop.md
-    sha256: sha256:df1ba6b7ff2e2edc1d9d7383778be1553771b3a05b899fb72b88268994720c66
+    sha256: sha256:4bf286cdbd38ef997bf10be36a1b77659ce78a7da905e23ec75d1b99694dc836
   - dest: .claude/commands/forge/status.md
     src: .forge/commands/harness/status.md
     sha256: sha256:04cd2652000528afe75a17bae0cdb2993c241f3b4ed49417f6bd80e4d361cdf6
   - dest: .claude/commands/forge/sync-adapters.md
     src: .forge/commands/harness/sync-adapters.md
     sha256: sha256:3b209d583c0aeed71f45023d522d96df6508879fd941417cee3fe68506c6b96b
+  - dest: .claude/commands/forge/tasks.md
+    src: .forge/commands/specs/tasks.md
+    sha256: sha256:f8ac655c0dc4fc16abe1ddbfc3e626330cab987a3ca9b9d792edb4d741565f00
   - dest: .claude/commands/forge/update-changelog.md
     src: .forge/commands/docs/update-changelog.md
-    sha256: sha256:d1e9c732a8013aede53a75723ffe4709a5718939c7d8cf3ca0caa6c8de311b9d
+    sha256: sha256:2438140252a45ff137a8309d5cf86085ade1f60010fa814cd45de7ff25b827d1
+  - dest: .claude/commands/forge/update.md
+    src: .forge/commands/graph/update.md
+    sha256: sha256:f9fd75ae3a4f78f060c78943cd3d3818dd2a6eebe4f4e2ea17ac6a07964f1b58
+  - dest: .claude/commands/forge/verify.md
+    src: .forge/commands/specs/verify.md
+    sha256: sha256:1462c0b0fa8c7201148633dc4b19553b497639071316f9986b7ad69c5421d8be
   - dest: .claude/commands/new-adr.md
     src: .forge/commands/docs/new-adr.md
     sha256: sha256:f7d89ce04214354cd34ed7f9729109f238164a2224f5d1fc3482690a8e809799
@@ -180,9 +252,15 @@ files:
     sha256: sha256:56b884b334300a895c18935e3edf8b105b50f5f26b39d8fd51d06ca7e1329bdf
   - dest: .claude/settings.json
     sha256: sha256:c9d15dd1bce8f1fb33fe6f5205df39c4233f20cde8b1f9ac917e5a8bb4032177
+  - dest: .claude/skills/c4-render/SKILL.md
+    src: .forge/skills/c4-render/SKILL.md
+    sha256: sha256:0fbfbd1e3458b23c618dd07c4c91186b3e43a25985680474c8c9d05a74bef057
   - dest: .claude/skills/design-system-creator/SKILL.md
     src: .forge/skills/design-system-creator/SKILL.md
     sha256: sha256:947c8e3a0c7072591d636fdaa18725be5a6693032532b987310b4f40b05ae791
+  - dest: .claude/skills/gate-runner/SKILL.md
+    src: .forge/skills/gate-runner/SKILL.md
+    sha256: sha256:8e78b0c5d884164a99f661f59269a83da3eb23ce1bc11284c53f271706e42166
   - dest: .claude/skills/using-git-worktrees/SKILL.md
     src: .forge/skills/using-git-worktrees/SKILL.md
     sha256: sha256:9f0a939eb12fd2ca592456d8bc17f5ca38afe3169980c5a3494d7e09df08ca40
