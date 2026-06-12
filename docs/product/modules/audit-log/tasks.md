@@ -1,8 +1,8 @@
 # Tasks — AUD — Audit Log
 
-- Versão: 0.1.0
-- Data: 2026-06-11
-- Status: Rascunho para revisão
+- Versão: 0.1.1
+- Data: 2026-06-12
+- Status: Aprovado para desenvolvimento
 - Referência base requirements: docs/product/modules/audit-log/requirements.md v0.1.0
 - Referência base design: docs/product/modules/audit-log/design.md v0.1.0
 - ADRs aplicáveis: ADR-0003 (política de retenção, a definir), ADR-0007 (stack GCP, a formalizar)
@@ -13,6 +13,7 @@
 | Versão | Data | Status | Descrição da alteração |
 |--------|------|--------|------------------------|
 | 0.1.0 | 2026-06-11 | Rascunho para revisão | Criação inicial do plano de tasks a partir do requirements.md v0.1.0 e design.md v0.1.0; 20 TASKs em 6 ondas, 6 PBTs cobertos. |
+| 0.1.1 | 2026-06-12 | Aprovado para desenvolvimento | Aprovação humana do HITL #1 (Milton); início da execução via `/forge:coding-loop audit-log` Wave 1 (TASK-01, TASK-02). |
 
 ---
 
