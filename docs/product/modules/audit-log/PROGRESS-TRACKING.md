@@ -15,9 +15,11 @@
 | 1 | Bootstrap | TASK-01, TASK-02 | `feat/audit-log/wave-01` | [X] |
 | 2 | Domínio | TASK-03..06 | `feat/audit-log/wave-02` | [X] |
 | 3 | Application | TASK-07..10 | `feat/audit-log/wave-03` | [X] |
-| 4 | Infrastructure | TASK-11..14 | `feat/audit-log/wave-04` | [ ] |
-| 5 | API + Contracts | TASK-15..17 | `feat/audit-log/wave-05` | [ ] |
-| 6 | Hardening | TASK-18..20 | `feat/audit-log/wave-06` | [ ] |
+| 4 | Infrastructure | TASK-11..14 | `feat/audit-log/waves-4-6` | [-] |
+| 5 | API + Contracts | TASK-15..17 | `feat/audit-log/waves-4-6` | [ ] |
+| 6 | Hardening | TASK-18..20 | `feat/audit-log/waves-4-6` | [ ] |
+
+> **Estratégia (ajuste 12/06):** Waves 4-6 executadas numa branch contínua `feat/audit-log/waves-4-6`, com **um único PR ao fim da fase** (decisão de Milton). Docker confirmado rodando (Testcontainers Wave 4).
 
 ## Wave 1 — Bootstrap (concluída ✅)
 
