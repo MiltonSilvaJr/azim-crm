@@ -13,7 +13,7 @@
 | Onda | Foco | TASKs | Branch | Status |
 |------|------|-------|--------|--------|
 | 1 | Bootstrap | TASK-01, TASK-02 | `feat/audit-log/wave-01` | [X] |
-| 2 | Domínio | TASK-03..06 | `feat/audit-log/wave-02` | [ ] |
+| 2 | Domínio | TASK-03..06 | `feat/audit-log/wave-02` | [-] |
 | 3 | Application | TASK-07..10 | `feat/audit-log/wave-03` | [ ] |
 | 4 | Infrastructure | TASK-11..14 | `feat/audit-log/wave-04` | [ ] |
 | 5 | API + Contracts | TASK-15..17 | `feat/audit-log/wave-05` | [ ] |
@@ -33,6 +33,17 @@
 - Solution gerada como `AuditLog.slnx` (formato sucessor nativo do SDK 10; aceito por `dotnet build/test/sln`).
 - `AuditAction` sem `[JsonConverter]` no tipo: serialização lowercase (`create`/`update`/`delete`) garantida via `JsonStringEnumConverter` + `JsonNamingPolicy.CamelCase` **a configurar no host da Api (Wave 5)**. Coberto por teste documental.
 - EF Core 9.0.6 (LTS, compatível com net10.0; EF Core 10 sem release estável no momento).
+
+## Wave 2 — Domínio (em progresso)
+
+🌿 Worktree: `.forge/worktrees/audit-log/wave-02` — branch `feat/audit-log/wave-02`
+
+| TASK | Título | Specialist | Status | Commit |
+|------|--------|-----------|--------|--------|
+| TASK-03 | Objetos de valor do domínio (6 VOs) | backend-engineer-dotnet | [-] | — |
+| TASK-04 | Aggregate root AuditLog + IAuditLogRepository | backend-engineer-dotnet | [ ] | — |
+| TASK-05 | PiiMasker + PiiFieldPolicy + PBT-04 | backend-engineer-dotnet | [ ] | — |
+| TASK-06 | PBT-03 Round-trip do delta | backend-engineer-dotnet | [ ] | — |
 
 ## Última falha
 
