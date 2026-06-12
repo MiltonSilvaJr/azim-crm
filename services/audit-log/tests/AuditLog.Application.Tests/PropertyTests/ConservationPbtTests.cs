@@ -269,6 +269,7 @@ public sealed class ConservationPbtTests
         var handler = new AuditService(
             repository,
             new PiiMasker(policy),
+            policy,
             clock,
             tenantContext,
             metrics,

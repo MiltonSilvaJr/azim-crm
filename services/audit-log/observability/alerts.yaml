@@ -1,0 +1,114 @@
+# Definições de alerta do módulo audit-log (design §11.4, RNF-004, DD-007)
+# Stack: GCP Cloud Monitoring (ADR-0007, VAL-TRD-07)
+# Formato: GCP Alerting Policy — adaptável para Prometheus/AlertManager se a stack mudar.
+#
+# ATENÇÃO: Nenhuma condição ou label deve conter PII (RNF-002).
+
+alerts:
+
+  # ---------------------------------------------------------------------------
+  # ALERTA 1 — Falha de auditoria (RNF-004.2)
+  # Condição: audit_insert_failures_total > 0 em janela de 5 minutos
+  # Severidade: CRITICAL — perda de trilha de auditoria viola RN-024/LGPD
+  # ---------------------------------------------------------------------------
+  - name: audit-insert-failure
+    display_name: "Falha de INSERT em audit_logs"
+    description: >
+      O contador audit_insert_failures_total ultrapassou 0 na janela de observação.
+      Cada incremento indica que um INSERT em audit_logs falhou, causando rollback
+      da operação de negócio correspondente (fail-closed, DD-001).
+      Pode indicar indisponibilidade do banco, esgotamento de conexões ou revogação
+      de permissão INSERT para o role 'app'.
+    severity: CRITICAL
+    condition:
+      metric: audit_insert_failures_total
+      filter: {}
+      aggregation:
+        alignment_period: 300s   # 5 minutos
+        per_series_aligner: ALIGN_DELTA
+        cross_series_reducer: REDUCE_SUM
+      comparison: COMPARISON_GT
+      threshold_value: 0
+      duration: 0s               # alerta imediato — qualquer falha é crítica
+    notification_channels:
+      - ops-pagerduty
+      - ops-slack-critical
+    documentation:
+      content: |
+        ## Ação recomendada
+        1. Verificar conectividade com Cloud SQL (health check /health).
+        2. Verificar logs da aplicação por erros de banco (sem PII).
+        3. Verificar se permissão INSERT foi revogada do role 'app'.
+        4. Verificar o runbook de incidente de auditoria.
+      mime_type: "text/markdown"
+
+  # ---------------------------------------------------------------------------
+  # ALERTA 2 — Consulta sem contexto de tenant (DD-007)
+  # Condição: audit_query_without_tenant_context_total > 0
+  # Severidade: HIGH — pode indicar falha de configuração ou bypass de autenticação
+  # ---------------------------------------------------------------------------
+  - name: audit-query-without-tenant
+    display_name: "Consulta de auditoria sem contexto de tenant"
+    description: >
+      O contador audit_query_without_tenant_context_total ultrapassou 0.
+      Indica que uma requisição chegou ao módulo de auditoria sem tenant_id
+      no contexto autenticado. Pode indicar falha de configuração de middleware,
+      bypass de autenticação ou bug no pipeline de behaviors (DD-007).
+      A consulta é bloqueada (AUD-ERR-008), mas o evento é crítico para segurança.
+    severity: HIGH
+    condition:
+      metric: audit_query_without_tenant_context_total
+      filter: {}
+      aggregation:
+        alignment_period: 60s    # 1 minuto — resposta rápida
+        per_series_aligner: ALIGN_DELTA
+        cross_series_reducer: REDUCE_SUM
+      comparison: COMPARISON_GT
+      threshold_value: 0
+      duration: 0s
+    notification_channels:
+      - ops-slack-security
+      - security-team
+    documentation:
+      content: |
+        ## Ação recomendada
+        1. Identificar a origem da requisição sem tenant_id (IP, user-agent).
+        2. Verificar se o middleware de autenticação está configurado corretamente.
+        3. Revisar logs do TenantContextBehavior para o correlation_id da requisição.
+        4. Se repetido, escalar para o time de segurança.
+      mime_type: "text/markdown"
+
+  # ---------------------------------------------------------------------------
+  # ALERTA 3 — Latência de auditoria acima do SLO (RNF-003)
+  # Condição: p95 de audit_insert_latency_seconds > SLO budget
+  # Severidade: WARNING — risco de violar o SLO p95 ≤ 500 ms da operação de negócio
+  # ---------------------------------------------------------------------------
+  - name: audit-insert-latency-slo
+    display_name: "Latência de INSERT em audit_logs acima do SLO"
+    description: >
+      O percentil 95 da métrica audit_insert_latency_seconds ultrapassou o orçamento
+      de latência (500 ms, RNF-003.1). Como a auditoria é síncrona e transacional
+      (DD-001), latência alta impacta diretamente o SLO da operação de negócio
+      (p95 ≤ 500 ms a 50 RPS, NFR-PERF-02).
+    severity: WARNING
+    condition:
+      metric: audit_insert_latency_seconds
+      filter: {}
+      aggregation:
+        alignment_period: 300s   # 5 minutos
+        per_series_aligner: ALIGN_PERCENTILE_99   # usar p95 quando disponível
+        cross_series_reducer: REDUCE_PERCENTILE_99
+      comparison: COMPARISON_GT
+      threshold_value: 0.5       # 500 ms em segundos
+      duration: 300s             # persistência de 5 minutos antes de alertar
+    notification_channels:
+      - ops-slack-warning
+    documentation:
+      content: |
+        ## Ação recomendada
+        1. Verificar carga e performance do Cloud SQL (slow query log).
+        2. Verificar tamanho médio do delta_json inserido.
+        3. Verificar índices em audit_logs (ix_audit_logs_tenant_entity etc.).
+        4. Avaliar necessidade de particionamento por created_at (RISK-AUDIT-03).
+        5. Considerar upgrade de instance do Cloud SQL se carga cresceu.
+      mime_type: "text/markdown"

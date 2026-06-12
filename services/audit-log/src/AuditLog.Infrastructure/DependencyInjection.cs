@@ -3,6 +3,8 @@ using AuditLog.Domain.Abstractions;
 using AuditLog.Domain.Repositories;
 using AuditLog.Domain.Services;
 using AuditLog.Infrastructure.Clock;
+using AuditLog.Infrastructure.HealthChecks;
+using AuditLog.Infrastructure.Observability;
 using AuditLog.Infrastructure.Persistence;
 using AuditLog.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +14,8 @@ namespace AuditLog.Infrastructure;
 
 /// <summary>
 /// Extensões de injeção de dependência para o projeto <c>AuditLog.Infrastructure</c>.
-/// Registra persistência (EF Core, repositório), políticas de PII e IAuditMetrics (NoOp).
+/// Registra persistência (EF Core, repositório), políticas de PII, métricas OpenTelemetry
+/// e health check de capacidade de INSERT (design §11, RNF-004, RNF-006).
 /// </summary>
 public static class DependencyInjection
 {
@@ -46,8 +49,15 @@ public static class DependencyInjection
         // PiiMasker — serviço de domínio puro, injeta IPiiFieldPolicy
         services.AddSingleton<PiiMasker>();
 
-        // IAuditMetrics — implementação NoOp (substituída por OpenTelemetry na Wave 6)
-        services.AddSingleton<IAuditMetrics, NoOpAuditMetrics>();
+        // IAuditMetrics — implementação OpenTelemetry com System.Diagnostics.Metrics (design §11.2, Wave 6)
+        services.AddSingleton<IAuditMetrics, OtelAuditMetrics>();
+
+        // Health check de capacidade de INSERT em audit_logs (design §11.5, RNF-006)
+        services.AddHealthChecks()
+            .AddCheck<AuditInsertCapabilityHealthCheck>(
+                name: "audit-insert-capability",
+                failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
+                tags: ["audit", "database"]);
 
         return services;
     }
@@ -55,11 +65,13 @@ public static class DependencyInjection
 
 /// <summary>
 /// Implementação NoOp de <see cref="IAuditMetrics"/>.
-/// Usada no MVP enquanto a integração com OpenTelemetry/GCP não está configurada (Wave 6).
+/// Usada em contextos onde a instrumentação OpenTelemetry não está disponível.
 /// </summary>
 internal sealed class NoOpAuditMetrics : IAuditMetrics
 {
     public void IncrementEventsReceived() { }
     public void IncrementInsertFailures() { }
     public void IncrementQueryWithoutTenantContext() { }
+    public void RecordInsertLatency(double seconds) { }
+    public void IncrementPiiMaskingApplied() { }
 }

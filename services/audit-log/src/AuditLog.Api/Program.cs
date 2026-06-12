@@ -94,6 +94,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+// Health check exposto em /health (design §11.5, RNF-006)
+app.MapHealthChecks("/health");
+
 app.Run();
 
 // Necessário para WebApplicationFactory nos testes de integração
