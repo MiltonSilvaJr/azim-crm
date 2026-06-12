@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 // forge c4 generate (§16.5, W4.3). Zero-dependency. Derives C4 Mermaid diagrams
-// from the code graph (deterministic, zero tokens beyond curation):
-//   c1-context.mmd   — system + grouped external dependencies
-//   c2-container.mmd  — boundaries (services/packages/apps/src groups) + relations
-//   c3-component-<module>.mmd — files within each multi-file boundary + internal edges
+// from the code graph (deterministic, zero tokens beyond curation). Output is Markdown
+// (.md) wrapping a ```mermaid fenced block, so it renders in any Markdown previewer
+// (VS Code, GitHub) instead of showing raw Mermaid like a bare .mmd:
+//   c1-context.md   — system + grouped external dependencies
+//   c2-container.md  — boundaries (services/packages/apps/src groups) + relations
+//   c3-component-<module>.md — files within each multi-file boundary + internal edges
 // Convention (§16.5): NO dots and NO em-dash inside Mermaid labels — sanitized here.
 // Usage: c4-gen.mjs <forge-root>
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
@@ -16,14 +18,60 @@ const g = JSON.parse(readFileSync(graphPath, 'utf8'));
 const c4Dir = join(root, '.forge/graph/c4');
 mkdirSync(c4Dir, { recursive: true });
 
-// label sanitizer: strip dots and em/en-dash from label text (Mermaid convention)
-const san = (s) => String(s).replace(/[—–]/g, '-').replace(/\./g, ' ').replace(/\s+/g, ' ').trim();
+// label sanitizer: remove caracteres que quebram o parser do Mermaid em labels
+// (pontos, travessões, parênteses/colchetes/chaves, aspas, #, <, >, |, ;, :, &, backtick).
+const san = (s) => String(s)
+  .replace(/[—–]/g, '-')
+  .replace(/[.()[\]{}<>"'`#|;:&]/g, ' ')
+  .replace(/\s+/g, ' ').trim();
 
-const BOUNDARY_ROOTS = ['src', 'services', 'apps', 'packages', 'modules', 'libs'];
+// Equilíbrio para grafos grandes (limite Mermaid maxEdges/maxTextSize + legibilidade):
+// boundary pequeno → C3 por arquivo (detalhe); boundary grande → C3 AGREGADO por
+// submódulo (renderável E completo — nenhum arquivo some, só sobe de abstração).
+const C3_MAX_NODES = 50;
+// submódulo de um arquivo dentro de um boundary: o projeto .NET (DotPascalCase) se houver,
+// senão até 2 níveis de diretório abaixo do boundary.
+function subGroup(id, boundary) {
+  const rest = id.slice(boundary.length + 1).split('/');
+  const dirs = rest.slice(0, -1); // exclui o filename
+  const idx = dirs.findIndex((s) => /^[A-Z][A-Za-z0-9]*(\.[A-Z][A-Za-z0-9]*)+$/.test(s));
+  const take = idx >= 0 ? dirs.slice(0, idx + 1) : dirs.slice(0, 2);
+  return take.length ? `${boundary}/${take.join('/')}` : boundary;
+}
+
+// Write a diagram as Markdown with a fenced ```mermaid block (human-renderable).
+function writeDiagram(base, title, mermaid) {
+  const md = `# ${title}\n\n` +
+    '> Gerado por `/forge:c4` a partir do code graph. Renderiza como diagrama em qualquer\n' +
+    '> previewer de Markdown com suporte a Mermaid (VS Code, GitHub).\n\n' +
+    '```mermaid\n' + mermaid + '\n```\n';
+  writeFileSync(join(c4Dir, `${base}.md`), md);
+}
+
+const BOUNDARY_ROOTS = ['src', 'services', 'apps', 'packages', 'modules', 'libs', 'backend', 'frontend'];
 function boundaryOf(id) {
   const p = id.split('/');
   if (BOUNDARY_ROOTS.includes(p[0]) && p.length > 1) return `${p[0]}/${p[1]}`;
   return p.length > 1 ? p[0] : '(root)';
+}
+
+// cor por camada (absorvido do Understand-Anything) — classDef Mermaid por layer.
+const layerOf = new Map(g.nodes.map((n) => [n.id, n.layer || 'unknown']));
+const LAYER_STYLE = {
+  api: 'fill:#e3f2fd,stroke:#1565c0,color:#0d47a1',
+  application: 'fill:#fff3e0,stroke:#ef6c00,color:#e65100',
+  domain: 'fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20',
+  infrastructure: 'fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c',
+  contracts: 'fill:#e0f7fa,stroke:#00838f,color:#006064',
+  test: 'fill:#eceff1,stroke:#546e7a,color:#263238',
+  config: 'fill:#fffde7,stroke:#f9a825,color:#f57f17',
+  unknown: 'fill:#fafafa,stroke:#bdbdbd,color:#616161',
+};
+const classDefs = () => Object.entries(LAYER_STYLE).map(([l, s]) => `  classDef ${l} ${s};`);
+function dominantLayer(ids) {
+  const c = {};
+  for (const id of ids) { const l = layerOf.get(id) || 'unknown'; c[l] = (c[l] || 0) + 1; }
+  return Object.entries(c).sort((a, b) => b[1] - a[1])[0]?.[0] || 'unknown';
 }
 
 // project name from FORGE.md frontmatter (display), fallback to dir name
@@ -42,18 +90,18 @@ const c1 = ['flowchart TD', `  sys["${san(system)}"]`];
 if (externals.size) {
   c1.push('  ext["External dependencies"]', '  sys --> ext');
 }
-writeFileSync(join(c4Dir, 'c1-context.mmd'), c1.join('\n') + '\n');
+writeDiagram('c1-context', 'C1 — Contexto do Sistema', c1.join('\n'));
 
 // ── C2 container ──────────────────────────────────────────────────────────────
-const containers = new Map(); // boundary -> {files}
+const containers = new Map(); // boundary -> [ids]
 for (const n of g.nodes) {
   const b = boundaryOf(n.id);
-  if (!containers.has(b)) containers.set(b, 0);
-  containers.set(b, containers.get(b) + 1);
+  if (!containers.has(b)) containers.set(b, []);
+  containers.get(b).push(n.id);
 }
 const idOf = new Map([...containers.keys()].sort().map((b, i) => [b, `c${i}`]));
 const c2 = ['flowchart TD'];
-for (const [b, count] of [...containers.entries()].sort()) c2.push(`  ${idOf.get(b)}["${san(b)} (${count})"]`);
+for (const [b, ids] of [...containers.entries()].sort()) c2.push(`  ${idOf.get(b)}["${san(b)} (${ids.length})"]:::${dominantLayer(ids)}`);
 const seenRel = new Set();
 for (const e of g.edges) {
   if (!e.resolved) continue;
@@ -64,7 +112,8 @@ for (const e of g.edges) {
   seenRel.add(key);
   c2.push(`  ${idOf.get(ba)} --> ${idOf.get(bb)}`);
 }
-writeFileSync(join(c4Dir, 'c2-container.mmd'), c2.join('\n') + '\n');
+c2.push(...classDefs());
+writeDiagram('c2-container', 'C2 — Containers (cor = camada dominante)', c2.join('\n'));
 
 // ── C3 component (per multi-file boundary) ───────────────────────────────────
 const byBoundary = new Map();
@@ -74,25 +123,51 @@ for (const n of g.nodes) {
   byBoundary.get(b).push(n.id);
 }
 let c3count = 0;
-for (const [b, files] of [...byBoundary.entries()].sort()) {
-  if (files.length < 2) continue;
+for (const [b, allFiles] of [...byBoundary.entries()].sort()) {
+  if (allFiles.length < 2) continue;
   const slug = b.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase();
-  const nid = new Map(files.sort().map((f, i) => [f, `f${i}`]));
-  const lines = ['flowchart TD', `  %% component view: ${san(b)}`];
-  for (const f of files.sort()) lines.push(`  ${nid.get(f)}["${san(f.split('/').pop())}"]`);
-  for (const e of g.edges) {
-    if (!e.resolved) continue;
-    if (nid.has(e.from) && nid.has(e.to)) lines.push(`  ${nid.get(e.from)} --> ${nid.get(e.to)}`);
+  let title, lines;
+  if (allFiles.length <= C3_MAX_NODES) {
+    // pequeno → detalhe por arquivo
+    const inset = new Set(allFiles);
+    const nid = new Map([...allFiles].sort().map((f, i) => [f, `f${i}`]));
+    title = `C3 — Componentes: ${san(b)} (cor = camada)`;
+    lines = ['flowchart TD', `  %% component view: ${san(b)}`];
+    for (const f of [...allFiles].sort()) lines.push(`  ${nid.get(f)}["${san(f.split('/').pop())}"]:::${layerOf.get(f) || 'unknown'}`);
+    for (const e of g.edges) {
+      if (!e.resolved) continue;
+      if (inset.has(e.from) && inset.has(e.to)) lines.push(`  ${nid.get(e.from)} --> ${nid.get(e.to)}`);
+    }
+  } else {
+    // grande → agregado por submódulo (renderável + completo; nenhum arquivo some)
+    const groupOf = new Map(allFiles.map((f) => [f, subGroup(f, b)]));
+    const groups = [...new Set(groupOf.values())].sort();
+    const gid = new Map(groups.map((gp, i) => [gp, `g${i}`]));
+    const gfiles = new Map(groups.map((gp) => [gp, allFiles.filter((f) => groupOf.get(f) === gp)]));
+    const gedge = new Map();
+    for (const e of g.edges) {
+      if (!e.resolved) continue;
+      const ga = groupOf.get(e.from), gb = groupOf.get(e.to);
+      if (!ga || !gb || ga === gb) continue;
+      gedge.set(`${ga}>${gb}`, (gedge.get(`${ga}>${gb}`) || 0) + 1);
+    }
+    title = `C3 — Componentes: ${san(b)} (agregado: ${groups.length} submódulos · ${allFiles.length} arquivos; cor = camada)`;
+    lines = ['flowchart TD', `  %% component view (aggregated): ${san(b)}`];
+    for (const gp of groups) lines.push(`  ${gid.get(gp)}["${san(gp.slice(b.length + 1) || gp)} (${gfiles.get(gp).length})"]:::${dominantLayer(gfiles.get(gp))}`);
+    for (const k of [...gedge.keys()].sort()) { const [a, c] = k.split('>'); lines.push(`  ${gid.get(a)} --> ${gid.get(c)}`); }
   }
-  writeFileSync(join(c4Dir, `c3-component-${slug}.mmd`), lines.join('\n') + '\n');
+  lines.push(...classDefs());
+  writeDiagram(`c3-component-${slug}`, title, lines.join('\n'));
   c3count++;
 }
 
-// clean stale c3 files from previous runs that no longer correspond to a boundary
+// clean stale c3 files from previous runs that no longer correspond to a boundary,
+// plus any legacy .mmd files from versions that emitted bare Mermaid.
 const wanted = new Set([...byBoundary.entries()].filter(([, f]) => f.length >= 2)
-  .map(([b]) => `c3-component-${b.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase()}.mmd`));
+  .map(([b]) => `c3-component-${b.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase()}.md`));
 for (const f of readdirSync(c4Dir)) {
-  if (f.startsWith('c3-component-') && !wanted.has(f)) rmSync(join(c4Dir, f));
+  if (f.endsWith('.mmd')) { rmSync(join(c4Dir, f)); continue; }
+  if (f.startsWith('c3-component-') && f.endsWith('.md') && !wanted.has(f)) rmSync(join(c4Dir, f));
 }
 
 console.log(`OK c4: c1-context, c2-container (${containers.size} containers), ${c3count} component view(s)`);
