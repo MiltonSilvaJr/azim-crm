@@ -14,7 +14,7 @@
 |------|------|-------|--------|--------|
 | 1 | Bootstrap | TASK-01, TASK-02 | `feat/audit-log/wave-01` | [X] |
 | 2 | Domínio | TASK-03..06 | `feat/audit-log/wave-02` | [X] |
-| 3 | Application | TASK-07..10 | `feat/audit-log/wave-03` | [-] |
+| 3 | Application | TASK-07..10 | `feat/audit-log/wave-03` | [X] |
 | 4 | Infrastructure | TASK-11..14 | `feat/audit-log/wave-04` | [ ] |
 | 5 | API + Contracts | TASK-15..17 | `feat/audit-log/wave-05` | [ ] |
 | 6 | Hardening | TASK-18..20 | `feat/audit-log/wave-06` | [ ] |
@@ -50,16 +50,21 @@
 - Coverage de linha Domain ≥ 95% (critério atendido); branch coverage 78.7% — diferença em branches de null-check geradas pelo compilador para `private init` do record `AuditDelta`.
 - ✅ **Dívida resolvida** (`ba0dc65`): bypass `AuditDelta.ForMaskedUpdate` (internal) removido. Substituído por `AuditDelta.TransformChanges(Func<...>)` — transformação pós-construção que aplica o mascaramento sobre um delta já validado, sem re-executar o guard `before != after`. O guard de "mudança real" (REQ-003.4) passa a ser avaliado sobre os valores originais, antes do mascaramento. Teste explícito adicionado para o caso PII-distintos→mesmo-marcador. 128 testes verdes.
 
-## Wave 3 — Application (em progresso)
+## Wave 3 — Application (concluída ✅)
 
 🌿 Worktree: `.forge/worktrees/audit-log/wave-03` — branch `feat/audit-log/wave-03`
+🧪 217 testes verdes (Domain 95 + Application 110 + Architecture 12) · build limpo · NetArchTest intacto · PBT-02 com 200 amostras.
 
 | TASK | Título | Specialist | Status | Commit |
 |------|--------|-----------|--------|--------|
-| TASK-07 | RecordAuditEntryCommand + AuditService handler | backend-engineer-dotnet | [-] | — |
-| TASK-08 | Queries de consulta + handlers + validators | backend-engineer-dotnet | [ ] | — |
-| TASK-09 | Pipeline behaviors (4) | backend-engineer-dotnet | [ ] | — |
-| TASK-10 | PBT-02 Conservação (Application.Tests) | backend-engineer-dotnet | [ ] | — |
+| TASK-07 | RecordAuditEntryCommand + AuditService handler + IAuditWriter impl | backend-engineer-dotnet | [X] | `7ed1e1d` |
+| TASK-08 | Queries de consulta + handlers + validators | backend-engineer-dotnet | [X] | `06c02fb` |
+| TASK-09 | Pipeline behaviors (Validation→Tenant→Authorization→Logging) | backend-engineer-dotnet | [X] | `10c284c` |
+| TASK-10 | PBT-02 Conservação (Application.Tests) | backend-engineer-dotnet | [X] | `0d648ef` |
+
+**Abstrações introduzidas (Application):** `ITenantContext`, `IUserContext`, `IBuScopeResolver`, `IAuditMetrics`, `IEntityContextRequest`, `IAuditQuery` — implementações concretas virão nas Waves 4 (Infra) / 5 (Api).
+
+**Risco documentado — RISK-AUDIT-05:** `ListAuditLogsHandler` para `GestorBU` resolve escopo de BU iterando entidades (N+1) — aceito como MVP; Wave 4+ deve adicionar `ListAsync(entityIds)` em lote no repositório.
 
 ## Última falha
 
