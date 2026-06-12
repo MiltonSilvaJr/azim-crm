@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using AuditLog.Api.ErrorHandling;
 using AuditLog.Api.Infrastructure;
 using AuditLog.Application;
 using AuditLog.Application.Abstractions;
@@ -75,6 +76,7 @@ builder.Services.AddAuditLogInfrastructure(connectionString);
 
 // ------------------------------------------------------------------ Middleware de erros (Problem Details)
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<AuditExceptionHandler>();
 
 // ------------------------------------------------------------------ Build
 var app = builder.Build();
