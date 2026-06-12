@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AuditLog.Api/AuditLog.Api.csproj" />
+    <Project Path="src/AuditLog.Application/AuditLog.Application.csproj" />
+    <Project Path="src/AuditLog.Contracts/AuditLog.Contracts.csproj" />
+    <Project Path="src/AuditLog.Domain/AuditLog.Domain.csproj" />
+    <Project Path="src/AuditLog.Infrastructure/AuditLog.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AuditLog.Api.Tests/AuditLog.Api.Tests.csproj" />
+    <Project Path="tests/AuditLog.Application.Tests/AuditLog.Application.Tests.csproj" />
+    <Project Path="tests/AuditLog.Architecture.Tests/AuditLog.Architecture.Tests.csproj" />
+    <Project Path="tests/AuditLog.Domain.Tests/AuditLog.Domain.Tests.csproj" />
+    <Project Path="tests/AuditLog.Infrastructure.Tests/AuditLog.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>
