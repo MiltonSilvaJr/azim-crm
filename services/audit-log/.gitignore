@@ -1,0 +1,19 @@
+# Saídas de build
+bin/
+obj/
+
+# Arquivos de usuário do VS
+*.user
+*.suo
+.vs/
+
+# Pacotes NuGet locais
+packages/
+
+# Configurações de usuário
+launchSettings.json.user
+
+# Cobertura de código
+coverage/
+*.cobertura.xml
+TestResults/
