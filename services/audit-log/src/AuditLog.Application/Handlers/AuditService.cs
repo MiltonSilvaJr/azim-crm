@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AuditLog.Application.Abstractions;
 using AuditLog.Application.Commands;
 using AuditLog.Domain.Abstractions;
@@ -14,11 +15,16 @@ namespace AuditLog.Application.Handlers;
 /// Handler de <see cref="RecordAuditEntryCommand"/>.
 /// Implementa a recepção centralizada de auditoria (REQ-006):
 /// mascara PII → constrói aggregate → persiste na transação corrente (DD-001, fail-closed).
+/// <para>Instrumentado com métricas OpenTelemetry (design §11.2, §11.3).</para>
 /// </summary>
 public sealed class AuditService : IRequestHandler<RecordAuditEntryCommand>
 {
+    /// <summary>ActivitySource para traces do AuditService (design §11.3).</summary>
+    public static readonly ActivitySource ActivitySource = new("AuditLog.AuditService", "1.0.0");
+
     private readonly IAuditLogRepository _repository;
     private readonly PiiMasker _piiMasker;
+    private readonly IPiiFieldPolicy _piiFieldPolicy;
     private readonly IClock _clock;
     private readonly ITenantContext _tenantContext;
     private readonly IAuditMetrics _metrics;
@@ -28,6 +34,7 @@ public sealed class AuditService : IRequestHandler<RecordAuditEntryCommand>
     public AuditService(
         IAuditLogRepository repository,
         PiiMasker piiMasker,
+        IPiiFieldPolicy piiFieldPolicy,
         IClock clock,
         ITenantContext tenantContext,
         IAuditMetrics metrics,
@@ -35,6 +42,7 @@ public sealed class AuditService : IRequestHandler<RecordAuditEntryCommand>
     {
         ArgumentNullException.ThrowIfNull(repository);
         ArgumentNullException.ThrowIfNull(piiMasker);
+        ArgumentNullException.ThrowIfNull(piiFieldPolicy);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(tenantContext);
         ArgumentNullException.ThrowIfNull(metrics);
@@ -42,6 +50,7 @@ public sealed class AuditService : IRequestHandler<RecordAuditEntryCommand>
 
         _repository = repository;
         _piiMasker = piiMasker;
+        _piiFieldPolicy = piiFieldPolicy;
         _clock = clock;
         _tenantContext = tenantContext;
         _metrics = metrics;
@@ -57,10 +66,16 @@ public sealed class AuditService : IRequestHandler<RecordAuditEntryCommand>
     /// 4. Mascara PII no delta (REQ-004) antes de qualquer persistência.
     /// 5. Constrói o aggregate AuditLogAggregate com created_at via IClock (REQ-002.4).
     /// 6. Persiste via repositório na transação corrente (DD-001).
+    /// 7. Registra métricas de latência e PII (design §11.2).
     /// </remarks>
     public async Task Handle(RecordAuditEntryCommand request, CancellationToken cancellationToken)
     {
         _metrics.IncrementEventsReceived();
+
+        // Span de trace cobrindo mascaramento + INSERT (design §11.3)
+        using var activity = ActivitySource.StartActivity("AuditService.Record");
+        activity?.SetTag("audit.entity_type", request.EntityType);
+        activity?.SetTag("audit.action", request.Action.ToString());
 
         var tenantIdValue = _tenantContext.TenantId
             ?? throw new InvalidOperationException(
@@ -74,8 +89,15 @@ public sealed class AuditService : IRequestHandler<RecordAuditEntryCommand>
         // Constrói delta bruto a partir dos dados recebidos
         var rawDelta = BuildDelta(request.Action, request.RawBefore, request.RawAfter);
 
+        // Verifica se mascaramento será aplicado antes de chamar o masker
+        var hasPiiFields = _piiFieldPolicy.GetPiiFields(request.EntityType).Count > 0;
+
         // Mascara PII antes de qualquer persistência (REQ-004 / DD-004)
         var maskedDelta = _piiMasker.Mask(request.EntityType, rawDelta);
+
+        // Incrementa contador de mascaramento se campos PII foram processados (design §11.2)
+        if (hasPiiFields)
+            _metrics.IncrementPiiMaskingApplied();
 
         // Constrói o aggregate — created_at derivado do IClock (REQ-002.4)
         var auditLog = AuditLogAggregate.Create(
@@ -86,13 +108,21 @@ public sealed class AuditService : IRequestHandler<RecordAuditEntryCommand>
             maskedDelta,
             _clock);
 
+        // Mede a latência do INSERT (design §11.2, RNF-003)
+        var sw = Stopwatch.StartNew();
         try
         {
             await _repository.AddAsync(auditLog, cancellationToken);
+            sw.Stop();
+            _metrics.RecordInsertLatency(sw.Elapsed.TotalSeconds);
         }
         catch (Exception ex)
         {
+            sw.Stop();
+            _metrics.RecordInsertLatency(sw.Elapsed.TotalSeconds);
             _metrics.IncrementInsertFailures();
+
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
 
             // Loga a falha sem expor PII (RNF-002.3): apenas metadados não sensíveis
             _logger.LogError(ex,

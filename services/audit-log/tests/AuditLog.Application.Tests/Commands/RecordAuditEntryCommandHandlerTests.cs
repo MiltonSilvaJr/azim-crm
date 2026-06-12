@@ -39,6 +39,7 @@ public sealed class RecordAuditEntryCommandHandlerTests
         return new AuditService(
             _repository,
             new PiiMasker(effectivePolicy),
+            effectivePolicy,
             _clock,
             _tenantContext,
             _metrics,

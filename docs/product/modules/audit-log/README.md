@@ -1,7 +1,15 @@
 # Module — Audit Log
 
-**Status:** Rascunho para revisão
+**Status:** Implementado
 **Fase:** Fase 1 MVP
+**Versão requirements.md:** 0.1.0
+**Versão design.md:** 0.1.0
+**Versão tasks.md:** 0.2.0
+**Ondas concluídas:** 6 de 6 (Onda 1 Bootstrap · Onda 2 Domínio · Onda 3 Application · Onda 4 Infrastructure · Onda 5 API + Contratos · Onda 6 Hardening)
+**TASKs:** 20 de 20 concluídas (TASK-01..TASK-20)
+**PBTs cobertos:** 6 de 6 (PBT-01..PBT-06)
+**Testes:** 308 verdes (Domain 95 · Application 117 · Architecture 12 · Infrastructure 36 · Api 51) — excluindo Infrastructure.Tests dependentes de Testcontainers em CI sem Docker
+**Commit final Onda 6:** `96425b6` (feat: PII scan em CI e testes de segurança)
 
 ---
 
@@ -20,7 +28,7 @@ Módulo cross-cutting responsável por registrar de forma imutável (append-only
 | Bounded Context Relacionado | Audit Log (BC-15) |
 | Subdomínio DDD | Generic Subdomain |
 | Tier / Criticidade | Tier 1 — imutabilidade é requisito de produto (RN-024) e de compliance LGPD |
-| Status | Rascunho para revisão |
+| Status | Implementado |
 
 ---
 
@@ -162,14 +170,14 @@ Este módulo não publica eventos de domínio próprios.
 
 ## 17. Observabilidade
 
-| Item | Recomendação Inicial |
+| Item | Implementado |
 |---|---|
-| Logs | Logs estruturados com correlation_id, tenant_id, entity_type, entity_id; sem PII |
-| Métricas | audit_events_received_total (contador); audit_insert_failures_total (alerta) |
-| Traces | Trace no AuditService.Persist cobrindo mascaramento + INSERT |
-| Alertas | Alerta imediato se audit_insert_failures_total > 0 por janela de 5 min |
-| Health Checks | Verificar conectividade com o banco e permissão de INSERT na tabela audit_logs |
-| Auditoria | O próprio módulo é a auditoria — falhas devem ser registradas em Cloud Logging separado |
+| Logs | Logs estruturados com correlation_id, entity_type, entity_id, action; sem PII, sem delta_json |
+| Métricas (5) | `audit_events_received_total` · `audit_insert_failures_total` · `audit_query_without_tenant_context_total` · `audit_insert_latency_seconds` (histogram) · `audit_pii_masking_applied_total` |
+| Traces | `ActivitySource("AuditLog.AuditService")` com span `AuditService.Record`; tags `audit.entity_type` e `audit.action` (sem PII) |
+| Alertas (3) | `audit-insert-failure` (CRITICAL) · `audit-query-without-tenant` (HIGH) · `audit-insert-latency-slo` (WARNING); definições em `observability/alerts.yaml` |
+| Health Check | `AuditInsertCapabilityHealthCheck`: Healthy (banco + INSERT ok) · Unhealthy (banco inacessível) · Degraded (banco ok, sem permissão de INSERT); endpoint `/health` |
+| PII scan | `scripts/pii-scan.sh` detecta e-mail (RFC 5322) e telefone BR; gate no CI (`audit-log-pii-scan` em staging.yml) |
 
 ---
 

@@ -16,3 +16,76 @@ jobs:
           echo "Pipeline de staging — preencher conforme a stack do projeto:"
           echo "  build + suite integrada + contract tests + security scan + deploy staging"
           echo "Checks baratos rodam localmente (hooks .forge/hooks/git + /forge:verify)."
+
+  # ---------------------------------------------------------------------------
+  # Gate de PII em logs do módulo audit-log (RNF-002.2, TASK-19)
+  # Roda nos pushes de branches feature/audit-log/** e em develop/staging.
+  # ---------------------------------------------------------------------------
+  audit-log-pii-scan:
+    name: audit-log / PII scan em logs
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/staging' ||
+      github.ref == 'refs/heads/develop' ||
+      startsWith(github.ref, 'refs/heads/feat/audit-log') ||
+      github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verificar self-test do script pii-scan (amostra limpa)
+        run: |
+          chmod +x services/audit-log/scripts/pii-scan.sh
+          services/audit-log/scripts/pii-scan.sh --sample-pass
+
+      - name: Verificar self-test do script pii-scan (amostra com PII deve falhar)
+        # Garante que o script detecta PII quando presente (regressão do gate)
+        run: |
+          if services/audit-log/scripts/pii-scan.sh --sample-fail; then
+            echo "ERRO: script não detectou PII na amostra suja — gate quebrado!" >&2
+            exit 1
+          fi
+          echo "OK: amostra com PII corretamente rejeitada pelo gate."
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Build audit-log
+        working-directory: services/audit-log
+        run: dotnet build AuditLog.slnx --configuration Release -warnaserror:false
+
+      - name: Executar testes e capturar logs
+        working-directory: services/audit-log
+        run: |
+          # Executa apenas os projetos de teste que não precisam de Testcontainers
+          # (evitar dependência de Docker em runners sem suporte)
+          dotnet test tests/AuditLog.Domain.Tests/ --no-build --configuration Release \
+            --logger "console;verbosity=normal" 2>&1 | tee /tmp/audit-log-domain-tests.log
+          dotnet test tests/AuditLog.Application.Tests/ --no-build --configuration Release \
+            --logger "console;verbosity=normal" 2>&1 | tee /tmp/audit-log-app-tests.log
+          dotnet test tests/AuditLog.Architecture.Tests/ --no-build --configuration Release \
+            --logger "console;verbosity=normal" 2>&1 | tee /tmp/audit-log-arch-tests.log
+          dotnet test tests/AuditLog.Api.Tests/ --no-build --configuration Release \
+            --logger "console;verbosity=normal" 2>&1 | tee /tmp/audit-log-api-tests.log
+
+      - name: PII scan nos logs dos testes (gate obrigatório — RNF-002.2)
+        run: |
+          echo "=== Iniciando PII scan nos logs de testes do audit-log ==="
+          exit_code=0
+          for log_file in /tmp/audit-log-*.log; do
+            echo "Escaneando: $log_file"
+            if ! services/audit-log/scripts/pii-scan.sh "$log_file"; then
+              echo "FALHA: PII detectada em $log_file" >&2
+              exit_code=1
+            fi
+          done
+          if [ $exit_code -ne 0 ]; then
+            echo ""
+            echo "=== PII SCAN FALHOU ===" >&2
+            echo "Logs de testes contêm padrões de PII (e-mail ou telefone BR)." >&2
+            echo "Verifique o Serilog destructuring e os logs de erro do AuditService." >&2
+            echo "Referência: design.md §13, RNF-002.2" >&2
+            exit 1
+          fi
+          echo "=== PII scan concluído — nenhum padrão de PII detectado ==="

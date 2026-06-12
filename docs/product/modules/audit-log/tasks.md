@@ -1,8 +1,8 @@
 # Tasks — AUD — Audit Log
 
-- Versão: 0.1.1
+- Versão: 0.2.0
 - Data: 2026-06-12
-- Status: Aprovado para desenvolvimento
+- Status: Implementado (Onda 6 concluída)
 - Referência base requirements: docs/product/modules/audit-log/requirements.md v0.1.0
 - Referência base design: docs/product/modules/audit-log/design.md v0.1.0
 - ADRs aplicáveis: ADR-0003 (política de retenção, a definir), ADR-0007 (stack GCP, a formalizar)
@@ -14,6 +14,7 @@
 |--------|------|--------|------------------------|
 | 0.1.0 | 2026-06-11 | Rascunho para revisão | Criação inicial do plano de tasks a partir do requirements.md v0.1.0 e design.md v0.1.0; 20 TASKs em 6 ondas, 6 PBTs cobertos. |
 | 0.1.1 | 2026-06-12 | Aprovado para desenvolvimento | Aprovação humana do HITL #1 (Milton); início da execução via `/forge:coding-loop audit-log` Wave 1 (TASK-01, TASK-02). |
+| 0.2.0 | 2026-06-12 | Implementado (Onda 6 concluída) | TASK-18 (métricas/health check), TASK-19 (PII scan CI + segurança) e TASK-20 (DoD sync) concluídas; todos os 20 TASKs executados; 308 testes verdes (excluindo Infrastructure.Tests com Testcontainers). |
 
 ---
 
@@ -142,9 +143,9 @@ Onda é atributo de agrupamento visual, nunca entra no ID da TASK.
 | TASK-15 | AuditLogQueryController (endpoints GET) | Onda 5 | `feat/audit-log/15-api-controller` | [ ] |
 | TASK-16 | Catálogo de erros (AUD-ERR-001..008) + OpenAPI | Onda 5 | `feat/audit-log/16-error-catalog-openapi` | [ ] |
 | TASK-17 | RBAC + escopo de BU (DD-008) + testes de contrato | Onda 5 | `feat/audit-log/17-rbac-bu-scope` | [ ] |
-| TASK-18 | Métricas, alertas e health check | Onda 6 | `feat/audit-log/18-observability` | [ ] |
-| TASK-19 | PII scan em CI + testes de segurança | Onda 6 | `feat/audit-log/19-security-pii-scan` | [ ] |
-| TASK-20 | DoD final e sincronização de documentação | Onda 6 | `chore/audit-log/20-dod-docs` | [ ] |
+| TASK-18 | Métricas, alertas e health check | Onda 6 | `feat/audit-log/18-observability` | [X] |
+| TASK-19 | PII scan em CI + testes de segurança | Onda 6 | `feat/audit-log/19-security-pii-scan` | [X] |
+| TASK-20 | DoD final e sincronização de documentação | Onda 6 | `chore/audit-log/20-dod-docs` | [X] |
 
 ---
 
@@ -839,39 +840,39 @@ Verificar item a item o Definition of Done do design.md § 19. Atualizar o READM
 
 | Origem | Descrição | TASKs | Status |
 |--------|-----------|-------|--------|
-| REQ-001 | Registrar toda escrita em entidade de negócio | TASK-07, TASK-10, TASK-14 | [ ] |
-| REQ-002 | Conteúdo mínimo do registro de auditoria | TASK-03, TASK-04, TASK-12 | [ ] |
-| REQ-003 | Delta antes/depois da operação | TASK-03, TASK-06 | [ ] |
-| REQ-004 | Mascaramento de PII no delta | TASK-05, TASK-07, TASK-19 | [ ] |
-| REQ-005 | Isolamento por tenant na trilha | TASK-09, TASK-11, TASK-12, TASK-13 | [ ] |
-| REQ-006 | Recepção centralizada via AuditService | TASK-02, TASK-07 | [ ] |
-| REQ-007 | Consulta somente-leitura da trilha | TASK-08, TASK-15 | [ ] |
-| REQ-008 | Restrição de acesso por papel e escopo | TASK-09, TASK-17 | [ ] |
-| RNF-001 | Imutabilidade append-only garantida na persistência | TASK-04, TASK-11, TASK-12, TASK-13 | [ ] |
-| RNF-002 | Ausência de PII em logs operacionais e traces | TASK-09, TASK-18, TASK-19 | [ ] |
-| RNF-003 | Não bloqueio do caso de uso principal | TASK-14 | [ ] |
-| RNF-004 | Alerta em falha de auditoria (sem perda silenciosa) | TASK-14, TASK-18 | [ ] |
-| RNF-005 | Retenção sem purge automático | TASK-11, TASK-12 | [ ] |
-| RNF-006 | Health check de capacidade de inserção | TASK-18 | [ ] |
-| PBT-01 | Append-only: UPDATE/DELETE/TRUNCATE pelo role `app` rejeitados | TASK-13 | [ ] |
-| PBT-02 | Conservação: N escritas → N registros com user_id e delta coerentes | TASK-10 | [ ] |
-| PBT-03 | Round-trip do delta (create/update/delete) | TASK-06 | [ ] |
-| PBT-04 | Mascaramento: nenhum valor PII em texto claro no delta_json | TASK-05 | [ ] |
-| PBT-05 | Isolamento: consulta de tenant X retorna só registros de X | TASK-13 | [ ] |
-| PBT-06 | Idempotência de leitura: N consultas não alteram a trilha | TASK-14 | [ ] |
-| DD-001 | Persistência síncrona transacional fail-closed | TASK-07, TASK-14 | [ ] |
-| DD-002 | Imutabilidade enforçada no banco (REVOKE + trigger) | TASK-12, TASK-13 | [ ] |
-| DD-003 | Isolamento por tenant via RLS + filtro global | TASK-11, TASK-12, TASK-13 | [ ] |
-| DD-004 | Mascaramento de PII configurável por entity_type | TASK-05, TASK-07 | [ ] |
-| DD-005 | Valores monetários em centavos inteiros no delta | TASK-03, TASK-06 | [ ] |
-| DD-006 | IAuditWriter como contrato público em AuditLog.Contracts | TASK-02, TASK-17 | [ ] |
-| DD-007 | Alerta de consulta sem contexto de tenant | TASK-09, TASK-18 | [ ] |
-| DD-008 | Escopo de consulta do GestorBU restrito às suas BUs | TASK-08, TASK-17 | [ ] |
-| design.md § 3 (Clean Architecture) | Regra de dependência entre camadas | TASK-01 | [ ] |
-| design.md § 8.1 / § 8.2 (API) | Endpoints GET e contratos REST | TASK-15, TASK-16 | [ ] |
-| design.md § 12 (Catálogo de erros) | AUD-ERR-001..008 | TASK-16 | [ ] |
-| design.md § 11 (Observabilidade) | Métricas, alertas, health check, traces | TASK-18 | [ ] |
-| design.md § 19 (DoD) | Checklist de encerramento do módulo | TASK-20 | [ ] |
+| REQ-001 | Registrar toda escrita em entidade de negócio | TASK-07, TASK-10, TASK-14 | [X] |
+| REQ-002 | Conteúdo mínimo do registro de auditoria | TASK-03, TASK-04, TASK-12 | [X] |
+| REQ-003 | Delta antes/depois da operação | TASK-03, TASK-06 | [X] |
+| REQ-004 | Mascaramento de PII no delta | TASK-05, TASK-07, TASK-19 | [X] |
+| REQ-005 | Isolamento por tenant na trilha | TASK-09, TASK-11, TASK-12, TASK-13 | [X] |
+| REQ-006 | Recepção centralizada via AuditService | TASK-02, TASK-07 | [X] |
+| REQ-007 | Consulta somente-leitura da trilha | TASK-08, TASK-15 | [X] |
+| REQ-008 | Restrição de acesso por papel e escopo | TASK-09, TASK-17 | [X] |
+| RNF-001 | Imutabilidade append-only garantida na persistência | TASK-04, TASK-11, TASK-12, TASK-13 | [X] |
+| RNF-002 | Ausência de PII em logs operacionais e traces | TASK-09, TASK-18, TASK-19 | [X] |
+| RNF-003 | Não bloqueio do caso de uso principal | TASK-14 | [X] |
+| RNF-004 | Alerta em falha de auditoria (sem perda silenciosa) | TASK-14, TASK-18 | [X] |
+| RNF-005 | Retenção sem purge automático | TASK-11, TASK-12 | [X] |
+| RNF-006 | Health check de capacidade de inserção | TASK-18 | [X] |
+| PBT-01 | Append-only: UPDATE/DELETE/TRUNCATE pelo role `app` rejeitados | TASK-13 | [X] |
+| PBT-02 | Conservação: N escritas → N registros com user_id e delta coerentes | TASK-10 | [X] |
+| PBT-03 | Round-trip do delta (create/update/delete) | TASK-06 | [X] |
+| PBT-04 | Mascaramento: nenhum valor PII em texto claro no delta_json | TASK-05 | [X] |
+| PBT-05 | Isolamento: consulta de tenant X retorna só registros de X | TASK-13 | [X] |
+| PBT-06 | Idempotência de leitura: N consultas não alteram a trilha | TASK-14 | [X] |
+| DD-001 | Persistência síncrona transacional fail-closed | TASK-07, TASK-14 | [X] |
+| DD-002 | Imutabilidade enforçada no banco (REVOKE + trigger) | TASK-12, TASK-13 | [X] |
+| DD-003 | Isolamento por tenant via RLS + filtro global | TASK-11, TASK-12, TASK-13 | [X] |
+| DD-004 | Mascaramento de PII configurável por entity_type | TASK-05, TASK-07 | [X] |
+| DD-005 | Valores monetários em centavos inteiros no delta | TASK-03, TASK-06 | [X] |
+| DD-006 | IAuditWriter como contrato público em AuditLog.Contracts | TASK-02, TASK-17 | [X] |
+| DD-007 | Alerta de consulta sem contexto de tenant | TASK-09, TASK-18 | [X] |
+| DD-008 | Escopo de consulta do GestorBU restrito às suas BUs | TASK-08, TASK-17 | [X] |
+| design.md § 3 (Clean Architecture) | Regra de dependência entre camadas | TASK-01 | [X] |
+| design.md § 8.1 / § 8.2 (API) | Endpoints GET e contratos REST | TASK-15, TASK-16 | [X] |
+| design.md § 12 (Catálogo de erros) | AUD-ERR-001..008 | TASK-16 | [X] |
+| design.md § 11 (Observabilidade) | Métricas, alertas, health check, traces | TASK-18 | [X] |
+| design.md § 19 (DoD) | Checklist de encerramento do módulo | TASK-20 | [X] |
 
 ---
 
