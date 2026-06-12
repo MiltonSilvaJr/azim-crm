@@ -17,7 +17,7 @@
 | 3 | Application | TASK-07..10 | `feat/audit-log/wave-03` | [X] |
 | 4 | Infrastructure | TASK-11..14 | `feat/audit-log/waves-4-6` | [X] |
 | 5 | API + Contracts | TASK-15..17 | `feat/audit-log/waves-4-6` | [X] |
-| 6 | Hardening | TASK-18..20 | `feat/audit-log/waves-4-6` | [-] |
+| 6 | Hardening | TASK-18..20 | `feat/audit-log/waves-4-6` | [X] |
 
 > **Estratégia (ajuste 12/06):** Waves 4-6 executadas numa branch contínua `feat/audit-log/waves-4-6`, com **um único PR ao fim da fase** (decisão de Milton). Docker confirmado rodando (Testcontainers Wave 4).
 
@@ -94,13 +94,28 @@
 
 **⚠️ RISCO DE SEGURANÇA EM ABERTO — RISK-AUDIT-05:** `StubBuScopeResolver` retorna escopo irrestrito (null). Enquanto ativo, **`GestorBU` enxerga todos os registros do tenant**, não apenas das suas BUs (REQ-008.3 parcialmente atendido: estrutura RBAC presente, filtro de BU efetivo pendente). O filtro real depende do read model do `organization` (planejado Sprint 7 no backlog). **NÃO promover a produção sem implementar `IBuScopeResolver` real.** Estrutura/contrato prontos; só a resolução efetiva está stubbed.
 
-## Wave 6 — Hardening (em progresso)
+## Wave 6 — Hardening (concluída ✅)
+
+🧪 Verificação final: **314 testes verdes** (Domain 95 + Application 117 + Api 51 + Infrastructure 39 + Architecture 12) · 0 ignorados · PII scan self-test OK.
 
 | TASK | Título | Status | Commit |
 |------|--------|--------|--------|
-| TASK-18 | Métricas, alertas e health check | [-] | — |
-| TASK-19 | PII scan em CI + testes de segurança | [ ] | — |
-| TASK-20 | DoD final e sincronização de documentação | [ ] | — |
+| TASK-18 | 5 métricas OTel + health check (3 estados) + traces + 3 alertas | [X] | `3ae5487` |
+| TASK-19 | PII scan no CI (gate) + testes de segurança | [X] | `96425b6` |
+| TASK-20 | DoD §19 + matriz de rastreabilidade + README | [X] | `3878245` |
+
+---
+
+## 🎯 Módulo audit-log — 6/6 ondas concluídas
+
+Todas as 20 TASKs implementadas com TDD; 6 PBTs verdes; build limpo; 314 testes.
+**Código nas Waves 4-6 está no PR #4** (https://github.com/MiltonSilvaJr/azim-crm/pull/4) — aguardando code-evaluator (CI) + merge. Waves 1-3 já em `develop` (PRs #1, #2, #3 mergeados).
+
+**Riscos/dívidas que acompanham o módulo para as próximas fases:**
+- **RISK-AUDIT-05 (segurança):** `StubBuScopeResolver` irrestrito — `GestorBU` vê todo o tenant. Bloqueia produção; depende do read model do `organization` (Sprint 7).
+- Aggregate com backing fields públicos para EF Core (vazamento de persistência no domínio).
+- VAL-AUDIT-01 (retenção LGPD / ADR-0003) e VAL-AUDIT-03 (SOX comissão) diferidos com justificativa.
+- Jira AZIM-96..AZIM-115 ainda não sincronizados (MCP atlassian `Pending approval`).
 
 ## Última falha
 
