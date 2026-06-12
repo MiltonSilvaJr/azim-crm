@@ -17,8 +17,16 @@ const outArg = process.argv.indexOf('--out');
 const outDir = outArg >= 0 ? resolve(process.argv[outArg + 1]) : join(root, '.forge/graph');
 const cacheDir = join(outDir, 'cache');
 
-const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'build', 'out', 'bin', 'obj', '.forge', 'coverage', '.next', 'vendor']);
+// Build/output/vendored dirs are excluded: they hold generated artifacts (minified
+// bundles, archived copies) that pollute the graph with non-source nodes (G2).
+const SKIP_DIRS = new Set([
+  'node_modules', '.git', 'dist', 'build', 'out', 'bin', 'obj', '.forge', 'coverage',
+  '.next', 'vendor', 'storybook-static', 'wwwroot', '_archive', 'TestResults',
+  '.vs', '.idea', '.venv', '__pycache__', '.turbo', '.cache',
+]);
 const LANG = { '.js': 'js', '.mjs': 'js', '.cjs': 'js', '.jsx': 'js', '.ts': 'ts', '.tsx': 'ts', '.cs': 'csharp', '.go': 'go', '.py': 'python', '.kt': 'kotlin', '.kts': 'kotlin' };
+// Minified/generated files are not source — skip even when they carry a source extension (G2).
+const SKIP_FILE = /\.min\.(js|css)$|\.bundle\.js$/;
 
 function walk(dir, acc = []) {
   let entries;
@@ -27,7 +35,7 @@ function walk(dir, acc = []) {
     if (e.name.startsWith('.') && e.name !== '.') continue;
     const p = join(dir, e.name);
     if (e.isDirectory()) { if (!SKIP_DIRS.has(e.name)) walk(p, acc); }
-    else if (LANG[extname(e.name)]) acc.push(p);
+    else if (LANG[extname(e.name)] && !SKIP_FILE.test(e.name)) acc.push(p);
   }
   return acc;
 }
@@ -48,14 +56,18 @@ function structuralFingerprint(src) {
   return createHash('sha256').update(norm).digest('hex');
 }
 
+// Layer classification by path. Two signals: folder conventions (controllers/, domain/…)
+// AND the .NET project-suffix convention (Collatra.Billing.Domain/… → domain), which the
+// folder-only heuristic missed for ~55% of C# files in real solutions (G3). The dotted
+// suffix (\.domain\/) is checked alongside the folder name in each layer.
 function layerOf(id) {
   const p = id.toLowerCase();
-  if (/(^|\/)(tests?|__tests__|spec)(\/|$)|\.(spec|test)\./.test(p)) return 'test';
-  if (/(^|\/)(api|controllers?|presentation|web|app|pages|routes)(\/|$)/.test(p)) return 'api';
-  if (/(^|\/)(application|usecases?|handlers?|services?)(\/|$)/.test(p)) return 'application';
-  if (/(^|\/)(domain|entities|core|model)(\/|$)/.test(p)) return 'domain';
-  if (/(^|\/)(infrastructure|persistence|repositories|data|adapters?)(\/|$)/.test(p)) return 'infrastructure';
-  if (/(^|\/)(contracts?|dtos?|schemas?)(\/|$)/.test(p)) return 'contracts';
+  if (/(^|\/)(tests?|__tests__|spec)(\/|$)|\.(spec|test|tests)\.|\.tests?(\/|$)/.test(p)) return 'test';
+  if (/(^|\/)(api|controllers?|presentation|web|pages|routes|endpoints?|middlewares?|filters|attributes)(\/|$)|\.(api|web|host|gateway|bff|presentation)(\/|$)/.test(p)) return 'api';
+  if (/(^|\/)(application|usecases?|handlers?|services?|commands?|queries|behaviors?)(\/|$)|\.(application|usecases?|worker)(\/|$)/.test(p)) return 'application';
+  if (/(^|\/)(domain|entities|core|model|aggregates?|valueobjects?|events?)(\/|$)|\.(domain|core)(\/|$)/.test(p)) return 'domain';
+  if (/(^|\/)(infrastructure|persistence|repositories|data|adapters?|migrations?)(\/|$)|\.(infrastructure|infra|persistence|messaging|caching|observability|errorhandling|data)(\/|$)/.test(p)) return 'infrastructure';
+  if (/(^|\/)(contracts?|dtos?|schemas?)(\/|$)|\.(contracts?|dtos?)(\/|$)/.test(p)) return 'contracts';
   if (/\.(config|json|ya?ml)$|(^|\/)config(\/|$)/.test(p)) return 'config';
   return 'unknown';
 }

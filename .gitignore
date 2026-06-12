@@ -1,8 +1,12 @@
 
+
 # >>> forge (managed) >>>
 # Local-only Forge paths (§20 of the project doc) — never commit caches, worktrees or costs.
 .forge/worktrees/
-.forge/graph/cache/
+# code graph: artefatos regeneraveis em 7s sao ignorados; summaries.json (custa tokens) NAO.
+.forge/graph/graph.json
+.forge/graph/report.md
+.forge/graph/cache/fingerprints.json
 .forge/**/tmp/
 .forge/**/logs/
 .forge/**/cost*.json
