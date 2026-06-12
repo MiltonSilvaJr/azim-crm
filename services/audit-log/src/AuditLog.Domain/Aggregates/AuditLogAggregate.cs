@@ -28,8 +28,25 @@ public sealed class AuditLogAggregate
     /// <summary>Autor da operação (usuário humano ou de sistema).</summary>
     public ActorId ActorId { get; private init; } = null!;
 
-    /// <summary>Referência à entidade auditada (tipo + identificador).</summary>
-    public EntityReference EntityReference { get; private init; } = null!;
+    /// <summary>
+    /// Referência à entidade auditada (tipo + identificador).
+    /// Construída a partir de <see cref="EntityTypePersisted"/> e <see cref="EntityIdPersisted"/>,
+    /// que são os campos mapeados pelo EF Core.
+    /// </summary>
+    public EntityReference EntityReference =>
+        EntityReference.Create(EntityTypePersisted, EntityIdPersisted);
+
+    /// <summary>
+    /// Tipo da entidade auditada — persisted field mapeado pelo EF Core para a coluna <c>entity_type</c>.
+    /// Use <see cref="EntityReference"/> para acesso semântico.
+    /// </summary>
+    public string EntityTypePersisted { get; private set; } = null!;
+
+    /// <summary>
+    /// Identificador da entidade auditada — persisted field mapeado pelo EF Core para <c>entity_id</c>.
+    /// Use <see cref="EntityReference"/> para acesso semântico.
+    /// </summary>
+    public Guid EntityIdPersisted { get; private set; }
 
     /// <summary>Tipo de operação auditada: Create, Update ou Delete.</summary>
     public AuditAction Action { get; private init; }
@@ -76,7 +93,8 @@ public sealed class AuditLogAggregate
             Id = AuditLogId.New(),
             TenantId = tenantId,
             ActorId = actorId,
-            EntityReference = entityReference,
+            EntityTypePersisted = entityReference.EntityType,
+            EntityIdPersisted = entityReference.EntityId,
             Action = action,
             Delta = maskedDelta,
             CreatedAt = clock.UtcNow
@@ -109,7 +127,8 @@ public sealed class AuditLogAggregate
             Id = id,
             TenantId = tenantId,
             ActorId = actorId,
-            EntityReference = entityReference,
+            EntityTypePersisted = entityReference.EntityType,
+            EntityIdPersisted = entityReference.EntityId,
             Action = action,
             Delta = delta,
             CreatedAt = createdAt
