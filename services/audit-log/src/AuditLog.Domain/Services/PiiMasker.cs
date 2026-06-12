@@ -73,15 +73,14 @@ public sealed class PiiMasker
 
     private static AuditDelta MaskUpdate(AuditDelta delta, IReadOnlySet<string> piiFields)
     {
-        var masked = delta.Changes!.ToDictionary(
-            kvp => kvp.Key,
-            kvp => piiFields.Contains(kvp.Key)
+        // TransformChanges aplica a transformação sobre um delta já validado por ForUpdate.
+        // O guard before != after foi verificado nos valores originais; não é re-executado aqui,
+        // o que permite que dois PII distintos (ex.: "João" e "Maria") produzam o mesmo "[MASKED]"
+        // sem falso positivo de "nenhuma mudança real" (design §4.3, REQ-004.4).
+        return delta.TransformChanges((field, change) =>
+            piiFields.Contains(field)
                 ? new AuditAttributeChange(MaskedMarker, MaskedMarker)
-                : kvp.Value);
-
-        // Usa ForMaskedUpdate (internal) porque PII mascarada produz before == after == "[MASKED]",
-        // o que violaria o guard de ForUpdate (design §4.3, REQ-004.4).
-        return AuditDelta.ForMaskedUpdate(masked.AsReadOnly());
+                : change);
     }
 
     private static AuditDelta MaskDelete(AuditDelta delta, IReadOnlySet<string> piiFields)

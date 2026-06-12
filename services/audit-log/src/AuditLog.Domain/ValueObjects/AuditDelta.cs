@@ -146,30 +146,51 @@ public sealed record AuditDelta
         return hash.ToHashCode();
     }
 
-    // ------------------------------------------------------------------ Factory interno (pós-mascaramento)
+    // ------------------------------------------------------------------ Transformação pós-construção
 
     /// <summary>
-    /// Reconstrói um delta de atualização após mascaramento de PII.
-    /// Ao contrário de <see cref="ForUpdate"/>, permite pares onde before == after quando
-    /// ambos os valores são o marcador de mascaramento (design §4.3, REQ-004.4).
+    /// Produz um novo delta aplicando uma transformação sobre cada par de <see cref="Changes"/>.
     /// <para>
-    /// Uso restrito ao <see cref="AuditLog.Domain.Services.PiiMasker"/>.
-    /// Não use este método para criar deltas de dados reais — use <see cref="ForUpdate"/>.
+    /// O invariante "mudança real" (<c>before != after</c>) foi verificado nos valores originais
+    /// durante a construção com <see cref="ForUpdate"/>; esta operação não re-executa o guard,
+    /// pois representa uma transformação sobre um delta já validado (design §4.3, REQ-004.4).
+    /// </para>
+    /// <para>
+    /// Uso típico: mascaramento de PII pós-construção, onde valores distintos originais podem
+    /// produzir o mesmo marcador de substituição sem violar a semântica de auditoria.
     /// </para>
     /// </summary>
-    internal static AuditDelta ForMaskedUpdate(IReadOnlyDictionary<string, AuditAttributeChange> maskedChanges)
+    /// <param name="transform">
+    /// Função que recebe o nome do campo e o par original e devolve o par transformado.
+    /// Chamada exatamente uma vez por campo do delta.
+    /// </param>
+    /// <returns>Novo <see cref="AuditDelta"/> com <see cref="Kind"/> igual a <see cref="AuditDeltaKind.Update"/>
+    /// e <see cref="Changes"/> produzidos pela transformação.</returns>
+    /// <exception cref="ArgumentNullException">Se <paramref name="transform"/> for nulo.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// Se o delta não for do Kind <see cref="AuditDeltaKind.Update"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Se o resultado da transformação contiver valores do tipo
+    /// <see cref="float"/>, <see cref="double"/> ou <see cref="decimal"/>.
+    /// </exception>
+    public AuditDelta TransformChanges(
+        Func<string, AuditAttributeChange, AuditAttributeChange> transform)
     {
-        ArgumentNullException.ThrowIfNull(maskedChanges);
+        ArgumentNullException.ThrowIfNull(transform);
 
-        if (maskedChanges.Count == 0)
-            throw new ArgumentException(
-                "O delta de atualização mascarado deve conter pelo menos um atributo.",
-                nameof(maskedChanges));
+        if (Kind != AuditDeltaKind.Update)
+            throw new InvalidOperationException(
+                $"TransformChanges só pode ser aplicado a deltas de atualização (Kind={Kind}).");
 
-        var allValues = maskedChanges.Values.SelectMany(c => new[] { c.Before, c.After });
+        var newChanges = Changes!.ToDictionary(
+            kvp => kvp.Key,
+            kvp => transform(kvp.Key, kvp.Value));
+
+        var allValues = newChanges.Values.SelectMany(c => new[] { c.Before, c.After });
         ValidateNoForbiddenNumericTypes(allValues);
 
-        return new AuditDelta { Kind = AuditDeltaKind.Update, Changes = maskedChanges };
+        return new AuditDelta { Kind = AuditDeltaKind.Update, Changes = newChanges.AsReadOnly() };
     }
 
     // ------------------------------------------------------------------ Guard

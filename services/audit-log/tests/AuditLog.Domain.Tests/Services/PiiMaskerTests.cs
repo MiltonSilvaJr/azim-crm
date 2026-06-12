@@ -250,6 +250,26 @@ public sealed class PiiMaskerTests
         return !nameLeaked && !emailLeaked && !phoneLeaked;
     }
 
+    [Fact(DisplayName = "Mask ForUpdate: valores PII distintos que mascaram para [MASKED] idêntico produz delta válido sem reexecutar guard")]
+    public void Mask_ContactForUpdate_PiiDistintosViramMesmoMarcador_DeltaValido()
+    {
+        var masker = CreateMasker();
+
+        // "João" != "Maria" — ForUpdate aceita porque o guard valida os valores originais
+        // Após mascaramento: before == after == "[MASKED]", mas o guard NÃO é re-executado
+        // Este é exatamente o cenário que motivava o bypass ForMaskedUpdate (design §4.3)
+        var delta = AuditDelta.ForUpdate(new Dictionary<string, AuditAttributeChange>
+        {
+            ["name"] = new AuditAttributeChange("João", "Maria")
+        }.AsReadOnly());
+
+        var masked = masker.Mask("Contact", delta);
+
+        masked.Kind.Should().Be(AuditDeltaKind.Update);
+        masked.Changes!["name"].Before.Should().Be(PiiMasker.MaskedMarker);
+        masked.Changes!["name"].After.Should().Be(PiiMasker.MaskedMarker);
+    }
+
     /// <summary>
     /// PBT-04 (variante update): campos PII em before e after não aparecem em texto claro.
     /// </summary>
