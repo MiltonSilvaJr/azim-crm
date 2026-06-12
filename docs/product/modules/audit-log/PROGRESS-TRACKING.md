@@ -16,8 +16,8 @@
 | 2 | Domínio | TASK-03..06 | `feat/audit-log/wave-02` | [X] |
 | 3 | Application | TASK-07..10 | `feat/audit-log/wave-03` | [X] |
 | 4 | Infrastructure | TASK-11..14 | `feat/audit-log/waves-4-6` | [X] |
-| 5 | API + Contracts | TASK-15..17 | `feat/audit-log/waves-4-6` | [-] |
-| 6 | Hardening | TASK-18..20 | `feat/audit-log/waves-4-6` | [ ] |
+| 5 | API + Contracts | TASK-15..17 | `feat/audit-log/waves-4-6` | [X] |
+| 6 | Hardening | TASK-18..20 | `feat/audit-log/waves-4-6` | [-] |
 
 > **Estratégia (ajuste 12/06):** Waves 4-6 executadas numa branch contínua `feat/audit-log/waves-4-6`, com **um único PR ao fim da fase** (decisão de Milton). Docker confirmado rodando (Testcontainers Wave 4).
 
@@ -82,13 +82,25 @@
 
 **Dívida técnica:** o aggregate `AuditLog` ganhou backing fields públicos `EntityTypePersisted`/`EntityIdPersisted` (mapeáveis pelo EF Core), com `EntityReference` virando propriedade computada — vazamento de concern de persistência no domínio (alternativa evitada: `InternalsVisibleTo`). Revisitar na fase de hardening/refino.
 
-## Wave 5 — API + Contracts (em progresso)
+## Wave 5 — API + Contracts (concluída ✅)
+
+🧪 296 testes verdes (Domain 95 + Application 110 + Architecture 12 + Infrastructure 36 + **Api 43**) · Api coverage ~83%.
 
 | TASK | Título | Status | Commit |
 |------|--------|--------|--------|
-| TASK-15 | AuditLogQueryController (endpoints GET) | [-] | — |
-| TASK-16 | Catálogo de erros (AUD-ERR-001..008) + OpenAPI | [ ] | — |
-| TASK-17 | RBAC + escopo de BU (DD-008) + testes de contrato | [ ] | — |
+| TASK-15 | AuditLogQueryController (GET) + DTOs + JWT + 405 em escrita | [X] | `4530547` |
+| TASK-16 | Catálogo AUD-ERR-001..008 + IExceptionHandler + anti-enumeração + OpenAPI | [X] | `dcda02c` |
+| TASK-17 | RBAC (TAdmin/GestorBU/403) + contrato IAuditWriter | [X] | `b9bbfd4` |
+
+**⚠️ RISCO DE SEGURANÇA EM ABERTO — RISK-AUDIT-05:** `StubBuScopeResolver` retorna escopo irrestrito (null). Enquanto ativo, **`GestorBU` enxerga todos os registros do tenant**, não apenas das suas BUs (REQ-008.3 parcialmente atendido: estrutura RBAC presente, filtro de BU efetivo pendente). O filtro real depende do read model do `organization` (planejado Sprint 7 no backlog). **NÃO promover a produção sem implementar `IBuScopeResolver` real.** Estrutura/contrato prontos; só a resolução efetiva está stubbed.
+
+## Wave 6 — Hardening (em progresso)
+
+| TASK | Título | Status | Commit |
+|------|--------|--------|--------|
+| TASK-18 | Métricas, alertas e health check | [-] | — |
+| TASK-19 | PII scan em CI + testes de segurança | [ ] | — |
+| TASK-20 | DoD final e sincronização de documentação | [ ] | — |
 
 ## Última falha
 
