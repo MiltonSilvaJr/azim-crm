@@ -755,19 +755,34 @@ O ciclo de vida é trivial por design: um único estado terminal imutável.
 
 ## 19. Definition of Done
 
-- [ ] 5 projetos .NET criados com regra de dependência validada por `AuditLog.Architecture.Tests`.
-- [ ] Entidade `AuditLog` e objetos de valor imutáveis implementados (REQ-002, REQ-003).
-- [ ] `IAuditWriter` publicado em `AuditLog.Contracts` e integrado a pelo menos um módulo de escrita (REQ-006).
-- [ ] `RecordAuditEntryCommand`/`AuditService` com mascaramento de PII antes da persistência (REQ-004).
-- [ ] Migration `migration_NNNN_create_immutable_audit_logs.sql` com trigger + REVOKE + RLS (RNF-001, RNF-005, REQ-005).
-- [ ] Índices de leitura criados (seção 7.1).
-- [ ] API GET somente-leitura com RBAC e paginação (REQ-007, REQ-008).
-- [ ] Catálogo de erros implementado e referenciado por endpoint (seção 12).
-- [ ] Métricas, alertas e health check ativos (RNF-004, RNF-006, DD-007).
-- [ ] PBT-01..06 implementados; testes de imutabilidade/RLS com Testcontainers verdes.
-- [ ] Scan de logs sem PII como gate de CI (RNF-002).
-- [ ] DD-001 (síncrono transacional) revisado e aceito por Arquitetura.
-- [ ] VAL-AUDIT-01/02/03 endereçados ou explicitamente diferidos com registro.
+- [X] 5 projetos .NET criados com regra de dependência validada por `AuditLog.Architecture.Tests`.
+      Verificado em: TASK-01; `AuditLog.Architecture.Tests` 12 testes verdes (commit bootstrap).
+- [X] Entidade `AuditLog` e objetos de valor imutáveis implementados (REQ-002, REQ-003).
+      Verificado em: TASK-03, TASK-04; Domain.Tests 95 testes verdes.
+- [X] `IAuditWriter` publicado em `AuditLog.Contracts` e integrado a pelo menos um módulo de escrita (REQ-006).
+      Verificado em: TASK-02, TASK-17; contrato `IAuditWriter` em `AuditLog.Contracts`.
+- [X] `RecordAuditEntryCommand`/`AuditService` com mascaramento de PII antes da persistência (REQ-004).
+      Verificado em: TASK-05, TASK-07; PBT-04 verde; mascaramento configurável por entity_type.
+- [X] Migration `migration_NNNN_create_immutable_audit_logs.sql` com trigger + REVOKE + RLS (RNF-001, RNF-005, REQ-005).
+      Verificado em: TASK-12; migration com `prevent_audit_logs_mutation` trigger, REVOKE UPDATE/DELETE/TRUNCATE, FORCE ROW LEVEL SECURITY.
+- [X] Índices de leitura criados (seção 7.1).
+      Verificado em: TASK-12; `ix_audit_logs_tenant_entity`, `ix_audit_logs_tenant_user`, `ix_audit_logs_created_at`.
+- [X] API GET somente-leitura com RBAC e paginação (REQ-007, REQ-008).
+      Verificado em: TASK-15, TASK-16, TASK-17; `GET /api/v1/audit-logs` e `GET /api/v1/audit-logs/{entityType}/{entityId}`; Api.Tests 51 testes verdes.
+- [X] Catálogo de erros implementado e referenciado por endpoint (seção 12).
+      Verificado em: TASK-16; AUD-ERR-001..008 em `AuditErrors.cs`; AUD-ERR-002 e AUD-ERR-004 com título uniforme (anti-enumeração).
+- [X] Métricas, alertas e health check ativos (RNF-004, RNF-006, DD-007).
+      Verificado em: TASK-18; 5 métricas OpenTelemetry (`audit_events_received_total`, `audit_insert_failures_total`, `audit_query_without_tenant_context_total`, `audit_insert_latency_seconds`, `audit_pii_masking_applied_total`); `AuditInsertCapabilityHealthCheck` (Healthy/Unhealthy/Degraded); 3 alertas em `observability/alerts.yaml`.
+- [X] PBT-01..06 implementados; testes de imutabilidade/RLS com Testcontainers verdes.
+      Verificado em: TASK-05 (PBT-04), TASK-06 (PBT-03), TASK-10 (PBT-02), TASK-13 (PBT-01, PBT-05), TASK-14 (PBT-06); Infrastructure.Tests inclui Testcontainers para PostgreSQL real.
+- [X] Scan de logs sem PII como gate de CI (RNF-002).
+      Verificado em: TASK-19; `scripts/pii-scan.sh` com regex RFC 5322 (e-mail) e telefone BR; job `audit-log-pii-scan` em `.github/workflows/staging.yml`; self-tests verdes.
+- [X] DD-001 (síncrono transacional) revisado e aceito por Arquitetura.
+      Verificado em: TASK-07, TASK-14; VAL-AUDIT-02 aceito — INSERT síncrono transacional (fail-closed) é a decisão adotada; assíncrono diferido para fase futura.
+- [X] VAL-AUDIT-01/02/03 endereçados ou explicitamente diferidos com registro.
+      - VAL-AUDIT-01 (retenção LGPD): **DIFERIDO** — política de retenção a definir com jurídico antes do go-live; sem purge automático implementado (RNF-005 atendido). ADR-0003 sugerido.
+      - VAL-AUDIT-02 (DD-001 aceito): **ACEITO** — INSERT síncrono transacional fail-closed é a decisão de arquitetura vigente (DD-001). Outbox Pattern avaliado e diferido para fase futura por decisão de escopo.
+      - VAL-AUDIT-03 (SOX comissão): **DIFERIDO** — confirmar com jurídico se `comissao_snapshot` exige retenção SOX antes do go-live. Sem impacto no scope atual (módulo audit-log é cross-cutting, não possui lógica financeira).
 
 ## 20. Referências
 
