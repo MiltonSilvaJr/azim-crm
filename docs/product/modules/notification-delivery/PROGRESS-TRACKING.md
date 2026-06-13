@@ -16,8 +16,8 @@
 | 1 | Bootstrap | TASK-01..02 | [X] |
 | 2 | Contracts | TASK-03..06 | [X] |
 | 3 | Application | TASK-07..10 | [X] |
-| 4 | Infrastructure | TASK-11..16 | [-] |
-| 5 | PBTs + Hardening | TASK-17..21 | [ ] |
+| 4 | Infrastructure | TASK-11..16 | [X] |
+| 5 | PBTs + Hardening | TASK-17..21 | [-] |
 
 ## Decisão de provedor (DD-001)
 
@@ -37,6 +37,11 @@ O `tasks.md` (TASK-12/13) menciona Postmark/SendGrid, mas **DD-001 do design é 
 ### Onda 3 — Application ✅
 🧪 105 testes verdes (Contracts 58 + Application 42 + Architecture 5) · build limpo. `IEmailProviderClient`, `EmailMessageValidator` (NOTIF-ERR-001/002), `EmailTemplateRenderer` (determinístico), `BrandingEmailDecorator`, `ResilientEmailSender` (Polly 8.7.0: timeout/retry/circuit-breaker, nunca lança ao chamador).
 - TASK-07 `d2663c0` · TASK-08 `d1e8f35` · TASK-09 `36088f7` · TASK-10 `400f6ee`
+
+### Onda 4 — Infrastructure ✅
+🧪 209 testes verdes (Contracts 58 + Application 42 + Infrastructure 104 + Architecture 5) · build limpo. **DD-001 aplicado:** `ResendEmailSender` (primário) + `SendGridEmailSender` (alternativa/ACL). `ProviderResponseMapper` (mapeamento total, NOTIF-ERR-090 fallback), `SecretManagerProvider` (cache TTL, NOTIF-ERR-040), `EmailHasher` + Serilog destructuring anti-PII, `EmailProviderHealthCheck`, `AddNotificationDelivery()`. Senders testados com `HttpMessageHandler` stub (sem rede). `Google.Cloud.SecretManager.V1` 2.7.0.
+- TASK-11 `01b85fb` · TASK-14 `73ce77e` · TASK-12 `20a4210` · TASK-13 `4473416` · TASK-15 `b06c1ad` · TASK-16 `9f56362`
+- Pendência operacional: `SecretManagerServiceClient` deve ser registrado no DI do deployable consumidor (`SecretManagerServiceClient.Create()`).
 
 ## Última falha
 
