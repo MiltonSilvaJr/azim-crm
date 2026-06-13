@@ -31,7 +31,7 @@ namespace NotificationDelivery.Application.Resilience;
 /// <para>Validação de borda (<see cref="EmailMessageValidator"/>) ocorre antes do pipeline de resiliência,
 /// sem consumir tentativa nem cota de envio (Req 2.5).</para>
 /// </summary>
-public sealed class ResilientEmailSender : IEmailSender
+public sealed class ResilientEmailSender : IEmailSender, IDisposable
 {
     // -------------------------------------------------------------------------
     // Código de correlação de fallback para mensagens nulas

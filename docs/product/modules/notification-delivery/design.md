@@ -648,20 +648,29 @@ Ver seção 4.5 (máquina de estados do `SendResult`).
 
 ## 19. Definition of Done
 
-- [ ] `IEmailSender` definido em `Contracts`, sem nenhum tipo de provedor na assinatura (Req 1, RNF-1.1).
-- [ ] `EmailMessage` e `SendResult` imutáveis, com igualdade por valor e testes correspondentes (Req 2, Req 3).
-- [ ] `PostmarkEmailSender` e `SendGridEmailSender` implementados e intercambiáveis por configuração (Req 4, DD-001).
-- [ ] `ProviderResponseMapper` cobre o mapeamento total (sucesso, 4xx, 5xx, timeout, bounce, supressão) sem estado indefinido (Req 7, PBT-04).
-- [ ] `ResilientEmailSender` com timeout, retry/backoff e circuit breaker; nunca lança ao chamador (Req 8, RNF 3, DD-004).
-- [ ] Idempotency_key propagada quando suportada; idempotência de negócio documentada como do chamador (Req 9, DD-005).
-- [ ] Branding estrito (DEC-004) e renderização determinística HTML+plaintext (Req 5, Req 6, DD-006).
-- [ ] Credencial exclusivamente via Secret Manager; `gitleaks` verde; nunca em log/erro (Req 10, RNF 6, DD-007).
-- [ ] `EmailProviderHealthCheck` integrado ao readiness do worker (Req 11).
-- [ ] Logs estruturados sem PII + métricas `email_send_*` + alertas configurados (RNF 4, RNF 5, DD-008).
-- [ ] `Architecture.Tests` valida regra de dependência e não-fuga de SDK de provedor (RNF 1, DD-003).
-- [ ] PBT-01..05 implementados e verdes.
-- [ ] Teste de caos confirma não bloqueio do chamador (RNF-3.4).
-- [ ] Gates de go-live: SPF/DKIM/DMARC validados, DPA assinado, ADR-0005 publicada (RNF 2, RNF 7, DD-001).
+<!-- Atualizado em TASK-21 (Onda 5). Status: Implementado (231 testes verdes). -->
+<!-- Gates operacionais pendentes sinalizados como [GATE]. -->
+
+- [X] `IEmailSender` definido em `Contracts`, sem nenhum tipo de provedor na assinatura (Req 1, RNF-1.1). _(TASK-02, Onda 1)_
+- [X] `EmailMessage` e `SendResult` imutáveis, com igualdade por valor e testes correspondentes (Req 2, Req 3). _(TASK-03..06, Onda 2)_
+- [X] `ResendEmailSender` (primário, DD-001) e `SendGridEmailSender` implementados e intercambiáveis por configuração (Req 4). _(TASK-14..16, Onda 4)_
+- [X] `ProviderResponseMapper` cobre o mapeamento total (sucesso, 4xx, 5xx, timeout, bounce, supressão) sem estado indefinido (Req 7, PBT-04). _(TASK-11, Onda 4; PBT-04 verde em TASK-17)_
+- [X] `ResilientEmailSender` com timeout, retry/backoff e circuit breaker; nunca lança ao chamador (Req 8, RNF 3, DD-004). _(TASK-08, Onda 3)_
+- [X] Idempotency_key propagada quando suportada; idempotência de negócio documentada como do chamador (Req 9, DD-005). _(TASK-05, Onda 2; PBT-02 verde em TASK-18)_
+- [X] Branding estrito (DEC-004) e renderização determinística HTML+plaintext (Req 5, Req 6, DD-006). _(TASK-09..10, Onda 3)_
+- [X] Credencial exclusivamente via Secret Manager; `gitleaks` verde; nunca em log/erro (Req 10, RNF 6, DD-007). _(TASK-12..13, Onda 4)_
+- [X] `EmailProviderHealthCheck` integrado ao readiness do worker (Req 11). _(TASK-16, Onda 4)_
+- [X] Logs estruturados sem PII + métricas `email_send_*` + alertas configurados (RNF 4, RNF 5, DD-008). _(TASK-20, Onda 5; observability/alerts.yaml)_
+- [X] `Architecture.Tests` valida regra de dependência e não-fuga de SDK de provedor (RNF 1, DD-003). _(TASK-07, Onda 3)_
+- [X] PBT-01..05 implementados e verdes (≥ 500 exemplos cada). _(TASK-17..19, Onda 5)_
+- [X] Teste de caos confirma não bloqueio do chamador (RNF-3.4). _(TASK-21, Onda 5; ChaosAndIsolationTests)_
+- [GATE] Gates de go-live operacionais — pendentes de validação antes do primeiro envio em produção:
+  - [ ] SPF configurado para domínio remetente (`v=spf1 include:_spf.resend.com ~all`).
+  - [ ] DKIM habilitado no painel Resend e registro DNS publicado.
+  - [ ] DMARC publicado (`v=DMARC1; p=quarantine; rua=mailto:dmarc@azim.com.br`).
+  - [ ] DPA (Data Processing Agreement) assinado com Resend (RNF 7, RNF 2).
+  - [ ] ADR-0005 (provedor primário Resend) publicada em `docs/product/adr/`.
+  - [ ] Variáveis de ambiente de produção (`RESEND__ApiKey`, `RESEND__FromEmail`) provisionadas no Secret Manager.
 
 ## 20. Referências
 
