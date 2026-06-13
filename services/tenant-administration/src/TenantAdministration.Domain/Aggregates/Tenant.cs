@@ -194,7 +194,7 @@ public sealed class Tenant
         DigestTime = digestTime;
         UpdatedAt = now;
 
-        _domainEvents.Add(new DigestConfigChanged(Id, timezone.Value, digestTime.Value));
+        _domainEvents.Add(new DigestConfigChanged(Id, timezone.Value, digestTime.Value, now));
     }
 
     /// <summary>

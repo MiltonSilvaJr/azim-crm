@@ -7,11 +7,12 @@ namespace TenantAdministration.Domain.Events;
 public sealed record DigestConfigChanged(
     Guid TenantId,
     string Timezone,
-    string DigestTime) : IDomainEvent
+    string DigestTime,
+    DateTimeOffset ChangedAt) : IDomainEvent
 {
     /// <inheritdoc/>
     public Guid EventId { get; } = Guid.NewGuid();
 
     /// <inheritdoc/>
-    public DateTimeOffset OccurredAt { get; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset OccurredAt => ChangedAt;
 }
