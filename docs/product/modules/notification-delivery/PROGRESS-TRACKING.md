@@ -15,8 +15,8 @@
 |------|------|-------|--------|
 | 1 | Bootstrap | TASK-01..02 | [X] |
 | 2 | Contracts | TASK-03..06 | [X] |
-| 3 | Application | TASK-07..10 | [-] |
-| 4 | Infrastructure | TASK-11..16 | [ ] |
+| 3 | Application | TASK-07..10 | [X] |
+| 4 | Infrastructure | TASK-11..16 | [-] |
 | 5 | PBTs + Hardening | TASK-17..21 | [ ] |
 
 ## Decisão de provedor (DD-001)
@@ -33,6 +33,10 @@ O `tasks.md` (TASK-12/13) menciona Postmark/SendGrid, mas **DD-001 do design é 
 🧪 63 testes verdes (Contracts 58 + Architecture 5) · build limpo. VOs imutáveis: `SendStatus`, `FailureReason`/`FailureCode`, `BrandingConfig`, `EmailMessage` (sem PII em ToString/exceções), `SendResult`, `IEmailSender`, `EmailSenderContractTestBase`.
 - TASK-03 `f34bd06` · TASK-05 `c7d7359` · TASK-04 `e5a3188` · TASK-06 `a313a17`
 - Dívida leve: `Microsoft.Extensions.Diagnostics.HealthChecks` em Contracts (para `CheckAvailabilityAsync`→`HealthCheckResult`, design §8.1); não é provedor, NetArchTest verde.
+
+### Onda 3 — Application ✅
+🧪 105 testes verdes (Contracts 58 + Application 42 + Architecture 5) · build limpo. `IEmailProviderClient`, `EmailMessageValidator` (NOTIF-ERR-001/002), `EmailTemplateRenderer` (determinístico), `BrandingEmailDecorator`, `ResilientEmailSender` (Polly 8.7.0: timeout/retry/circuit-breaker, nunca lança ao chamador).
+- TASK-07 `d2663c0` · TASK-08 `d1e8f35` · TASK-09 `36088f7` · TASK-10 `400f6ee`
 
 ## Última falha
 
