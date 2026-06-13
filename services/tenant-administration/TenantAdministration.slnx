@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TenantAdministration.Api/TenantAdministration.Api.csproj" />
+    <Project Path="src/TenantAdministration.Application/TenantAdministration.Application.csproj" />
+    <Project Path="src/TenantAdministration.Contracts/TenantAdministration.Contracts.csproj" />
+    <Project Path="src/TenantAdministration.Domain/TenantAdministration.Domain.csproj" />
+    <Project Path="src/TenantAdministration.Infrastructure/TenantAdministration.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TenantAdministration.Api.Tests/TenantAdministration.Api.Tests.csproj" />
+    <Project Path="tests/TenantAdministration.Application.Tests/TenantAdministration.Application.Tests.csproj" />
+    <Project Path="tests/TenantAdministration.Architecture.Tests/TenantAdministration.Architecture.Tests.csproj" />
+    <Project Path="tests/TenantAdministration.Domain.Tests/TenantAdministration.Domain.Tests.csproj" />
+    <Project Path="tests/TenantAdministration.Infrastructure.Tests/TenantAdministration.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

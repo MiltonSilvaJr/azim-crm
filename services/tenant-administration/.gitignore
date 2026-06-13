@@ -1,0 +1,30 @@
+# Artefatos de build
+bin/
+obj/
+
+# Configurações locais
+*.user
+*.suo
+.vs/
+.idea/
+
+# Arquivos de publicação
+publish/
+out/
+
+# NuGet
+*.nupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Cobertura de código
+coverage/
+*.opencover.xml
+*.cobertura.xml
+TestResults/
+
+# Segredos locais
+appsettings.*.local.json
+secrets.json

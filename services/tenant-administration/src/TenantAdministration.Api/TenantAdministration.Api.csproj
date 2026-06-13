@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\TenantAdministration.Application\TenantAdministration.Application.csproj" />
+    <ProjectReference Include="..\TenantAdministration.Infrastructure\TenantAdministration.Infrastructure.csproj" />
+    <ProjectReference Include="..\TenantAdministration.Contracts\TenantAdministration.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
+  </ItemGroup>
+
+</Project>
