@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Contratos públicos: sem dependências de projetos internos -->
+</Project>

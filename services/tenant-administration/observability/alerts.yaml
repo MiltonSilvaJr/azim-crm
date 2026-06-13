@@ -1,0 +1,85 @@
+# Alertas operacionais — módulo tenant-administration
+# TASK-22, design.md §11, RNF 6.2
+# Destino: Cloud Monitoring (GCP) / Prometheus-compatible
+#
+# Todos os alertas usam métricas snake_case definidas em TenantAdministrationMetrics.
+# Revisão obrigatória antes de aplicar em produção.
+
+alerts:
+  # ─── Provisionamento ──────────────────────────────────────────────────────────
+
+  - id: tenant_provisioning_failure
+    display_name: "Falha de Provisionamento de Tenant"
+    severity: critical
+    description: |
+      Alerta crítico de plataforma (RNF 6.2).
+      Disparado quando tenant_provisioning_failed_total incrementa.
+      Indica falha na saga de provisionamento (IdP ou persistência).
+    metric: tenant_provisioning_failed_total
+    condition:
+      threshold: 1
+      window: 5m
+      aggregation: sum
+    notification_channels:
+      - ops-critical
+    runbook: "docs/runbooks/tenant-provisioning-failure.md"
+
+  # ─── Outbox ──────────────────────────────────────────────────────────────────
+
+  - id: outbox_failed_events
+    display_name: "Eventos do Outbox com Falha"
+    severity: high
+    description: |
+      Disparado quando outbox_failed_total > 0.
+      Indica que eventos de domínio não foram publicados no Pub/Sub após MaxRetries.
+      Requer investigação manual — DLQ azim-tenants-dlq pode conter mensagens.
+    metric: outbox_failed_total
+    condition:
+      threshold: 0
+      operator: ">"
+      window: 5m
+      aggregation: sum
+    notification_channels:
+      - ops-high
+    runbook: "docs/runbooks/outbox-failed-events.md"
+
+  # ─── RLS / Segurança ─────────────────────────────────────────────────────────
+
+  - id: tenant_rls_violation
+    display_name: "Violação de RLS entre Tenants (SEV-1)"
+    severity: critical
+    description: |
+      Incidente SEV-1 (design.md §14, RISK-TA-03).
+      Disparado quando tenant_rls_violation_count > 0.
+      Indica possível vazamento de dados entre tenants.
+      Acionar resposta de incidente imediatamente.
+    metric: tenant_rls_violation_count
+    condition:
+      threshold: 0
+      operator: ">"
+      window: 1m
+      aggregation: sum
+    notification_channels:
+      - ops-critical
+      - security-incident
+    runbook: "docs/runbooks/rls-violation-incident.md"
+
+  # ─── DLQ ─────────────────────────────────────────────────────────────────────
+
+  - id: pubsub_dlq_non_empty
+    display_name: "DLQ do Pub/Sub com Mensagens"
+    severity: high
+    description: |
+      Disparado quando a DLQ azim-tenants-dlq contém mensagens.
+      Indica eventos que não puderam ser processados pelos consumidores.
+    metric: pubsub_subscription_num_undelivered_messages
+    labels:
+      subscription: azim-tenants-dlq
+    condition:
+      threshold: 0
+      operator: ">"
+      window: 10m
+      aggregation: max
+    notification_channels:
+      - ops-high
+    runbook: "docs/runbooks/pubsub-dlq.md"

@@ -102,28 +102,28 @@ A numeração ST-MM reinicia a cada nova TASK.
 
 | TASK | Título | Onda | Branch | Status |
 |------|--------|------|--------|--------|
-| TASK-01 | Bootstrap solution e testes de arquitetura | Onda 1 | `feat/tenant-administration/01-bootstrap-solution` | [ ] |
-| TASK-02 | Objetos de valor Slug, TimezoneIana e DigestTime | Onda 2 | `feat/tenant-administration/02-domain-slug-vos` | [ ] |
-| TASK-03 | WcagContrastPolicy, ToneDerivationService e ColorPair | Onda 2 | `feat/tenant-administration/03-domain-wcag-tones` | [ ] |
-| TASK-04 | BrandingTheme e AssetValidationPolicy | Onda 2 | `feat/tenant-administration/04-domain-branding-theme` | [ ] |
-| TASK-05 | Agregado Tenant, TenantBranding e state machine | Onda 2 | `feat/tenant-administration/05-domain-tenant-aggregate` | [ ] |
-| TASK-06 | Domain events e enfileiramento pelo agregado | Onda 2 | `feat/tenant-administration/06-domain-events` | [ ] |
-| TASK-07 | Pipeline behaviors (Correlation, Logging, Validation, Auth, Idempotency, Transaction) | Onda 3 | `feat/tenant-administration/07-app-behaviors` | [ ] |
-| TASK-08 | ProvisionTenantCommand e handler | Onda 3 | `feat/tenant-administration/08-app-provision` | [ ] |
-| TASK-09 | SuspendTenantCommand e ReactivateTenantCommand | Onda 3 | `feat/tenant-administration/09-app-state-commands` | [ ] |
-| TASK-10 | UpdateBrandingCommand e handler | Onda 3 | `feat/tenant-administration/10-app-branding-command` | [ ] |
-| TASK-11 | UpdateDigestConfigCommand, handler e queries | Onda 3 | `feat/tenant-administration/11-app-digest-queries` | [ ] |
-| TASK-12 | EF Core, migrations, RLS e global query filter | Onda 4 | `feat/tenant-administration/12-infra-efcore-rls` | [ ] |
-| TASK-13 | TenantProvisioningSaga e adapter IIdentityTenantProvisioner | Onda 4 | `feat/tenant-administration/13-infra-saga-idp` | [ ] |
-| TASK-14 | IBrandingAssetStorage (GCS), ICdnInvalidator e cache slug | Onda 4 | `feat/tenant-administration/14-infra-gcs-cdn` | [ ] |
-| TASK-15 | Outbox, IEventOutbox e publicador Pub/Sub | Onda 4 | `feat/tenant-administration/15-infra-outbox-pubsub` | [ ] |
-| TASK-16 | Testes de isolamento RLS + PBT-06 gate de CI | Onda 4 | `test/tenant-administration/16-infra-rls-pbt06` | [ ] |
-| TASK-17 | Endpoints de plataforma (provision, suspend, reactivate) | Onda 5 | `feat/tenant-administration/17-api-platform` | [ ] |
-| TASK-18 | Endpoints de tenant (GET/PATCH tenant, GET/PUT branding) | Onda 5 | `feat/tenant-administration/18-api-tenant` | [ ] |
-| TASK-19 | Endpoint público brand.json + CDN cache + anti-enumeração | Onda 5 | `feat/tenant-administration/19-api-brand-json` | [ ] |
-| TASK-20 | Contract tests de eventos + OpenAPI | Onda 5 | `test/tenant-administration/20-contract-events-openapi` | [ ] |
-| TASK-21 | Segurança: bloqueio PlatOp, sanitização SVG, auditoria | Onda 6 | `feat/tenant-administration/21-hardening-security` | [ ] |
-| TASK-22 | Observabilidade: métricas, alertas, health checks e DoD | Onda 6 | `feat/tenant-administration/22-hardening-observability` | [ ] |
+| TASK-01 | Bootstrap solution e testes de arquitetura | Onda 1 | `feat/tenant-administration/01-bootstrap-solution` | [X] |
+| TASK-02 | Objetos de valor Slug, TimezoneIana e DigestTime | Onda 2 | `feat/tenant-administration/02-domain-slug-vos` | [X] |
+| TASK-03 | WcagContrastPolicy, ToneDerivationService e ColorPair | Onda 2 | `feat/tenant-administration/03-domain-wcag-tones` | [X] |
+| TASK-04 | BrandingTheme e AssetValidationPolicy | Onda 2 | `feat/tenant-administration/04-domain-branding-theme` | [X] |
+| TASK-05 | Agregado Tenant, TenantBranding e state machine | Onda 2 | `feat/tenant-administration/05-domain-tenant-aggregate` | [X] |
+| TASK-06 | Domain events e enfileiramento pelo agregado | Onda 2 | `feat/tenant-administration/06-domain-events` | [X] |
+| TASK-07 | Pipeline behaviors (Correlation, Logging, Validation, Auth, Idempotency, Transaction) | Onda 3 | `feat/tenant-administration/07-app-behaviors` | [X] |
+| TASK-08 | ProvisionTenantCommand e handler | Onda 3 | `feat/tenant-administration/08-app-provision` | [X] |
+| TASK-09 | SuspendTenantCommand e ReactivateTenantCommand | Onda 3 | `feat/tenant-administration/09-app-state-commands` | [X] |
+| TASK-10 | UpdateBrandingCommand e handler | Onda 3 | `feat/tenant-administration/10-app-branding-command` | [X] |
+| TASK-11 | UpdateDigestConfigCommand, handler e queries | Onda 3 | `feat/tenant-administration/11-app-digest-queries` | [X] |
+| TASK-12 | EF Core, migrations, RLS e global query filter | Onda 4 | `feat/tenant-administration/12-infra-efcore-rls` | [X] |
+| TASK-13 | TenantProvisioningSaga e adapter IIdentityTenantProvisioner | Onda 4 | `feat/tenant-administration/13-infra-saga-idp` | [X] |
+| TASK-14 | IBrandingAssetStorage (GCS), ICdnInvalidator e cache slug | Onda 4 | `feat/tenant-administration/14-infra-gcs-cdn` | [X] |
+| TASK-15 | Outbox, IEventOutbox e publicador Pub/Sub | Onda 4 | `feat/tenant-administration/15-infra-outbox-pubsub` | [X] |
+| TASK-16 | Testes de isolamento RLS + PBT-06 gate de CI | Onda 4 | `test/tenant-administration/16-infra-rls-pbt06` | [X] |
+| TASK-17 | Endpoints de plataforma (provision, suspend, reactivate) | Onda 5 | `feat/tenant-administration/17-api-platform` | [X] |
+| TASK-18 | Endpoints de tenant (GET/PATCH tenant, GET/PUT branding) | Onda 5 | `feat/tenant-administration/18-api-tenant` | [X] |
+| TASK-19 | Endpoint público brand.json + CDN cache + anti-enumeração | Onda 5 | `feat/tenant-administration/19-api-brand-json` | [X] |
+| TASK-20 | Contract tests de eventos + OpenAPI | Onda 5 | `test/tenant-administration/20-contract-events-openapi` | [X] |
+| TASK-21 | Segurança: bloqueio PlatOp, sanitização SVG, auditoria | Onda 6 | `feat/tenant-administration/21-hardening-security` | [X] |
+| TASK-22 | Observabilidade: métricas, alertas, health checks e DoD | Onda 6 | `feat/tenant-administration/22-hardening-observability` | [X] |
 
 ---
 
@@ -823,7 +823,7 @@ Verificar que os eventos publicados no Pub/Sub conformam ao envelope TRD: `event
 | **Onda** | Onda 6 — Hardening |
 | **Branch** | `feat/tenant-administration/21-hardening-security` |
 | **Worktree** | `git worktree add ../worktrees/tenant-administration/21-hardening-security -b feat/tenant-administration/21-hardening-security` |
-| **Status** | [ ] |
+| **Status** | [X] |
 | **Depende de** | TASK-20 |
 | **Entregável** | Testes de bloqueio de PlatOp a dados comerciais; sanitização SVG verificada por teste; auditoria append-only de provisionamento e branding validada; grants de banco revisados |
 | **Mapeia** | RNF 5, RNF 7; design.md §10, §14, DD-001, DD-007 |
@@ -856,7 +856,7 @@ Consolidar as verificações de segurança que não foram cobertas em TASKs ante
 | **Onda** | Onda 6 — Hardening |
 | **Branch** | `feat/tenant-administration/22-hardening-observability` |
 | **Worktree** | `git worktree add ../worktrees/tenant-administration/22-hardening-observability -b feat/tenant-administration/22-hardening-observability` |
-| **Status** | [ ] |
+| **Status** | [X] |
 | **Depende de** | TASK-21 |
 | **Entregável** | Todas as métricas do design.md §11 implementadas; alertas de falha de provisionamento e RLS configurados; health checks ativos; DoD completo verificado; README do módulo sincronizado |
 | **Mapeia** | RNF 6; design.md §11 |
@@ -888,44 +888,44 @@ Fechar o DoD do design.md §20: implementar as métricas `tenant_provisioned_tot
 
 | Origem | Descrição curta | TASKs | Status |
 |--------|-----------------|-------|--------|
-| Req 1 | Provisionar novo tenant (PlatOp, slug, displayName, timezone) | TASK-08, TASK-13, TASK-17 | [ ] |
-| Req 2 | Slug único global e imutável | TASK-02, TASK-05, TASK-12, TASK-17 | [ ] |
-| Req 3 | Fuso horário IANA e horário do digest | TASK-02, TASK-11, TASK-18 | [ ] |
-| Req 4 | Suspensão e reativação do tenant | TASK-05, TASK-09, TASK-17 | [ ] |
-| Req 5 | Branding white-label estrito (logo, favicon, cores) | TASK-04, TASK-10, TASK-18 | [ ] |
-| Req 6 | Validação de contraste WCAG 2.1 AA | TASK-03, TASK-10, TASK-18 | [ ] |
-| Req 7 | Formato e tamanho de logo e favicon | TASK-04, TASK-10, TASK-14 | [ ] |
-| Req 8 | Derivação determinística de tons | TASK-03, TASK-11, TASK-19 | [ ] |
-| Req 9 | Exposição de branding cacheável (brand.json) | TASK-11, TASK-14, TASK-19 | [ ] |
-| Req 10 | Isolamento estrito por tenant_id (RLS) | TASK-12, TASK-16, TASK-18 | [ ] |
-| Req 11 | Publicação de TenantProvisioned e BrandingChanged | TASK-06, TASK-15, TASK-20 | [ ] |
-| Req 12 | Atomicidade do provisionamento com IdP | TASK-13 | [ ] |
-| RNF 1 | Isolamento multi-tenant com defesa em profundidade | TASK-12, TASK-16, TASK-21 | [ ] |
-| RNF 2 | Validação de contraste WCAG 2.1 AA (determinismo) | TASK-03 | [ ] |
-| RNF 3 | Provisionamento como rotina de aplicação (≤ 30 min) | TASK-13 | [ ] |
-| RNF 4 | Propagação do branding em < 30 s | TASK-14, TASK-19 | [ ] |
-| RNF 5 | Auditoria imutável de provisionamento e branding | TASK-15, TASK-21 | [ ] |
-| RNF 6 | Observabilidade: logs, métricas, alertas, traces | TASK-07, TASK-22 | [ ] |
-| RNF 7 | Bloqueio de PlatOp a dados comerciais | TASK-07, TASK-12, TASK-21 | [ ] |
-| PBT-01 | Imutabilidade e unicidade global do slug | TASK-02 | [ ] |
-| PBT-02 | Normalização e formato do slug | TASK-02 | [ ] |
-| PBT-03 | White-label estrito — conjunto de campos persistidos | TASK-04 | [ ] |
-| PBT-04 | Monotonicidade da validação de contraste WCAG AA | TASK-03 | [ ] |
-| PBT-05 | Determinismo dos tons derivados | TASK-03 | [ ] |
-| PBT-06 | Isolamento estrito por tenant — gate obrigatório de CI | TASK-16 | [ ] |
-| PBT-07 | Atomicidade do provisionamento (ambos-ou-nenhum) | TASK-13 | [ ] |
-| PBT-08 | Transições válidas da state machine do tenant | TASK-05 | [ ] |
-| DD-001 | Acesso a `tenants` em dois planos (roles segregadas) | TASK-12, TASK-21 | [ ] |
-| DD-002 | `status` enum + projeção `active` | TASK-05, TASK-12 | [ ] |
-| DD-003 | Comparação de contraste com arredondamento a 2 casas | TASK-03 | [ ] |
-| DD-004 | Salvar branding com cores reprovadas bloqueia (fail-safe) | TASK-10, TASK-18 | [ ] |
-| DD-005 | Separação física `tenants`/`tenant_brandings` | TASK-12 | [ ] |
-| DD-006 | Cache `slug→tenantId` em Memorystore | TASK-14 | [ ] |
-| DD-007 | Sanitização SVG e validação de content-type real | TASK-04, TASK-21 | [ ] |
-| ADR-0001 | Multi-tenancy pooled DB + RLS | TASK-12, TASK-16 | [ ] |
-| ADR-0008 | Scheduling do digest por fuso IANA | TASK-02, TASK-11 | [ ] |
-| ADR-0009 | Propagação de `correlation_id` e `tenant_id` | TASK-07, TASK-22 | [ ] |
-| TA-ERR-001..014 | Catálogo de erros completo | TASK-17, TASK-18, TASK-19 | [ ] |
+| Req 1 | Provisionar novo tenant (PlatOp, slug, displayName, timezone) | TASK-08, TASK-13, TASK-17 | [X] |
+| Req 2 | Slug único global e imutável | TASK-02, TASK-05, TASK-12, TASK-17 | [X] |
+| Req 3 | Fuso horário IANA e horário do digest | TASK-02, TASK-11, TASK-18 | [X] |
+| Req 4 | Suspensão e reativação do tenant | TASK-05, TASK-09, TASK-17 | [X] |
+| Req 5 | Branding white-label estrito (logo, favicon, cores) | TASK-04, TASK-10, TASK-18 | [X] |
+| Req 6 | Validação de contraste WCAG 2.1 AA | TASK-03, TASK-10, TASK-18 | [X] |
+| Req 7 | Formato e tamanho de logo e favicon | TASK-04, TASK-10, TASK-14 | [X] |
+| Req 8 | Derivação determinística de tons | TASK-03, TASK-11, TASK-19 | [X] |
+| Req 9 | Exposição de branding cacheável (brand.json) | TASK-11, TASK-14, TASK-19 | [X] |
+| Req 10 | Isolamento estrito por tenant_id (RLS) | TASK-12, TASK-16, TASK-18 | [X] |
+| Req 11 | Publicação de TenantProvisioned e BrandingChanged | TASK-06, TASK-15, TASK-20 | [X] |
+| Req 12 | Atomicidade do provisionamento com IdP | TASK-13 | [X] |
+| RNF 1 | Isolamento multi-tenant com defesa em profundidade | TASK-12, TASK-16, TASK-21 | [X] |
+| RNF 2 | Validação de contraste WCAG 2.1 AA (determinismo) | TASK-03 | [X] |
+| RNF 3 | Provisionamento como rotina de aplicação (≤ 30 min) | TASK-13 | [X] |
+| RNF 4 | Propagação do branding em < 30 s | TASK-14, TASK-19 | [X] |
+| RNF 5 | Auditoria imutável de provisionamento e branding | TASK-15, TASK-21 | [X] |
+| RNF 6 | Observabilidade: logs, métricas, alertas, traces | TASK-07, TASK-22 | [X] |
+| RNF 7 | Bloqueio de PlatOp a dados comerciais | TASK-07, TASK-12, TASK-21 | [X] |
+| PBT-01 | Imutabilidade e unicidade global do slug | TASK-02 | [X] |
+| PBT-02 | Normalização e formato do slug | TASK-02 | [X] |
+| PBT-03 | White-label estrito — conjunto de campos persistidos | TASK-04 | [X] |
+| PBT-04 | Monotonicidade da validação de contraste WCAG AA | TASK-03 | [X] |
+| PBT-05 | Determinismo dos tons derivados | TASK-03 | [X] |
+| PBT-06 | Isolamento estrito por tenant — gate obrigatório de CI | TASK-16 | [X] |
+| PBT-07 | Atomicidade do provisionamento (ambos-ou-nenhum) | TASK-13 | [X] |
+| PBT-08 | Transições válidas da state machine do tenant | TASK-05 | [X] |
+| DD-001 | Acesso a `tenants` em dois planos (roles segregadas) | TASK-12, TASK-21 | [X] |
+| DD-002 | `status` enum + projeção `active` | TASK-05, TASK-12 | [X] |
+| DD-003 | Comparação de contraste com arredondamento a 2 casas | TASK-03 | [X] |
+| DD-004 | Salvar branding com cores reprovadas bloqueia (fail-safe) | TASK-10, TASK-18 | [X] |
+| DD-005 | Separação física `tenants`/`tenant_brandings` | TASK-12 | [X] |
+| DD-006 | Cache `slug→tenantId` em Memorystore | TASK-14 | [X] |
+| DD-007 | Sanitização SVG e validação de content-type real | TASK-04, TASK-21 | [X] |
+| ADR-0001 | Multi-tenancy pooled DB + RLS | TASK-12, TASK-16 | [X] |
+| ADR-0008 | Scheduling do digest por fuso IANA | TASK-02, TASK-11 | [X] |
+| ADR-0009 | Propagação de `correlation_id` e `tenant_id` | TASK-07, TASK-22 | [X] |
+| TA-ERR-001..014 | Catálogo de erros completo | TASK-17, TASK-18, TASK-19 | [X] |
 
 ---
 
