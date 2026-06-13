@@ -20,4 +20,8 @@
     <ProjectReference Include="..\Authentication.Domain\Authentication.Domain.csproj" />
     <ProjectReference Include="..\Authentication.Contracts\Authentication.Contracts.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Cloud.SecretManager.V1" Version="2.7.0" />
+  </ItemGroup>
 </Project>

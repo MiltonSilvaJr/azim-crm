@@ -18,6 +18,33 @@ jobs:
           echo "Checks baratos rodam localmente (hooks .forge/hooks/git + /forge:verify)."
 
   # ---------------------------------------------------------------------------
+  # Gate gitleaks — módulo authentication (RNF 7.3, TASK-13, DD-005)
+  # Bloqueia o build ao detectar segredo versionado em qualquer push relevante.
+  # ---------------------------------------------------------------------------
+  authentication-gitleaks-gate:
+    name: authentication / gitleaks (RNF 7.3 gate)
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/staging' ||
+      github.ref == 'refs/heads/develop' ||
+      startsWith(github.ref, 'refs/heads/feat/authentication') ||
+      startsWith(github.ref, 'refs/heads/test/authentication') ||
+      github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: gitleaks scan (segredos versionados — RNF 7.3, DD-005)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+        # Configuração: bloqueia presença de qualquer segredo no histórico do repositório.
+        # A service account key do Firebase Admin SDK é obtida via Secret Manager em runtime (DD-005).
+        # Nenhum segredo deve estar em código, imagem, env em texto claro ou no repositório.
+
+  # ---------------------------------------------------------------------------
   # Gate de Architecture Tests do módulo authentication (DD-001, TASK-02)
   # Roda em pushes de branches feat/authentication/** e em develop/staging.
   # Falha o build imediatamente se Firebase Admin SDK ou identity_uid vazarem
