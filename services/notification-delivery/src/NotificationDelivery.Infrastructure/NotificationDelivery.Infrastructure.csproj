@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    NotificationDelivery.Infrastructure
+    Papel: implementações concretas de provedor (PostmarkEmailSender, SendGridEmailSender,
+           ResendEmailSender), ProviderResponseMapper (ACL), SecretManagerProvider,
+           EmailHasher, EmailProviderHealthCheck, extensões de DI.
+    Regra de dependência (DD-003): Infrastructure → Application, Contracts.
+    SDK de provedor SOMENTE aqui — nunca em Application ou Contracts (RNF 1).
+  -->
+  <PropertyGroup>
+    <AssemblyName>NotificationDelivery.Infrastructure</AssemblyName>
+    <RootNamespace>NotificationDelivery.Infrastructure</RootNamespace>
+    <Description>Camada Infrastructure do módulo notification-delivery: adapters de provedor de e-mail, ACL (ProviderResponseMapper), secrets, hasher PII e health check. SDK de provedor confinado aqui (DD-003, RNF 1).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Infrastructure → Application, Contracts (regra de dependência DD-003) -->
+    <ProjectReference Include="..\..\src\NotificationDelivery.Application\NotificationDelivery.Application.csproj" />
+    <ProjectReference Include="..\..\src\NotificationDelivery.Contracts\NotificationDelivery.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- GCP Secret Manager (DD-007, Req 10): SDK confinado em Infrastructure (RNF 1) -->
+    <PackageReference Include="Google.Cloud.SecretManager.V1" Version="2.7.0" />
+    <!-- IMemoryCache para cache de segredo com TTL (DD-007, design §6.2) -->
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.0" />
+    <!-- HealthChecks (TASK-16, Req 11, design §11.5) -->
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.0" />
+    <!-- DI extensions (TASK-16) -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <!-- IHttpClientFactory (senders TASK-12/TASK-13) -->
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <!-- Logging (ILogger) -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <!-- Serilog destructuring policy (TASK-15) -->
+    <PackageReference Include="Serilog" Version="4.2.0" />
+    <!-- IOptions<T> para configuração tipada -->
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+  </ItemGroup>
+</Project>

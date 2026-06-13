@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    NotificationDelivery.Application
+    Papel: decorators de resiliência e branding, renderer de template,
+           porta de saída IEmailProviderClient, validações de borda.
+    Regra de dependência (DD-003): Application → Contracts.
+    Proibido: referência a Infrastructure ou a tipos de provedor.
+  -->
+  <PropertyGroup>
+    <AssemblyName>NotificationDelivery.Application</AssemblyName>
+    <RootNamespace>NotificationDelivery.Application</RootNamespace>
+    <Description>Camada Application do módulo notification-delivery: ResilientEmailSender, BrandingEmailDecorator, EmailTemplateRenderer, porta IEmailProviderClient e validações de borda.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Application → Contracts (regra de dependência DD-003) -->
+    <ProjectReference Include="..\..\src\NotificationDelivery.Contracts\NotificationDelivery.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Polly" Version="8.7.0" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    NotificationDelivery.Infrastructure.Tests
+    Foco: mapeamento ACL (ProviderResponseMapper), senders com provedor fake/WireMock,
+          SecretManagerProvider, EmailHasher (Req 3, Req 4, Req 7, Req 9, Req 10, RNF 4).
+    Coverlet configurado via Directory.Build.props.
+  -->
+  <PropertyGroup>
+    <AssemblyName>NotificationDelivery.Infrastructure.Tests</AssemblyName>
+    <RootNamespace>NotificationDelivery.Infrastructure.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NotificationDelivery.Infrastructure\NotificationDelivery.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\NotificationDelivery.Application\NotificationDelivery.Application.csproj" />
+    <ProjectReference Include="..\..\src\NotificationDelivery.Contracts\NotificationDelivery.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Fakes/stubs para ISecretProvider e HttpMessageHandler (RISK-EXEC-03: sem GCP real em CI) -->
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.0" />
+    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog.Sinks.InMemory" Version="1.0.0" />
+    <!-- PBT: FsCheck para TASK-17..19 (≥500 exemplos por propriedade) -->
+    <PackageReference Include="FsCheck.Xunit" Version="3.2.0" />
+  </ItemGroup>
+</Project>
