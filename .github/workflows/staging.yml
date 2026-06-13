@@ -18,6 +18,40 @@ jobs:
           echo "Checks baratos rodam localmente (hooks .forge/hooks/git + /forge:verify)."
 
   # ---------------------------------------------------------------------------
+  # Gate de Architecture Tests do módulo authentication (DD-001, TASK-02)
+  # Roda em pushes de branches feat/authentication/** e em develop/staging.
+  # Falha o build imediatamente se Firebase Admin SDK ou identity_uid vazarem
+  # para fora de Authentication.Infrastructure (Req 6.2, 6.3, RISK-AUTH-03).
+  # ---------------------------------------------------------------------------
+  authentication-architecture-gate:
+    name: authentication / Architecture.Tests (DD-001 gate)
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/staging' ||
+      github.ref == 'refs/heads/develop' ||
+      startsWith(github.ref, 'refs/heads/feat/authentication') ||
+      startsWith(github.ref, 'refs/heads/test/authentication') ||
+      github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Build authentication
+        working-directory: services/authentication
+        run: dotnet build Authentication.slnx --configuration Release
+
+      - name: Architecture.Tests (gate obrigatório — DD-001, Req 6.2, 6.3)
+        working-directory: services/authentication
+        run: |
+          dotnet test tests/Authentication.Architecture.Tests/ \
+            --no-build --configuration Release \
+            --logger "console;verbosity=normal"
+
+  # ---------------------------------------------------------------------------
   # Gate de PII em logs do módulo audit-log (RNF-002.2, TASK-19)
   # Roda nos pushes de branches feature/audit-log/** e em develop/staging.
   # ---------------------------------------------------------------------------
