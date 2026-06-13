@@ -1,0 +1,28 @@
+# PROGRESS-TRACKING — tenant-administration
+
+> Tracker do `/forge:coding-loop tenant-administration` (modo autônomo).
+> Legenda: `[ ]` pendente · `[-]` em progresso · `[X]` concluído · `[!]` falhou (HALT).
+
+- Módulo: `tenant-administration` (TA, Generic — Sprint 2/3)
+- tasks.md base: v0.1.1 (Aprovado para desenvolvimento)
+- Raiz da solution: `services/tenant-administration/`
+- Estratégia: branch contínua `feat/tenant-administration/all-waves`, PR único ao fim, merge autônomo após verificação verde (incl. `git status` worktree limpo + sanidade pós-merge).
+
+## Ondas
+
+| Onda | Foco | TASKs | Status |
+|------|------|-------|--------|
+| 1 | Bootstrap | TASK-01 | [ ] |
+| 2 | Domain (PBT 01-05, 08) | TASK-02..06 | [ ] |
+| 3 | Application | TASK-07..11 | [ ] |
+| 4 | Infrastructure (RLS, GCS, IdP, Outbox, Pub/Sub; PBT-06/07) | TASK-12..16 | [ ] |
+| 5 | API + Contracts | TASK-17..20 | [ ] |
+| 6 | Hardening | TASK-21..22 | [ ] |
+
+## Detalhe por onda
+
+_(preenchido conforme execução)_
+
+## Última falha
+
+_(nenhuma)_
