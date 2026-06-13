@@ -34,13 +34,9 @@ public sealed class ValidationBehavior<TRequest, TResponse>(
         if (failures.Count == 0)
             return await next(cancellationToken);
 
-        var errors = failures
-            .GroupBy(f => f.PropertyName, StringComparer.Ordinal)
-            .ToDictionary(
-                g => g.Key,
-                g => g.Select(f => f.ErrorMessage).ToArray(),
-                StringComparer.Ordinal);
+        var validationErrors = failures.Select(f =>
+            new Exceptions.ValidationError(f.PropertyName, f.ErrorMessage, f.ErrorCode));
 
-        throw new ApplicationValidationException(errors);
+        throw new ApplicationValidationException(validationErrors);
     }
 }

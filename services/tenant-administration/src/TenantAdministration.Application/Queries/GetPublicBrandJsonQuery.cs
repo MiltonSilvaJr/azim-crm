@@ -1,5 +1,6 @@
 using MediatR;
 using TenantAdministration.Application.Authorization;
+using TenantAdministration.Application.Dtos;
 using TenantAdministration.Application.Exceptions;
 using TenantAdministration.Application.Ports;
 using TenantAdministration.Domain.Policies;
@@ -17,7 +18,7 @@ public sealed record PublicBrandJsonDto(
     string? FaviconUrl,
     ColorsDto? Colors,
     bool WcagContrastOk,
-    DerivedTones? DerivedTones,
+    DerivedTonesDto? DerivedTones,
     DateTimeOffset Version);
 
 /// <summary>Par de cores público para o brand.json.</summary>
@@ -52,12 +53,19 @@ public sealed class GetPublicBrandJsonHandler(ITenantRepository repository)
                 "Tenant não encontrado.");  // não revelar se suspenso ou inexistente (RNF 1)
 
         var branding = tenant.Branding;
-        DerivedTones? derivedTones = null;
+        DerivedTonesDto? derivedTonesDto = null;
         ColorsDto? colors = null;
 
         if (branding?.Theme.Colors is not null)
         {
-            derivedTones = ToneDerivationService.Derive(branding.Theme.Colors);
+            var domainTones = ToneDerivationService.Derive(branding.Theme.Colors);
+            derivedTonesDto = new DerivedTonesDto(
+                domainTones.PrimaryHover,
+                domainTones.PrimaryActive,
+                domainTones.PrimaryMuted,
+                domainTones.SecondaryHover,
+                domainTones.SecondaryActive,
+                domainTones.SecondaryMuted);
             colors = new ColorsDto(branding.Theme.Colors.Primary, branding.Theme.Colors.Secondary);
         }
 
@@ -67,7 +75,7 @@ public sealed class GetPublicBrandJsonHandler(ITenantRepository repository)
             FaviconUrl: branding?.Theme.FaviconUrl,
             Colors: colors,
             WcagContrastOk: branding?.WcagContrastOk ?? false,
-            DerivedTones: derivedTones,
+            DerivedTones: derivedTonesDto,
             Version: branding?.UpdatedAt ?? tenant.ProvisionedAt);  // versão para ETag do CDN
     }
 }

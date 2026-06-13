@@ -1,5 +1,6 @@
 using MediatR;
 using TenantAdministration.Application.Authorization;
+using TenantAdministration.Application.Dtos;
 using TenantAdministration.Application.Exceptions;
 using TenantAdministration.Application.Ports;
 using TenantAdministration.Domain.Policies;
@@ -9,6 +10,7 @@ namespace TenantAdministration.Application.Queries;
 
 /// <summary>
 /// Branding do tenant com tons derivados.
+/// Usa <see cref="DerivedTonesDto"/> para não criar dependência de Domain na camada de Api.
 /// </summary>
 public sealed record TenantBrandingDto(
     Guid TenantId,
@@ -18,7 +20,7 @@ public sealed record TenantBrandingDto(
     string? SecondaryColor,
     bool WcagContrastOk,
     decimal LastContrastRatio,
-    DerivedTones? DerivedTones,
+    DerivedTonesDto? DerivedTones,
     DateTimeOffset UpdatedAt);
 
 /// <summary>
@@ -47,22 +49,29 @@ public sealed class GetTenantBrandingHandler(ITenantRepository repository)
                 "Tenant não encontrado. Verifique o identificador informado.");
 
         var branding = tenant.Branding;
-        DerivedTones? derivedTones = null;
+        DerivedTonesDto? derivedTonesDto = null;
 
         if (branding?.Theme.Colors is not null)
         {
-            derivedTones = ToneDerivationService.Derive(branding.Theme.Colors);
+            var domainTones = ToneDerivationService.Derive(branding.Theme.Colors);
+            derivedTonesDto = new DerivedTonesDto(
+                domainTones.PrimaryHover,
+                domainTones.PrimaryActive,
+                domainTones.PrimaryMuted,
+                domainTones.SecondaryHover,
+                domainTones.SecondaryActive,
+                domainTones.SecondaryMuted);
         }
 
         return new TenantBrandingDto(
             TenantId: tenant.Id,
             LogoUrl: branding?.Theme.LogoUrl,
             FaviconUrl: branding?.Theme.FaviconUrl,
-            PrimaryColor: branding?.Theme.Colors.Primary,
-            SecondaryColor: branding?.Theme.Colors.Secondary,
+            PrimaryColor: branding?.Theme.Colors?.Primary,
+            SecondaryColor: branding?.Theme.Colors?.Secondary,
             WcagContrastOk: branding?.WcagContrastOk ?? false,
             LastContrastRatio: branding?.LastContrastRatio ?? 0m,
-            DerivedTones: derivedTones,
+            DerivedTones: derivedTonesDto,
             UpdatedAt: branding?.UpdatedAt ?? DateTimeOffset.MinValue);
     }
 }

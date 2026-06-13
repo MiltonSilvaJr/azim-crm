@@ -1,7 +1,7 @@
 using FluentValidation;
 using MediatR;
 using TenantAdministration.Application.Authorization;
-using TenantAdministration.Domain.ValueObjects;
+using TenantAdministration.Application.Dtos;
 
 namespace TenantAdministration.Application.Commands;
 
@@ -18,7 +18,7 @@ public sealed record UpdateBrandingResult(
     decimal ContrastRatio,
     string? LogoUrl,
     string? FaviconUrl,
-    DerivedTones DerivedTones);
+    DerivedTonesDto DerivedTones);
 
 /// <summary>
 /// Command para atualizar o branding white-label de um tenant. Restrito ao Tenant Admin.

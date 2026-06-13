@@ -1,4 +1,5 @@
 using MediatR;
+using TenantAdministration.Application.Dtos;
 using TenantAdministration.Application.Exceptions;
 using TenantAdministration.Application.Ports;
 using TenantAdministration.Domain.Policies;
@@ -95,9 +96,16 @@ public sealed class UpdateBrandingHandler(
         // 9. Invalidar CDN após commit bem-sucedido
         await cdnInvalidator.InvalidateAsync(tenant.Slug.Value, cancellationToken);
 
-        // 10. Derivar tons deterministicamente
-        var derivedTones = ToneDerivationService.Derive(colors);
+        // 10. Derivar tons deterministicamente e mapear para DTO sem dependência de Domain na Api
+        var domainTones = ToneDerivationService.Derive(colors);
+        var derivedTonesDto = new DerivedTonesDto(
+            domainTones.PrimaryHover,
+            domainTones.PrimaryActive,
+            domainTones.PrimaryMuted,
+            domainTones.SecondaryHover,
+            domainTones.SecondaryActive,
+            domainTones.SecondaryMuted);
 
-        return new UpdateBrandingResult(wcagApproved, contrastRatio, logoUrl, faviconUrl, derivedTones);
+        return new UpdateBrandingResult(wcagApproved, contrastRatio, logoUrl, faviconUrl, derivedTonesDto);
     }
 }
