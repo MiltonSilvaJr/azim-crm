@@ -1,0 +1,30 @@
+<Solution>
+  <!--
+    Organization.slnx — formato XML nativo .NET 10
+    Módulo: BC-08 Organization Management (Supporting Subdomain, Tier 1)
+    Estrutura: 5 projetos de produção + 5 de teste (Clean Architecture + DDD).
+
+    Regra de dependência (validada por Architecture.Tests, design §3):
+      Api            -> Application, Infrastructure, Contracts
+      Application    -> Domain, Contracts (NUNCA Infrastructure)
+      Infrastructure -> Application, Domain, Contracts
+      Domain         -> (nenhum projeto interno)
+      Contracts      -> (nenhum projeto interno)
+
+    ADRs aplicáveis: ADR-0001 (Multi-tenancy pooled DB + RLS)
+  -->
+  <Folder Name="/src/">
+    <Project Path="src/Organization.Contracts/Organization.Contracts.csproj" />
+    <Project Path="src/Organization.Domain/Organization.Domain.csproj" />
+    <Project Path="src/Organization.Application/Organization.Application.csproj" />
+    <Project Path="src/Organization.Infrastructure/Organization.Infrastructure.csproj" />
+    <Project Path="src/Organization.Api/Organization.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Organization.Domain.Tests/Organization.Domain.Tests.csproj" />
+    <Project Path="tests/Organization.Application.Tests/Organization.Application.Tests.csproj" />
+    <Project Path="tests/Organization.Infrastructure.Tests/Organization.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Organization.Api.Tests/Organization.Api.Tests.csproj" />
+    <Project Path="tests/Organization.Architecture.Tests/Organization.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>

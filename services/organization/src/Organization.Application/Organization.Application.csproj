@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Organization.Application
+    Papel: commands, queries, handlers, ports (interfaces), validadores FluentValidation,
+           projeção de cache de memberships, pipeline behaviors MediatR.
+    Portas de saída: IBusinessUnitRepository, IUserRepository, IUserInvitationRepository,
+                    IEmailSender, IEventOutbox, IInboxStore, IMembershipCache,
+                    IIdentityProvisioner, ITenantAdminCounter, IClock, ITokenHasher,
+                    IOpportunityCounter, IActivityCounter.
+    Regra de dependência: Application -> Domain, Contracts. NUNCA referencia Infrastructure.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Organization.Application</AssemblyName>
+    <RootNamespace>Organization.Application</RootNamespace>
+    <Description>Casos de uso, ports (interfaces) e pipeline behaviors do módulo organization. Nenhuma referência a Infrastructure (Clean Architecture).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Organization.Domain\Organization.Domain.csproj" />
+    <ProjectReference Include="..\Organization.Contracts\Organization.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- MediatR: desacopla controllers de handlers (clean-architecture rule §10) -->
+    <PackageReference Include="MediatR" Version="12.5.0" />
+    <!-- FluentValidation: validação sintática na borda (ValidationBehavior) -->
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <!-- Abstrações de logging estruturado (observabilidade — RNF 6) -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <!-- Options pattern para configurações (TTL do cache, etc.) -->
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+  </ItemGroup>
+</Project>

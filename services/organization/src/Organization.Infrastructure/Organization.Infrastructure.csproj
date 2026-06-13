@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Organization.Infrastructure
+    Papel: adapters concretos — EF Core (OrganizationDbContext, repositórios, migrations),
+           RLS via SET app.current_tenant, Outbox worker, Pub/Sub publisher,
+           Inbox consumer, Redis adapter (IMembershipCache), IdentityProvisioner
+           (GCP Identity Platform), EmailSender (notification-delivery), contadores
+           externos (IOpportunityCounter, IActivityCounter), IClock.
+    Regra de dependência: Infrastructure -> Application, Domain, Contracts.
+    Infrastructure é o único projeto autorizado a usar EF Core, Npgsql, Redis,
+    StackExchange.Redis, GCP SDKs e drivers de mensageria.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Organization.Infrastructure</AssemblyName>
+    <RootNamespace>Organization.Infrastructure</RootNamespace>
+    <Description>Adapters de infraestrutura do módulo organization: EF Core, RLS, Outbox/Inbox, Redis, Pub/Sub, Identity Platform. Único projeto autorizado a usar drivers de persistência e mensageria.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Organization.Application\Organization.Application.csproj" />
+    <ProjectReference Include="..\Organization.Domain\Organization.Domain.csproj" />
+    <ProjectReference Include="..\Organization.Contracts\Organization.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- EF Core 9.0.6 — versão alinhada com os demais módulos do repositório -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.6" />
+    <!-- Npgsql 9.0.4 — driver PostgreSQL alinhado com os demais módulos -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <!-- Redis para cache de memberships (RNF 5, Req 13) -->
+    <PackageReference Include="StackExchange.Redis" Version="2.8.31" />
+    <!-- Resiliência: retry, circuit breaker, timeout (Polly) -->
+    <PackageReference Include="Polly" Version="8.5.2" />
+    <!-- Serilog: logs estruturados (RNF 6.1) -->
+    <PackageReference Include="Serilog" Version="4.3.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
+    <!-- Health checks: live e ready endpoints -->
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.0" />
+    <!-- HTTP client para adapters externos -->
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+  </ItemGroup>
+</Project>
