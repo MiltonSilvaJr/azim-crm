@@ -172,7 +172,7 @@ public sealed class Tenant
     /// <param name="wcagContrastOk">Resultado da validação WCAG (calculado pelo handler).</param>
     /// <param name="contrastRatio">Razão de contraste calculada.</param>
     /// <param name="now">Instante atual.</param>
-    public void UpdateBranding(BrandingTheme theme, bool wcagContrastOk, decimal contrastRatio, DateTimeOffset now)
+    public void UpdateBranding(BrandingTheme theme, bool wcagContrastOk, decimal? contrastRatio, DateTimeOffset now)
     {
         if (Branding is null)
             Branding = new TenantBranding(theme, wcagContrastOk, contrastRatio, now);
@@ -199,8 +199,9 @@ public sealed class Tenant
 
     /// <summary>
     /// Define o ID do tenant no Identity Platform após o provisionamento externo.
+    /// Visível à Infrastructure para completar o resultado da saga.
     /// </summary>
-    internal void SetIdentityTenantId(string identityTenantId)
+    public void SetIdentityTenantId(string identityTenantId)
     {
         IdentityTenantId = identityTenantId;
     }
