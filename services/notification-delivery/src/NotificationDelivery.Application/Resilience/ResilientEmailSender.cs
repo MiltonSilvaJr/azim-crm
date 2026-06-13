@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NotificationDelivery.Application.Telemetry;
 using NotificationDelivery.Application.Validation;
 using NotificationDelivery.Contracts;
 using Polly;
@@ -45,6 +47,8 @@ public sealed class ResilientEmailSender : IEmailSender
     private readonly ILogger<ResilientEmailSender> _logger;
     private readonly EmailMessageValidator _validator;
     private readonly ResiliencePipeline<SendResult> _pipeline;
+    private readonly NotificationDeliveryMetrics _metrics;
+    private readonly bool _ownsMetrics;
 
     /// <summary>
     /// Constrói o <see cref="ResilientEmailSender"/> e monta o pipeline Polly.
@@ -52,15 +56,27 @@ public sealed class ResilientEmailSender : IEmailSender
     /// <param name="inner">Sender interno (ex.: <c>BrandingEmailDecorator</c> → <c>ProviderEmailSender</c>).</param>
     /// <param name="options">Opções de resiliência injetadas via <c>IOptions&lt;ResilientEmailSenderOptions&gt;</c>.</param>
     /// <param name="logger">Logger estruturado (sem PII — RNF 4).</param>
+    /// <param name="metrics">Métricas do módulo (opcional; criadas internamente se null).</param>
     public ResilientEmailSender(
         IEmailSender inner,
         IOptions<ResilientEmailSenderOptions> options,
-        ILogger<ResilientEmailSender> logger)
+        ILogger<ResilientEmailSender> logger,
+        NotificationDeliveryMetrics? metrics = null)
     {
         _inner = inner;
         _options = options.Value;
         _logger = logger;
         _validator = new EmailMessageValidator();
+        if (metrics is null)
+        {
+            _metrics = new NotificationDeliveryMetrics();
+            _ownsMetrics = true;
+        }
+        else
+        {
+            _metrics = metrics;
+            _ownsMetrics = false;
+        }
         _pipeline = BuildPipeline();
     }
 
@@ -90,10 +106,23 @@ public sealed class ResilientEmailSender : IEmailSender
         if (validationFailure is not null)
             return validationFailure;
 
+        // Iniciar span de rastreamento (sem PII — RNF 4)
+        using var activity = NotificationDeliveryMetrics.StartSendActivity(
+            correlationId: message.CorrelationId,
+            tenantId: message.TenantId,
+            provider: ProviderName);
+
+        var stopwatch = Stopwatch.StartNew();
+
+        // Registrar tentativa (TASK-20)
+        _metrics.RecordAttempt(ProviderName, message.TenantId);
+
+        SendResult result;
+
         // Executar dentro do pipeline de resiliência com captura total de exceções
         try
         {
-            return await _pipeline.ExecuteAsync(
+            result = await _pipeline.ExecuteAsync(
                 async ct => await _inner.SendAsync(message, ct).ConfigureAwait(false),
                 cancellationToken).ConfigureAwait(false);
         }
@@ -101,14 +130,77 @@ public sealed class ResilientEmailSender : IEmailSender
         {
             // Captura residual: qualquer exceção não tratada pelo pipeline
             // (ex.: BrokenCircuitException, TimeoutRejectedException quando propagadas)
-            return HandleResidualException(ex, message.CorrelationId);
+            result = HandleResidualException(ex, message.CorrelationId);
         }
+
+        stopwatch.Stop();
+
+        // Registrar duração e resultado nas métricas (TASK-20)
+        _metrics.RecordDuration(stopwatch.Elapsed.TotalSeconds, ProviderName, message.TenantId);
+        RecordResultMetrics(result, message.TenantId);
+
+        // Enriquecer span com resultado (sem PII)
+        activity?.SetTag("send.status", result.Status.ToString());
+        activity?.SetTag("send.attempt_count", result.AttemptCount);
+        if (result.Reason is not null)
+            activity?.SetTag("send.failure_code", result.Reason.Code);
+
+        return result;
     }
 
     /// <inheritdoc/>
     public Task<HealthCheckResult> CheckAvailabilityAsync(
         CancellationToken cancellationToken = default) =>
         _inner.CheckAvailabilityAsync(cancellationToken);
+
+    /// <summary>Libera recursos: fecha o <see cref="NotificationDeliveryMetrics"/> se foi criado internamente.</summary>
+    public void Dispose()
+    {
+        if (_ownsMetrics)
+            _metrics.Dispose();
+    }
+
+    // -------------------------------------------------------------------------
+    // Registro de métricas por resultado
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Registra métricas de resultado de acordo com o <see cref="SendStatus"/> do resultado.
+    /// Sem PII — usa apenas provider e tenantId (RNF 4, TASK-20).
+    /// </summary>
+    private void RecordResultMetrics(SendResult result, string tenantId)
+    {
+        switch (result.Status)
+        {
+            case SendStatus.Sent:
+                _metrics.RecordSuccess(result.Provider ?? ProviderName, tenantId);
+                break;
+
+            case SendStatus.TransientFailure:
+                _metrics.RecordFailure(
+                    result.Provider ?? ProviderName,
+                    tenantId,
+                    result.Reason?.Code ?? FailureCode.TransientProviderFailure,
+                    isTransient: true);
+                break;
+
+            case SendStatus.PermanentFailure:
+                _metrics.RecordFailure(
+                    result.Provider ?? ProviderName,
+                    tenantId,
+                    result.Reason?.Code ?? FailureCode.ProviderRejectedPayload,
+                    isTransient: false);
+                break;
+
+            case SendStatus.Bounced:
+                _metrics.RecordBounce(result.Provider ?? ProviderName, tenantId);
+                break;
+
+            case SendStatus.Suppressed:
+                _metrics.RecordSuppressed(result.Provider ?? ProviderName, tenantId);
+                break;
+        }
+    }
 
     // -------------------------------------------------------------------------
     // Construção do pipeline Polly v8
@@ -149,6 +241,7 @@ public sealed class ResilientEmailSender : IEmailSender
                     || r.Status == SendStatus.PermanentFailure),
             OnOpened = args =>
             {
+                _metrics.SetCircuitBreakerState(1); // 1 = aberto
                 _logger.LogError(
                     "Circuit breaker aberto após falhas consecutivas. " +
                     "Código: {FailureCode}. Break duration: {BreakDuration}s. (NOTIF-ERR-011, Req 8.3)",
@@ -158,11 +251,13 @@ public sealed class ResilientEmailSender : IEmailSender
             },
             OnClosed = args =>
             {
+                _metrics.SetCircuitBreakerState(0); // 0 = fechado
                 _logger.LogInformation("Circuit breaker fechado — provedor disponível novamente.");
                 return ValueTask.CompletedTask;
             },
             OnHalfOpened = args =>
             {
+                _metrics.SetCircuitBreakerState(2); // 2 = half-open
                 _logger.LogInformation("Circuit breaker em half-open — testando disponibilidade do provedor.");
                 return ValueTask.CompletedTask;
             }

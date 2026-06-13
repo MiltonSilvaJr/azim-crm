@@ -1,0 +1,210 @@
+# Alertas do módulo notification-delivery — Cloud Monitoring (Google Cloud)
+#
+# TASK-20: 4 alertas baseados nas métricas email_send_* (RNF 5).
+# Formato: Cloud Monitoring alertPolicies (gcloud monitoring policies).
+#
+# Deploy:
+#   gcloud alpha monitoring policies create --policy-from-file=alerts.yaml
+#
+# Referência: https://cloud.google.com/monitoring/alerts/policies-in-json
+#
+# Nenhum alerta usa PII (RNF 4). Todos os labels são técnicos (provider, tenant_id, failure_code).
+
+alertPolicies:
+
+  # ---------------------------------------------------------------------------
+  # ALERT-01: Taxa de falha de envio elevada (transiente ou permanente)
+  #
+  # Dispara quando a taxa de falhas de envio supera 10% nos últimos 5 minutos.
+  # Indica problema com o provedor de e-mail ou com a infraestrutura de rede.
+  # ---------------------------------------------------------------------------
+  - displayName: "notification-delivery: taxa de falha de envio elevada (>10%)"
+    documentation:
+      content: |
+        Taxa de falha de envio de e-mail superior a 10% nos últimos 5 minutos.
+
+        Possíveis causas:
+        - Provedor de e-mail indisponível ou com instabilidade.
+        - Credenciais expiradas ou inválidas (NOTIF-ERR-002).
+        - Rate limit atingido (NOTIF-ERR-003).
+        - Payload inválido em lote (NOTIF-ERR-001).
+
+        Runbook: docs/runbooks/notification-delivery-alta-taxa-falha.md
+        Código de falha: ver tag `failure_code` da métrica `email_send_failure_total`.
+      mimeType: "text/markdown"
+    conditions:
+      - displayName: "email_send_failure_total / email_send_attempts_total > 0.10"
+        conditionThreshold:
+          filter: >
+            metric.type="workload.googleapis.com/email_send_failure_total"
+            resource.type="generic_task"
+          aggregations:
+            - alignmentPeriod: "300s"
+              perSeriesAligner: ALIGN_RATE
+              crossSeriesReducer: REDUCE_SUM
+              groupByFields:
+                - "metric.label.provider"
+                - "metric.label.tenant_id"
+          denominatorFilter: >
+            metric.type="workload.googleapis.com/email_send_attempts_total"
+            resource.type="generic_task"
+          denominatorAggregations:
+            - alignmentPeriod: "300s"
+              perSeriesAligner: ALIGN_RATE
+              crossSeriesReducer: REDUCE_SUM
+          comparison: COMPARISON_GT
+          thresholdValue: 0.10
+          duration: "300s"
+          trigger:
+            count: 1
+    alertStrategy:
+      notificationRateLimit:
+        period: "600s"
+      autoClose: "1800s"
+    combiner: OR
+    enabled: true
+    severity: WARNING
+
+  # ---------------------------------------------------------------------------
+  # ALERT-02: Circuit breaker aberto
+  #
+  # Dispara quando o gauge email_circuit_breaker_state == 1 (aberto) por > 60s.
+  # Indica que o provedor está indisponível e todas as tentativas falham rapidamente.
+  # ---------------------------------------------------------------------------
+  - displayName: "notification-delivery: circuit breaker aberto"
+    documentation:
+      content: |
+        O circuit breaker do notification-delivery está aberto há mais de 60 segundos.
+
+        Isso significa que o provedor de e-mail está sendo detectado como indisponível.
+        Todas as tentativas de envio estão falhando rapidamente (fail-fast).
+
+        Possíveis causas:
+        - Provedor de e-mail completamente indisponível.
+        - Falha de rede entre o serviço e o provedor.
+        - Credenciais revogadas causando falhas consecutivas.
+
+        Código: NOTIF-ERR-011.
+        Runbook: docs/runbooks/notification-delivery-circuit-breaker.md
+      mimeType: "text/markdown"
+    conditions:
+      - displayName: "email_circuit_breaker_state == 1 (aberto) por > 60s"
+        conditionThreshold:
+          filter: >
+            metric.type="workload.googleapis.com/email_circuit_breaker_state"
+            resource.type="generic_task"
+          aggregations:
+            - alignmentPeriod: "60s"
+              perSeriesAligner: ALIGN_MEAN
+          comparison: COMPARISON_EQ
+          thresholdValue: 1
+          duration: "60s"
+          trigger:
+            count: 1
+    alertStrategy:
+      notificationRateLimit:
+        period: "300s"
+      autoClose: "900s"
+    combiner: OR
+    enabled: true
+    severity: CRITICAL
+
+  # ---------------------------------------------------------------------------
+  # ALERT-03: Latência de envio elevada (p95 > 5s)
+  #
+  # Dispara quando a latência p95 de envio supera 5 segundos nos últimos 10 minutos.
+  # Indica lentidão do provedor que pode preceder indisponibilidade.
+  # ---------------------------------------------------------------------------
+  - displayName: "notification-delivery: latência de envio elevada (p95 > 5s)"
+    documentation:
+      content: |
+        Latência de envio de e-mail (p95) superior a 5 segundos nos últimos 10 minutos.
+
+        Possíveis causas:
+        - Provedor de e-mail com degradação de performance.
+        - Problemas de rede com alta latência.
+        - Timeout configurado pode precisar de ajuste (RNF-3.1).
+
+        Runbook: docs/runbooks/notification-delivery-latencia-elevada.md
+        Métrica: `email_send_duration_seconds` (percentil 95).
+      mimeType: "text/markdown"
+    conditions:
+      - displayName: "email_send_duration_seconds p95 > 5s"
+        conditionThreshold:
+          filter: >
+            metric.type="workload.googleapis.com/email_send_duration_seconds"
+            resource.type="generic_task"
+          aggregations:
+            - alignmentPeriod: "600s"
+              perSeriesAligner: ALIGN_PERCENTILE_95
+              crossSeriesReducer: REDUCE_MAX
+              groupByFields:
+                - "metric.label.provider"
+          comparison: COMPARISON_GT
+          thresholdValue: 5.0
+          duration: "600s"
+          trigger:
+            count: 1
+    alertStrategy:
+      notificationRateLimit:
+        period: "900s"
+      autoClose: "1800s"
+    combiner: OR
+    enabled: true
+    severity: WARNING
+
+  # ---------------------------------------------------------------------------
+  # ALERT-04: Volume de bounces elevado (> 5% dos envios)
+  #
+  # Dispara quando a taxa de hard bounces supera 5% nos últimos 30 minutos.
+  # Indica problemas de qualidade da lista de destinatários ou reputação do domínio.
+  # ---------------------------------------------------------------------------
+  - displayName: "notification-delivery: taxa de bounces elevada (>5%)"
+    documentation:
+      content: |
+        Taxa de hard bounces superior a 5% nos últimos 30 minutos.
+
+        Alta taxa de bounces pode comprometer a reputação do domínio de envio
+        e levar ao bloqueio pelo provedor de e-mail.
+
+        Possíveis causas:
+        - Lista de e-mails com endereços inválidos ou desatualizados.
+        - Reputação do domínio remetente comprometida.
+        - Bloqueio por spam filters (verificar SPF/DKIM/DMARC).
+
+        Runbook: docs/runbooks/notification-delivery-bounces-elevados.md
+        Código: NOTIF-ERR-007 (HardBounce).
+        Gate: SPF/DKIM/DMARC configurados antes do go-live (ADR-0005).
+      mimeType: "text/markdown"
+    conditions:
+      - displayName: "email_bounce_total / email_send_attempts_total > 0.05"
+        conditionThreshold:
+          filter: >
+            metric.type="workload.googleapis.com/email_bounce_total"
+            resource.type="generic_task"
+          aggregations:
+            - alignmentPeriod: "1800s"
+              perSeriesAligner: ALIGN_RATE
+              crossSeriesReducer: REDUCE_SUM
+              groupByFields:
+                - "metric.label.provider"
+                - "metric.label.tenant_id"
+          denominatorFilter: >
+            metric.type="workload.googleapis.com/email_send_attempts_total"
+            resource.type="generic_task"
+          denominatorAggregations:
+            - alignmentPeriod: "1800s"
+              perSeriesAligner: ALIGN_RATE
+              crossSeriesReducer: REDUCE_SUM
+          comparison: COMPARISON_GT
+          thresholdValue: 0.05
+          duration: "300s"
+          trigger:
+            count: 1
+    alertStrategy:
+      notificationRateLimit:
+        period: "1800s"
+      autoClose: "3600s"
+    combiner: OR
+    enabled: true
+    severity: WARNING
