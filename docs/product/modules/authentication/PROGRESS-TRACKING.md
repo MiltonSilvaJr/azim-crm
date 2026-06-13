@@ -12,8 +12,8 @@
 
 | Onda | Foco | TASKs | Status |
 |------|------|-------|--------|
-| 1 | Bootstrap | TASK-01..02 | [ ] |
-| 2 | Domain | TASK-03..04 | [ ] |
+| 1 | Bootstrap | TASK-01..02 | [X] (`9e38bb5`,`388abdd`) — 14 testes Architecture |
+| 2 | Domain | TASK-03..04 | [-] |
 | 3 | Application | TASK-05..09 | [ ] |
 | 4 | Infrastructure (Firebase adapter) | TASK-10..14 | [ ] |
 | 5 | API + Contracts | TASK-15..20 | [ ] |
