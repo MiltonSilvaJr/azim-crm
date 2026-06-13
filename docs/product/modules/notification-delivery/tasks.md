@@ -1,8 +1,8 @@
 # Tasks — NOTIF — Notification Delivery
 
-- Versão: 0.1.0
-- Data: 2026-06-11
-- Status: Rascunho para revisão
+- Versão: 0.1.1
+- Data: 2026-06-13
+- Status: Aprovado para desenvolvimento
 - Referência base requirements: docs/product/modules/notification-delivery/requirements.md v0.1.0
 - Referência base design: docs/product/modules/notification-delivery/design.md v0.1.0
 - ADRs aplicáveis: ADR-0005 (provedor de e-mail transacional — a formalizar após spike), ADR-0007 (stack de observabilidade GCP — a formalizar)
@@ -13,6 +13,7 @@
 | Versão | Data | Status | Descrição da alteração |
 |--------|------|--------|------------------------|
 | 0.1.0 | 2026-06-11 | Rascunho para revisão | Criação inicial do plano de tasks a partir de requirements.md v0.1.0 e design.md v0.1.0 (Req 1..11, RNF 1..7, PBT-01..05, DD-001..009) |
+| 0.1.1 | 2026-06-13 | Aprovado para desenvolvimento | Aprovação humana (HITL #1); início da execução via `/forge:coding-loop notification-delivery` (modo autônomo, 5 ondas). |
 
 ## 1. Convenções de Implementação
 
