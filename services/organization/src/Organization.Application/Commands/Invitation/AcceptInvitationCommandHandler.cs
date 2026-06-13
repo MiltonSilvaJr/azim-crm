@@ -2,6 +2,7 @@ using MediatR;
 using Organization.Application.Ports;
 using Organization.Domain.Aggregates;
 using Organization.Domain.ValueObjects;
+using DomainUser = Organization.Domain.Aggregates.User;
 
 namespace Organization.Application.Commands.Invitation;
 
@@ -71,7 +72,7 @@ public sealed class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvit
             cancellationToken);
 
         // Cria usuário
-        var user = User.Activate(
+        var user = DomainUser.Activate(
             invitation.Email,
             request.DisplayName,
             identityUid,
