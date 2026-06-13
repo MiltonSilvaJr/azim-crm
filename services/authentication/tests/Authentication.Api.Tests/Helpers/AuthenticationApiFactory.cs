@@ -114,6 +114,19 @@ public sealed class AuthenticationApiFactory : WebApplicationFactory<Program>
                     Arg.Any<CancellationToken>())
                 .Returns(Task.CompletedTask);
 
+            // IdentityProvider: VerifyTokenAsync retorna resultado válido por padrão
+            IdentityProvider.VerifyTokenAsync(
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult(new VerifyTokenResult
+                {
+                    ProviderUserRef = "ref-default",
+                    FirebaseTenant = DefaultFirebaseTenant,
+                    Email = "user@acme.com",
+                    SignInProvider = "password"
+                }));
+
             // IdentityProvider: RevokeRefreshTokens não falha por padrão
             IdentityProvider.RevokeRefreshTokensAsync(
                     Arg.Any<Guid>(),
