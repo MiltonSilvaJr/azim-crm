@@ -16,8 +16,8 @@
 | 2 | Domain (PBT 01-05, 08) | TASK-02..06 | [X] (5 commits) — 133 Domain + PBT-01..05,08 |
 | 3 | Application | TASK-07..11 | [X] (5 commits) — 53 App; 10 ports |
 | 4 | Infrastructure (RLS, GCS, IdP, Outbox, Pub/Sub; PBT-06/07) | TASK-12..16 | [X] (5 commits) — 26 Infra (RLS Testcontainers), PBT-07; EF 9.0.6 |
-| 5 | API + Contracts | TASK-17..20 | [-] |
-| 6 | Hardening | TASK-21..22 | [ ] |
+| 5 | API + Contracts | TASK-17..20 | [X] (4 commits) — 42 Api; brand.json anti-enum |
+| 6 | Hardening | TASK-21..22 | [-] |
 
 ## Detalhe por onda
 
