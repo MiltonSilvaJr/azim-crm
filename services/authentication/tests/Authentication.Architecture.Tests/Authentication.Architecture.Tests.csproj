@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Authentication.Architecture.Tests
+    Foco: regra de dependência entre camadas (DD-001); proibição de Firebase Admin SDK
+          fora de Infrastructure; proibição de identity_uid fora de Infrastructure.
+    Executa em 100% dos PRs; falha o CI em caso de violação (Req 6.2, 6.3, RISK-AUTH-03, DD-001).
+    Coverlet configurado via Directory.Build.props.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Authentication.Architecture.Tests</AssemblyName>
+    <RootNamespace>Authentication.Architecture.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- NetArchTest para regras de arquitetura -->
+    <PackageReference Include="NetArchTest.Rules" Version="1.3.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Referencia todos os projetos de produção para inspeção de assemblies -->
+    <ProjectReference Include="..\..\src\Authentication.Contracts\Authentication.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Authentication.Domain\Authentication.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Authentication.Application\Authentication.Application.csproj" />
+    <ProjectReference Include="..\..\src\Authentication.Infrastructure\Authentication.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Authentication.Api\Authentication.Api.csproj" />
+  </ItemGroup>
+</Project>

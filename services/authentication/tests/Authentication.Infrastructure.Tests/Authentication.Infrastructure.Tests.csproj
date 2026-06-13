@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Authentication.Infrastructure.Tests
+    Foco: FirebaseIdentityProvider contra emulador Firebase/WireMock; mapeamento
+          de exceção -> IdentityProviderException; MembershipCacheRepository (Redis);
+          JwksTokenVerifier (WireMock); SecretManagerProvider; OrganizationUserDirectory
+          e TenantDirectory (Testcontainers PostgreSQL); PBT-02 de integração.
+    Gate de CI: Infrastructure.Tests coverage >= 70%.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Authentication.Infrastructure.Tests</AssemblyName>
+    <RootNamespace>Authentication.Infrastructure.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Authentication.Infrastructure\Authentication.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Authentication.Application\Authentication.Application.csproj" />
+    <ProjectReference Include="..\..\src\Authentication.Domain\Authentication.Domain.csproj" />
+  </ItemGroup>
+</Project>

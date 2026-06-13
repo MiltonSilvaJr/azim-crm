@@ -1,0 +1,28 @@
+<Solution>
+  <!--
+    Authentication.slnx — formato XML nativo .NET 10
+    Módulo: BC-12 Authentication (ACL stateless para GCP Identity Platform)
+    Estrutura DD-001: 5 projetos de produção + 5 de teste.
+    Regra de dependência (inviolável, enforçada por Architecture.Tests):
+      Api            -> Application, Contracts, Infrastructure (wiring DI)
+      Application    -> Domain, Contracts
+      Infrastructure -> Application, Domain, Contracts
+      Domain         -> Contracts
+      Contracts      -> (nenhum projeto interno)
+    Confinamento ACL (DD-001): Firebase Admin SDK e identity_uid SOMENTE em Infrastructure.
+  -->
+  <Folder Name="/src/">
+    <Project Path="src/Authentication.Contracts/Authentication.Contracts.csproj" />
+    <Project Path="src/Authentication.Domain/Authentication.Domain.csproj" />
+    <Project Path="src/Authentication.Application/Authentication.Application.csproj" />
+    <Project Path="src/Authentication.Infrastructure/Authentication.Infrastructure.csproj" />
+    <Project Path="src/Authentication.Api/Authentication.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Authentication.Domain.Tests/Authentication.Domain.Tests.csproj" />
+    <Project Path="tests/Authentication.Application.Tests/Authentication.Application.Tests.csproj" />
+    <Project Path="tests/Authentication.Infrastructure.Tests/Authentication.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Authentication.Api.Tests/Authentication.Api.Tests.csproj" />
+    <Project Path="tests/Authentication.Architecture.Tests/Authentication.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>

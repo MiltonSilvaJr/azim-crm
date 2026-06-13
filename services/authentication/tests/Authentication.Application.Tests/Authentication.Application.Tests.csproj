@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Authentication.Application.Tests
+    Foco: composição do AuthContext (cache hit/miss, usuário inativo -> 403),
+          validação de token, idempotência de logout; PBT-02 unitário (isolamento
+          cross-tenant), PBT-04 (idempotência de logout) e PBT-03 unitário
+          (anti-enumeração de e-mail).
+    Gate de CI: Application.Tests coverage >= 85%.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Authentication.Application.Tests</AssemblyName>
+    <RootNamespace>Authentication.Application.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Authentication.Application\Authentication.Application.csproj" />
+    <ProjectReference Include="..\..\src\Authentication.Domain\Authentication.Domain.csproj" />
+  </ItemGroup>
+</Project>

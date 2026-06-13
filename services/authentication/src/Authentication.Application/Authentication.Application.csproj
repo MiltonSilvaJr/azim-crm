@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Authentication.Application
+    Papel: portas de saída (IIdentityProvider, IUserDirectory, ITenantDirectory,
+           IEmailSender, IRateLimiter, ITokenVerifier, ISecretProvider),
+           serviços de aplicação (AuthContextComposer, SessionTokenValidator,
+           SessionRevocationService, InviteActivationService, PasswordResetService).
+    Regra de dependência (DD-001): referencia Domain e Contracts; NUNCA Infrastructure.
+    Confinamento ACL (DD-001): nenhum tipo do Firebase Admin SDK; nenhum identity_uid.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Authentication.Application</AssemblyName>
+    <RootNamespace>Authentication.Application</RootNamespace>
+    <Description>Portas de saída e serviços de aplicação do módulo authentication. Nenhuma referência ao SDK do Identity Provider (DD-001, Clean Architecture).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Authentication.Domain\Authentication.Domain.csproj" />
+    <ProjectReference Include="..\Authentication.Contracts\Authentication.Contracts.csproj" />
+  </ItemGroup>
+</Project>

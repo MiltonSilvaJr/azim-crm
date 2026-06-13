@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Authentication.Api.Tests
+    Foco: middlewares (ordem tenant->auth), /v1/auth/me, /v1/auth/logout,
+          anti-enumeração (corpo, código e timing do /password-reset);
+          PBT-03 API e PBT-04 API verdes.
+    Gate de CI: Api.Tests coverage >= 80%.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Authentication.Api.Tests</AssemblyName>
+    <RootNamespace>Authentication.Api.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Authentication.Api\Authentication.Api.csproj" />
+    <ProjectReference Include="..\..\src\Authentication.Application\Authentication.Application.csproj" />
+    <ProjectReference Include="..\..\src\Authentication.Contracts\Authentication.Contracts.csproj" />
+  </ItemGroup>
+</Project>
