@@ -16,4 +16,8 @@
     <!-- Application → Contracts (regra de dependência DD-003) -->
     <ProjectReference Include="..\..\src\NotificationDelivery.Contracts\NotificationDelivery.Contracts.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Polly" Version="8.7.0" />
+  </ItemGroup>
 </Project>
