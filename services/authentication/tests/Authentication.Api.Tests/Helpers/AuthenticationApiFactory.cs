@@ -68,6 +68,9 @@ public sealed class AuthenticationApiFactory : WebApplicationFactory<Program>
             services.AddScoped<InviteActivationService>();
             services.AddScoped<PasswordResetService>();
 
+            // Zerar delay constante para testes rápidos (RISK-AUTH-05 — delay real apenas em prod)
+            services.Configure<PasswordResetOptions>(opts => opts.ConstantDelayMs = 0);
+
             // Handler de autenticação de teste (substitui Firebase)
             services.AddAuthentication(TestAuthHandler.SchemeName)
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
