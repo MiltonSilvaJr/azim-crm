@@ -15,8 +15,8 @@
 | 1 | Bootstrap | TASK-01..02 | [X] (`90a8338`,`b72992c`) — 10 Architecture; EF 9.0.6 |
 | 2 | Domain (PBT-04/06/07) | TASK-03..06 | [X] (4 commits) — 139 Domain + PBT-04/06/07 |
 | 3 | Application (PBT-02/03) | TASK-07..14 | [X] (8 commits) — 95 App + PBT-02/03; GetRbacContextQuery + MembershipCacheProjector |
-| 4 | Infrastructure (RLS, Outbox/Inbox) | TASK-15..19 | [-] |
-| 5 | API + Contracts | TASK-20..24 | [ ] |
+| 4 | Infrastructure (RLS, Outbox/Inbox) | TASK-15..19 | [X] (5 commits) — 35 Infra (RLS Testcontainers); EF 9.0.6 |
+| 5 | API + Contracts | TASK-20..24 | [-] |
 | 6 | Hardening (PBT-01/05) | TASK-25..28 | [ ] |
 
 ## Detalhe por onda
