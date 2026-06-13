@@ -15,8 +15,8 @@
 | 1 | Bootstrap | TASK-01..02 | [X] (`9e38bb5`,`388abdd`) — 14 testes Architecture |
 | 2 | Domain | TASK-03..04 | [X] (`f51024f`,`eb36bf5`) — 72 Domain + PBT-01 |
 | 3 | Application | TASK-05..09 | [X] (5 commits) — 33 App + PBT-02/03/04/05 |
-| 4 | Infrastructure (Firebase adapter) | TASK-10..14 | [-] |
-| 5 | API + Contracts | TASK-15..20 | [ ] |
+| 4 | Infrastructure (Firebase adapter) | TASK-10..14 | [X] (5 commits) — 30 Infra (Testcontainers Redis+PG) |
+| 5 | API + Contracts | TASK-15..20 | [-] |
 | 6 | Hardening | TASK-21..25 | [ ] |
 
 ## Detalhe por onda
