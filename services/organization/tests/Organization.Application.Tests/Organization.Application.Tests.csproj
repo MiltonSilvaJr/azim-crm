@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Organization.Application.Tests
+    Foco: handlers de command/query, pipeline behaviors, LastTenantAdminPolicy,
+          idempotência de aceite/provisionamento, RBAC deny-by-default,
+          invalidação de cache. PBTs: PBT-02, PBT-03.
+    Cobertura meta: ≥85% em Organization.Application.
+    Coverlet configurado via Directory.Build.props.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Organization.Application.Tests</AssemblyName>
+    <RootNamespace>Organization.Application.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Organization.Domain\Organization.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Organization.Application\Organization.Application.csproj" />
+    <ProjectReference Include="..\..\src\Organization.Contracts\Organization.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- NSubstitute: mocks de ports (IBusinessUnitRepository, etc.) -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+  </ItemGroup>
+</Project>
