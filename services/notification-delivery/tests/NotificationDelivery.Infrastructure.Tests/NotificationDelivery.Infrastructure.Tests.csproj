@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    NotificationDelivery.Infrastructure.Tests
+    Foco: mapeamento ACL (ProviderResponseMapper), senders com provedor fake/WireMock,
+          SecretManagerProvider, EmailHasher (Req 3, Req 4, Req 7, Req 9, Req 10, RNF 4).
+    Coverlet configurado via Directory.Build.props.
+  -->
+  <PropertyGroup>
+    <AssemblyName>NotificationDelivery.Infrastructure.Tests</AssemblyName>
+    <RootNamespace>NotificationDelivery.Infrastructure.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NotificationDelivery.Infrastructure\NotificationDelivery.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\NotificationDelivery.Application\NotificationDelivery.Application.csproj" />
+    <ProjectReference Include="..\..\src\NotificationDelivery.Contracts\NotificationDelivery.Contracts.csproj" />
+  </ItemGroup>
+</Project>

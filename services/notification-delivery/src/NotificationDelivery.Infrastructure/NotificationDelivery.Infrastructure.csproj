@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    NotificationDelivery.Infrastructure
+    Papel: implementações concretas de provedor (PostmarkEmailSender, SendGridEmailSender,
+           ResendEmailSender), ProviderResponseMapper (ACL), SecretManagerProvider,
+           EmailHasher, EmailProviderHealthCheck, extensões de DI.
+    Regra de dependência (DD-003): Infrastructure → Application, Contracts.
+    SDK de provedor SOMENTE aqui — nunca em Application ou Contracts (RNF 1).
+  -->
+  <PropertyGroup>
+    <AssemblyName>NotificationDelivery.Infrastructure</AssemblyName>
+    <RootNamespace>NotificationDelivery.Infrastructure</RootNamespace>
+    <Description>Camada Infrastructure do módulo notification-delivery: adapters de provedor de e-mail, ACL (ProviderResponseMapper), secrets, hasher PII e health check. SDK de provedor confinado aqui (DD-003, RNF 1).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Infrastructure → Application, Contracts (regra de dependência DD-003) -->
+    <ProjectReference Include="..\..\src\NotificationDelivery.Application\NotificationDelivery.Application.csproj" />
+    <ProjectReference Include="..\..\src\NotificationDelivery.Contracts\NotificationDelivery.Contracts.csproj" />
+  </ItemGroup>
+</Project>

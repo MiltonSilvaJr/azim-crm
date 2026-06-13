@@ -1,0 +1,21 @@
+<Solution>
+  <!--
+    NotificationDelivery.slnx — formato XML nativo .NET 10
+    Estrutura DD-003: 3 projetos de produção + 4 de teste.
+    Regra de dependência:
+      Application  -> Contracts
+      Infrastructure -> Application, Contracts
+      Contracts -> (nenhum projeto interno)
+  -->
+  <Folder Name="/src/">
+    <Project Path="src/NotificationDelivery.Contracts/NotificationDelivery.Contracts.csproj" />
+    <Project Path="src/NotificationDelivery.Application/NotificationDelivery.Application.csproj" />
+    <Project Path="src/NotificationDelivery.Infrastructure/NotificationDelivery.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/NotificationDelivery.Contracts.Tests/NotificationDelivery.Contracts.Tests.csproj" />
+    <Project Path="tests/NotificationDelivery.Application.Tests/NotificationDelivery.Application.Tests.csproj" />
+    <Project Path="tests/NotificationDelivery.Infrastructure.Tests/NotificationDelivery.Infrastructure.Tests.csproj" />
+    <Project Path="tests/NotificationDelivery.Architecture.Tests/NotificationDelivery.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>

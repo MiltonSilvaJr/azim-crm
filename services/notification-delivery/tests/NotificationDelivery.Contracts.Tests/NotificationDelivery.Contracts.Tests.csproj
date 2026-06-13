@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    NotificationDelivery.Contracts.Tests
+    Foco: imutabilidade e igualdade por valor de EmailMessage, SendResult, BrandingConfig
+          (Req 2.3, Req 3). PBT-01 base estrutural (TASK-06/TASK-17).
+    Coverlet configurado via Directory.Build.props.
+  -->
+  <PropertyGroup>
+    <AssemblyName>NotificationDelivery.Contracts.Tests</AssemblyName>
+    <RootNamespace>NotificationDelivery.Contracts.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NotificationDelivery.Contracts\NotificationDelivery.Contracts.csproj" />
+  </ItemGroup>
+</Project>

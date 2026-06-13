@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    NotificationDelivery.Contracts
+    Papel: contrato público estável do módulo — IEmailSender, EmailMessage, SendResult,
+           SendStatus, BrandingConfig, FailureReason, FailureCode.
+    Regra de dependência (DD-003): nenhuma referência a projeto interno.
+    Portabilidade (RNF 1): zero tipos de provedor (Postmark, SendGrid, Resend) aqui.
+  -->
+  <PropertyGroup>
+    <AssemblyName>NotificationDelivery.Contracts</AssemblyName>
+    <RootNamespace>NotificationDelivery.Contracts</RootNamespace>
+    <Description>Contratos públicos estáveis do módulo notification-delivery (IEmailSender, objetos de valor imutáveis). Nenhuma dependência de provedor (DD-003, RNF 1).</Description>
+  </PropertyGroup>
+</Project>

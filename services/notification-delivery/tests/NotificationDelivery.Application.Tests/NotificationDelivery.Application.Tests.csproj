@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    NotificationDelivery.Application.Tests
+    Foco: resiliência (ResilientEmailSender), branding (BrandingEmailDecorator),
+          renderização (EmailTemplateRenderer), validações de borda (Req 8, RNF 3, Req 5, Req 6).
+    Coverlet configurado via Directory.Build.props.
+  -->
+  <PropertyGroup>
+    <AssemblyName>NotificationDelivery.Application.Tests</AssemblyName>
+    <RootNamespace>NotificationDelivery.Application.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NotificationDelivery.Application\NotificationDelivery.Application.csproj" />
+    <ProjectReference Include="..\..\src\NotificationDelivery.Contracts\NotificationDelivery.Contracts.csproj" />
+  </ItemGroup>
+</Project>
