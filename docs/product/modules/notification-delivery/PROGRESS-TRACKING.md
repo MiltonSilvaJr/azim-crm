@@ -17,7 +17,7 @@
 | 2 | Contracts | TASK-03..06 | [X] |
 | 3 | Application | TASK-07..10 | [X] |
 | 4 | Infrastructure | TASK-11..16 | [X] |
-| 5 | PBTs + Hardening | TASK-17..21 | [-] |
+| 5 | PBTs + Hardening | TASK-17..21 | [X] |
 
 ## Decisão de provedor (DD-001)
 
@@ -42,6 +42,18 @@ O `tasks.md` (TASK-12/13) menciona Postmark/SendGrid, mas **DD-001 do design é 
 🧪 209 testes verdes (Contracts 58 + Application 42 + Infrastructure 104 + Architecture 5) · build limpo. **DD-001 aplicado:** `ResendEmailSender` (primário) + `SendGridEmailSender` (alternativa/ACL). `ProviderResponseMapper` (mapeamento total, NOTIF-ERR-090 fallback), `SecretManagerProvider` (cache TTL, NOTIF-ERR-040), `EmailHasher` + Serilog destructuring anti-PII, `EmailProviderHealthCheck`, `AddNotificationDelivery()`. Senders testados com `HttpMessageHandler` stub (sem rede). `Google.Cloud.SecretManager.V1` 2.7.0.
 - TASK-11 `01b85fb` · TASK-14 `73ce77e` · TASK-12 `20a4210` · TASK-13 `4473416` · TASK-15 `b06c1ad` · TASK-16 `9f56362`
 - Pendência operacional: `SecretManagerServiceClient` deve ser registrado no DI do deployable consumidor (`SecretManagerServiceClient.Create()`).
+
+### Onda 5 — PBTs + Hardening ✅
+🧪 Verificação final: **231 testes verdes** (Contracts 58 + Application 56 + Infrastructure 112 + Architecture 5) · build limpo. 5 PBTs (FsCheck 3.2.0, ≥500 exemplos cada): PBT-01 reversibilidade, PBT-02 idempotência, PBT-03 anti-PII, PBT-04 totalidade ACL, PBT-05 backoff não duplica. 7 métricas `email_send_*` + traces + 4 alertas Cloud Monitoring. Teste de caos + isolamento por mensagem. DoD §19 preenchido.
+- TASK-17 `3a01685` · TASK-18 `22ccb81` · TASK-19 `36d3e0c` · TASK-20 `8fe3efe` · TASK-21 `74c820c`
+
+---
+
+## 🎯 Módulo notification-delivery — 5/5 ondas concluídas
+
+21/21 TASKs com TDD; 5 PBTs verdes; build limpo; 231 testes. **PR #5** abrange todo o módulo.
+
+**Gates de go-live pendentes (operacionais, não-código):** SPF/DKIM/DMARC no DNS; DPA com Resend; ADR-0005 publicada; secrets de produção no GCP Secret Manager. `SecretManagerServiceClient` a registrar no DI do deployable.
 
 ## Última falha
 
