@@ -79,6 +79,47 @@ jobs:
             --logger "console;verbosity=normal"
 
   # ---------------------------------------------------------------------------
+  # Gate de isolamento cross-tenant do módulo authentication (PBT-02, TASK-25)
+  # Roda em pushes de branches feat/authentication/** e em develop/staging.
+  # Garante que token do tenant A nunca autentica em contexto do tenant B.
+  # Referência: RNF 1.4, design.md § 13, § 14, RISK-AUTH-06.
+  # ---------------------------------------------------------------------------
+  authentication-cross-tenant-gate:
+    name: authentication / PBT-02 cross-tenant isolation (RNF 1.4 gate)
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/staging' ||
+      github.ref == 'refs/heads/develop' ||
+      startsWith(github.ref, 'refs/heads/feat/authentication') ||
+      startsWith(github.ref, 'refs/heads/test/authentication') ||
+      github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Build authentication
+        working-directory: services/authentication
+        run: dotnet build Authentication.slnx --configuration Release
+
+      - name: PBT-02 — Isolamento cross-tenant (gate obrigatório — RNF 1.4, PBT-02)
+        working-directory: services/authentication
+        run: |
+          dotnet test tests/Authentication.Infrastructure.Tests/ \
+            --no-build --configuration Release \
+            --filter "FullyQualifiedName~CrossTenantIsolation" \
+            --logger "console;verbosity=normal"
+        # Nota: PBT-02 de integração completo (com Testcontainers + emulador Firebase)
+        # requer ambiente de staging com Docker disponível (VAL-AUTH-02, DD-008/DD-009).
+        # A camada de integração com banco real está pendente de confirmação de go-live
+        # (RISK-AUTH-06). O PBT property-based (100 casos FsCheck) e os testes
+        # determinísticos de SessionTokenValidator + AuthContextComposer cobrem
+        # a invariante de isolamento em modo in-memory.
+
+  # ---------------------------------------------------------------------------
   # Gate de PII em logs do módulo audit-log (RNF-002.2, TASK-19)
   # Roda nos pushes de branches feature/audit-log/** e em develop/staging.
   # ---------------------------------------------------------------------------
