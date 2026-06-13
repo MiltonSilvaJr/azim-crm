@@ -1,0 +1,28 @@
+# PROGRESS-TRACKING — authentication
+
+> Tracker do `/forge:coding-loop authentication` (modo autônomo).
+> Legenda: `[ ]` pendente · `[-]` em progresso · `[X]` concluído · `[!]` falhou (HALT).
+
+- Módulo: `authentication` (BC-12, Generic — Sprint 2/3/5)
+- tasks.md base: v0.1.1 (Aprovado para desenvolvimento)
+- Raiz da solution: `services/authentication/`
+- Estratégia: branch contínua `feat/authentication/all-waves`, PR único ao fim, merge autônomo após verificação verde (incl. `git status` do worktree limpo).
+
+## Ondas
+
+| Onda | Foco | TASKs | Status |
+|------|------|-------|--------|
+| 1 | Bootstrap | TASK-01..02 | [ ] |
+| 2 | Domain | TASK-03..04 | [ ] |
+| 3 | Application | TASK-05..09 | [ ] |
+| 4 | Infrastructure (Firebase adapter) | TASK-10..14 | [ ] |
+| 5 | API + Contracts | TASK-15..20 | [ ] |
+| 6 | Hardening | TASK-21..25 | [ ] |
+
+## Detalhe por onda
+
+_(preenchido conforme execução)_
+
+## Última falha
+
+_(nenhuma)_

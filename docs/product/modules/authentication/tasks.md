@@ -1,8 +1,8 @@
 # Tasks — BC-12 — Authentication
 
-- Versão: 0.1.0
-- Data: 2026-06-11
-- Status: Rascunho para revisão
+- Versão: 0.1.1
+- Data: 2026-06-13
+- Status: Aprovado para desenvolvimento
 - Referência base requirements: docs/product/modules/authentication/requirements.md v0.1.0
 - Referência base design: docs/product/modules/authentication/design.md v0.1.0
 - ADRs aplicáveis: ADR-0005 (IEmailSender, a formalizar), ADR-0007 (stack GCP, a formalizar)
@@ -13,6 +13,7 @@
 | Versão | Data | Status | Descrição da alteração |
 |--------|------|--------|------------------------|
 | 0.1.0 | 2026-06-11 | Rascunho para revisão | Criação inicial do plano de tasks a partir de requirements.md v0.1.0 e design.md v0.1.0; 25 TASKs em 6 ondas, 5 PBTs cobertos. |
+| 0.1.1 | 2026-06-13 | Aprovado para desenvolvimento | Aprovação humana (HITL #1); execução via `/forge:coding-loop` autônomo (6 ondas). |
 
 ---
 
