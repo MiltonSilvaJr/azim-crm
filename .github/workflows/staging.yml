@@ -191,3 +191,60 @@ jobs:
             exit 1
           fi
           echo "=== PII scan concluído — nenhum padrão de PII detectado ==="
+
+  # ---------------------------------------------------------------------------
+  # Gate de isolamento RLS cross-tenant do módulo tenant-administration (PBT-06, TASK-16)
+  # Roda em pushes de branches feat/tenant-administration/** e em develop/staging.
+  # Garante que tenant A nunca vê dados de tenant B (defesa em profundidade: EF Core filter + RLS).
+  # Gate de nível sev-1: JAMAIS marcar como skip (design.md §14, ADR-0001, RISK-TA-03, RNF 1.1).
+  # ---------------------------------------------------------------------------
+  tenant-administration-rls-isolation-gate:
+    name: tenant-administration / PBT-06 RLS isolation (SecurityGate — ADR-0001)
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/staging' ||
+      github.ref == 'refs/heads/develop' ||
+      startsWith(github.ref, 'refs/heads/feat/tenant-administration') ||
+      startsWith(github.ref, 'refs/heads/test/tenant-administration') ||
+      github.event_name == 'workflow_dispatch'
+    services:
+      # Container PostgreSQL para Testcontainers em CI
+      # Nota: os testes usam Testcontainers (Docker-in-Docker) para criar container próprio.
+      # Este service block é opcional mas documenta a dependência de Docker no runner.
+      docker:
+        image: docker:dind
+        options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Build tenant-administration
+        working-directory: services/tenant-administration
+        run: dotnet build TenantAdministration.slnx --configuration Release
+
+      - name: PBT-06 — Isolamento RLS cross-tenant (gate de segurança sev-1 — ADR-0001, RNF 1.1)
+        working-directory: services/tenant-administration
+        run: |
+          dotnet test tests/TenantAdministration.Infrastructure.Tests/ \
+            --no-build --configuration Release \
+            --filter "Category=SecurityGate" \
+            --logger "console;verbosity=normal"
+        # Gate de segurança obrigatório (TASK-16, PBT-06, PBT-07):
+        # - PBT-06 (5 cenários): EF Core global filter + RLS PostgreSQL — isolamento cross-tenant
+        # - PBT-07 (50 casos FsCheck + 1 determinístico): atomicidade da saga de provisionamento
+        # Testcontainers cria container PostgreSQL real para validar RLS de banco.
+        # RLS não pode ser validado com banco em memória (ADR-0001).
+        # Violação = breaking change de segurança de nível crítico.
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+
+      - name: Architecture.Tests (gate de dependências — Clean Architecture)
+        working-directory: services/tenant-administration
+        run: |
+          dotnet test tests/TenantAdministration.Architecture.Tests/ \
+            --no-build --configuration Release \
+            --logger "console;verbosity=normal"
