@@ -17,6 +17,10 @@ public sealed class MembershipSet : IEquatable<MembershipSet>
     /// <summary>Carimbo UTC de quando este conjunto foi carregado/cacheado (para TTL).</summary>
     public DateTimeOffset CachedAt { get; }
 
+    /// <summary>Conjunto de memberships vazio (sem entradas).</summary>
+    public static readonly MembershipSet Empty =
+        new(Array.Empty<MembershipEntry>(), DateTimeOffset.MinValue);
+
     private MembershipSet(IReadOnlyList<MembershipEntry> entries, DateTimeOffset cachedAt)
     {
         Entries = entries;
