@@ -5,7 +5,9 @@ using Authentication.Infrastructure.Audit;
 using Authentication.Infrastructure.Directory;
 using Authentication.Infrastructure.Email;
 using Authentication.Infrastructure.Firebase;
+using Authentication.Infrastructure.HealthChecks;
 using Authentication.Infrastructure.RateLimiting;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 // =========================================================================
 // Authentication.Api — ponto de entrada do módulo BC-12.
@@ -57,6 +59,21 @@ builder.Services.AddScoped<PasswordResetService>();
 // =========================================================================
 builder.Services.AddControllers();
 
+// =========================================================================
+// DI — Health Checks (TASK-21, RNF 3.2)
+// =========================================================================
+// Readiness: verifica IdP e Redis — pod sai da rotação se dependência falhar
+// Liveness: apenas check interno — não derruba pod por falha transitória do IdP
+builder.Services.AddHealthChecks()
+    .AddCheck<IdentityProviderHealthCheck>(
+        "identity_provider",
+        failureStatus: HealthStatus.Unhealthy,
+        tags: ["readiness"])
+    .AddCheck<RedisHealthCheck>(
+        "redis",
+        failureStatus: HealthStatus.Unhealthy,
+        tags: ["readiness"]);
+
 var app = builder.Build();
 
 // =========================================================================
@@ -76,8 +93,35 @@ app.UseMiddleware<RateLimitingMiddleware>();
 app.UseMiddleware<AuthenticationMiddleware>();
 
 // =========================================================================
-// Rotas de saúde (sem autenticação, sem resolução de tenant)
+// Rotas de saúde (sem autenticação, sem resolução de tenant — TASK-21)
 // =========================================================================
+
+// GET /health/ready — verifica IdP e Redis; pod sai da rotação se unhealthy (RNF 3.2)
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("readiness"),
+    ResponseWriter = async (context, report) =>
+    {
+        // Resposta mínima sem expor detalhe interno (stack trace, mensagem de SDK)
+        context.Response.ContentType = "application/json";
+        var status = report.Status == HealthStatus.Healthy ? "healthy" : "unhealthy";
+        await context.Response.WriteAsync(
+            $"{{\"status\":\"{status}\"}}");
+    }
+});
+
+// GET /health/live — independe do IdP para não derrubar pod em falha transitória (RNF 3.2)
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false, // Apenas checks sem tag (internos ao processo)
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync("{\"status\":\"healthy\"}");
+    }
+});
+
+// Mantido para compatibilidade — ping simples sem health checks de dependência
 app.MapGet("/health/ping", () => Results.Ok(new { status = "ok" }));
 
 // =========================================================================
