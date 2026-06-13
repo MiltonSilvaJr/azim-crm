@@ -14,8 +14,8 @@
 | Onda | Foco | TASKs | Status |
 |------|------|-------|--------|
 | 1 | Bootstrap | TASK-01..02 | [X] |
-| 2 | Contracts | TASK-03..06 | [-] |
-| 3 | Application | TASK-07..10 | [ ] |
+| 2 | Contracts | TASK-03..06 | [X] |
+| 3 | Application | TASK-07..10 | [-] |
 | 4 | Infrastructure | TASK-11..16 | [ ] |
 | 5 | PBTs + Hardening | TASK-17..21 | [ ] |
 
@@ -28,6 +28,11 @@ O `tasks.md` (TASK-12/13) menciona Postmark/SendGrid, mas **DD-001 do design é 
 ### Onda 1 — Bootstrap ✅
 🧪 5 testes Architecture verdes · build limpo (0 warn). Solution `NotificationDelivery.slnx`, 3 prod + 4 teste (DD-003, sem Domain/Api). FluentAssertions fixado em 7.0.0 (MIT — 8.x é licença comercial).
 - TASK-01 `535491c` · TASK-02 `1122b90`
+
+### Onda 2 — Contracts ✅
+🧪 63 testes verdes (Contracts 58 + Architecture 5) · build limpo. VOs imutáveis: `SendStatus`, `FailureReason`/`FailureCode`, `BrandingConfig`, `EmailMessage` (sem PII em ToString/exceções), `SendResult`, `IEmailSender`, `EmailSenderContractTestBase`.
+- TASK-03 `f34bd06` · TASK-05 `c7d7359` · TASK-04 `e5a3188` · TASK-06 `a313a17`
+- Dívida leve: `Microsoft.Extensions.Diagnostics.HealthChecks` em Contracts (para `CheckAvailabilityAsync`→`HealthCheckResult`, design §8.1); não é provedor, NetArchTest verde.
 
 ## Última falha
 
