@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Authentication.Domain
+    Papel: objetos de valor imutáveis (AuthContext, Session, TenantSlug, MembershipSet),
+           regras de transição de SessionState, Specifications (TokenValiditySpec,
+           TenantMatchSpec, ActiveUserSpec, InviteUsableSpec, EmailMethodSpec).
+    Regra de dependência (DD-001): referencia apenas Authentication.Contracts.
+    Confinamento ACL (DD-001): nenhum tipo do Firebase Admin SDK; nenhum identity_uid.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Authentication.Domain</AssemblyName>
+    <RootNamespace>Authentication.Domain</RootNamespace>
+    <Description>Objetos de valor imutáveis e máquina de estados de sessão do módulo authentication. Sem dependência de infraestrutura (DD-001, Clean Architecture).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Authentication.Contracts\Authentication.Contracts.csproj" />
+  </ItemGroup>
+</Project>

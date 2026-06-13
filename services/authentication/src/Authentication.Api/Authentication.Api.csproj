@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!--
+    Authentication.Api
+    Papel: pipeline ASP.NET Core — middlewares (CorrelationMiddleware,
+           TenantResolutionMiddleware, AuthenticationMiddleware, RateLimitingMiddleware),
+           endpoints (AuthController /v1/auth/me + /v1/auth/logout,
+           InviteController, PasswordResetController).
+    Regra de dependência (DD-001): referencia Application e Contracts;
+    não referencia Domain diretamente (acesso via Application).
+    Confinamento ACL (DD-001): nenhum tipo do Firebase Admin SDK; nenhum identity_uid.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Authentication.Api</AssemblyName>
+    <RootNamespace>Authentication.Api</RootNamespace>
+    <Description>Pipeline HTTP e endpoints do módulo authentication. Nenhuma lógica de negócio; delega para Application (DD-001, Clean Architecture).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Authentication.Application\Authentication.Application.csproj" />
+    <ProjectReference Include="..\Authentication.Contracts\Authentication.Contracts.csproj" />
+    <ProjectReference Include="..\Authentication.Infrastructure\Authentication.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,60 @@
+# Configuração do gitleaks para o repositório azim-crm.
+#
+# Referência: TASK-25, RNF 7.3, design.md § 13, DD-005.
+# Gate de CI: .github/workflows/staging.yml → authentication-gitleaks-gate.
+#
+# O Firebase Admin SDK service account key é obtida exclusivamente via
+# GCP Secret Manager em runtime (DD-005). Nenhum segredo deve constar
+# em código, imagem Docker, variáveis de ambiente em texto claro ou
+# histórico do repositório.
+
+title = "azim-crm gitleaks config"
+
+[extend]
+# Usa as regras upstream do gitleaks (detecta ~150 padrões de segredos).
+useDefault = true
+
+[[rules]]
+# Firebase Admin SDK service account key JSON — regra extra.
+# Estrutura típica: { "type": "service_account", "private_key": "-----BEGIN RSA PRIVATE KEY-----" }
+id = "firebase-service-account-key"
+description = "Firebase Admin SDK service account key (deve estar no Secret Manager, não no repositório)"
+regex = '''["']private_key["']\s*:\s*["']-----BEGIN (RSA |EC )?PRIVATE KEY-----'''
+tags = ["firebase", "gcp", "secret", "high-severity"]
+
+[[rules]]
+# GCP API Key literal
+id = "gcp-api-key-literal"
+description = "GCP API Key literal no código (deve estar no Secret Manager)"
+regex = '''AIza[0-9A-Za-z\-_]{35}'''
+tags = ["gcp", "api-key", "high-severity"]
+
+[[rules]]
+# Connection string com senha inline
+id = "dotnet-connection-string-password"
+description = "Connection string .NET com senha inline"
+regex = '''(?i)(password|pwd)\s*=\s*[^;]{8,}'''
+tags = ["database", "connection-string", "high-severity"]
+
+[allowlist]
+# Arquivos gerados, lockfiles, documentação de referência e fixtures de teste.
+paths = [
+    # Lockfiles e gerados
+    '''.forge/adapters/.*\.lock\.yaml''',
+    '''.*\.lock''',
+    '''package-lock\.json''',
+    # Fixtures de teste: tokens JWT sintéticos (sem segredo real)
+    '''tests/.*TestData.*''',
+    '''tests/.*Fixtures.*''',
+    # Documentação com exemplos de formato (não valores reais)
+    '''docs/.*''',
+    '''.*README\.md''',
+    '''.*CHANGELOG\.md''',
+]
+
+commits = []
+
+[allowlist.regexes]
+# Tokens JWT de teste gerados sinteticamente (eyJ — base64 de {"alg":...})
+# Esses tokens são inválidos e não representam segredos reais.
+jwt-test-fixture = '''eyJ[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+'''

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Authentication.Contracts
+    Papel: contratos públicos estáveis do módulo — AuthContext, Session, SessionState,
+           DTOs de API (MeResponse, LogoutResponse, InviteRequest, etc.),
+           códigos de erro do catálogo (AUTH-ERR-001..090).
+    Regra de dependência (DD-001): nenhuma referência a projeto interno.
+    Confinamento ACL (DD-001): nenhum tipo do Firebase Admin SDK aqui;
+    nenhum símbolo identity_uid aqui.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Authentication.Contracts</AssemblyName>
+    <RootNamespace>Authentication.Contracts</RootNamespace>
+    <Description>Contratos públicos estáveis do módulo authentication (AuthContext, Session, DTOs, catálogo de erros). Nenhuma dependência de provedor de identidade (DD-001).</Description>
+  </PropertyGroup>
+</Project>

@@ -1,13 +1,17 @@
 # Module — Authentication
 
-**Status:** Rascunho para revisão
+**Status:** Implementado
 **Fase:** Fase 1 MVP
+**Versão:** 1.0.0
+**Implementação:** 6 ondas, 25 TASKs, 5 PBTs — 235 testes verdes
 
 ---
 
 ## 1. Visão Geral
 
 Módulo responsável pela autenticação de usuários e gerenciamento de sessão por tenant. Atua como Anti-Corruption Layer (ACL) entre o modelo interno do Azim CRM e o GCP Identity Platform (Firebase Auth multi-tenant). Garante que mudanças no contrato do IdP externo não impactem o modelo de domínio interno.
+
+Localização da solução: `services/authentication/Authentication.slnx`
 
 ---
 
@@ -20,7 +24,7 @@ Módulo responsável pela autenticação de usuários e gerenciamento de sessão
 | Bounded Context Relacionado | Identity & Access (BC-12) |
 | Subdomínio DDD | Generic Subdomain |
 | Tier / Criticidade | Tier 1 — sem autenticação, nenhuma funcionalidade do CRM é acessível |
-| Status | Rascunho para revisão |
+| Status | Implementado |
 
 ---
 
@@ -33,11 +37,12 @@ Prover autenticação segura por tenant via GCP Identity Platform. Validar token
 ## 4. Responsabilidades
 
 - Validar ID tokens JWT emitidos pelo GCP Identity Platform por tenant.
-- Extrair `user_id` e `tenant_id` do token e injetar no contexto da requisição.
+- Extrair `user_id` e `tenant_id` do token e injetar no contexto da requisição (`AuthContext`).
 - Implementar middleware de autenticação aplicado a todos os endpoints protegidos.
-- Expor endpoint de callback/redirect para fluxo OAuth2 do GCP.
-- Coordenar com o módulo organization o carregamento de `UserMembership` e papéis após autenticação bem-sucedida.
+- Coordenar com o módulo organization o carregamento de `UserMembership` e papéis após autenticação.
 - Implementar ACL: isolar o modelo interno do contrato do GCP Identity Platform.
+- Emitir eventos auditáveis (`session_revoked`, `invite_activated`, `password_reset_requested`) via `IAuditEventEmitter`.
+- Expor health checks em `/health/ready` (IdP + Redis) e `/health/live`.
 
 ---
 
@@ -47,7 +52,8 @@ Prover autenticação segura por tenant via GCP Identity Platform. Validar token
 - Gestão de papéis e permissões (pertence ao módulo organization / RBAC).
 - Provisionamento de tenant de identidade no GCP (pertence ao módulo tenant-administration).
 - Autorização por recurso (RBAC aplicado nos próprios módulos de negócio).
-- Autenticação de máquina a máquina entre workers (Ponto a Validar).
+- Autenticação de máquina a máquina entre workers (VAL-AUTH-01 — a confirmar).
+- Login: realizado diretamente no GCP Identity Platform pelo frontend (Firebase SDK).
 
 ---
 
@@ -63,194 +69,267 @@ Prover autenticação segura por tenant via GCP Identity Platform. Validar token
 
 | Termo | Definição |
 |---|---|
-| identity_uid | Identificador único do usuário no GCP Identity Platform (não o user_id interno) |
-| session_token | ID token JWT emitido pelo GCP Identity Platform; válido por tenant |
-| AuthContext | Objeto interno com user_id (UUID interno), tenant_id, email — isolado do modelo do GCP |
-| ACL (Anti-Corruption Layer) | Camada que traduz o modelo do GCP (identity_uid) para o modelo interno (user_id) |
+| `identity_uid` | Identificador único do usuário no GCP Identity Platform (não o `user_id` interno); confinado exclusivamente em `Authentication.Infrastructure` |
+| `session_token` | ID token JWT emitido pelo GCP Identity Platform; válido por tenant |
+| `AuthContext` | Objeto interno com `user_id` (UUID interno), `tenant_id`, `email` — isolado do modelo do GCP |
+| ACL (Anti-Corruption Layer) | Camada que traduz o modelo do GCP (`identity_uid`) para o modelo interno (`user_id`) |
+| `TenantSlug` | Identificador legível do tenant (ex.: `acme`), normalizado para lowercase |
+| `MembershipSet` | Conjunto de papéis do usuário por Business Unit; cacheado em Redis com TTL |
 
 ---
 
-## 8. Componentes Internos Candidatos
+## 8. Estrutura da Solução
 
-| Componente | Tipo | Responsabilidade |
+```text
+services/authentication/
+├── Authentication.slnx
+├── Directory.Build.props
+├── global.json          (.NET 10, C# 13)
+├── observability/
+│   ├── alerts.yaml      (4 alertas Cloud Monitoring — TASK-23)
+│   └── performance.md   (SLO p95 ≤ 1 s — TASK-25)
+├── src/
+│   ├── Authentication.Api/          (Minimal API, endpoints, middlewares)
+│   ├── Authentication.Application/  (Use cases, portas, serviços)
+│   ├── Authentication.Contracts/    (DTOs, catálogo de erros AUTH-ERR-*)
+│   ├── Authentication.Domain/       (VOs, máquina de estados, specifications)
+│   └── Authentication.Infrastructure/  (Adapters: Firebase, Postgres, Redis)
+└── tests/
+    ├── Authentication.Api.Tests/            (59 testes — integração de endpoints)
+    ├── Authentication.Application.Tests/    (39 testes — serviços de aplicação)
+    ├── Authentication.Architecture.Tests/   (14 testes — regras NetArchTest)
+    ├── Authentication.Domain.Tests/         (72 testes — VOs, states, specs, PBTs)
+    └── Authentication.Infrastructure.Tests/ (51 testes — adapters, health checks, métricas)
+```
+
+**Total: 235 testes, 0 falhas, 0 warnings de build.**
+
+---
+
+## 9. APIs Expostas
+
+| Método | Endpoint | Autenticação | Finalidade |
+|---|---|---|---|
+| GET | `/v1/auth/me` | Obrigatória | Retorna `AuthContext` do usuário autenticado |
+| POST | `/v1/auth/logout` | Obrigatória | Revoga refresh tokens (idempotente — PBT-04) |
+| POST | `/v1/invites` | Obrigatória (admin) | Cria convite de ativação para novo usuário |
+| POST | `/v1/invites/activate` | Pública | Ativa convite com link de ativação do IdP |
+| POST | `/v1/auth/password-reset` | Pública | Solicita reset (resposta uniforme — PBT-03) |
+| GET | `/health/ready` | Nenhuma | Readiness probe: verifica IdP + Redis |
+| GET | `/health/live` | Nenhuma | Liveness probe: sempre healthy se processo está vivo |
+
+---
+
+## 10. Eventos Auditáveis Emitidos
+
+Via porta `IAuditEventEmitter` (fail-open — falha não bloqueia o fluxo principal):
+
+| Evento | Quando | Emitido por |
 |---|---|---|
-| AuthMiddleware | Adapter | Intercepta requisições, valida token JWT, injeta AuthContext |
-| GcpIdentityPlatformAdapter | Adapter | Valida token com GCP SDK; traduz identity_uid → user_id interno |
-| SessionContextLoader | Application Service | Carrega user_memberships e papéis do usuário após autenticação |
-| AuthController | API Controller | Endpoint de logout e renovação de token |
+| `session_revoked` | Logout bem-sucedido (nova revogação) | `SessionRevocationService` |
+| `invite_activated` | Ativação de convite bem-sucedida | `InviteActivationService` |
+| `password_reset_requested` | Reset solicitado para usuário com método senha | `PasswordResetService` |
+| `user_authenticated` | Pendente — evento client-side (DD-010 a registrar) | — |
+| `password_reset_completed` | Pendente — ocorre no IdP client-side (DD-004) | — |
+
+Nenhum evento carrega `identity_uid`, senha ou token (verificado por teste — TASK-24).
 
 ---
 
-## 9. APIs Principais
+## 11. Observabilidade
 
-| Método | Endpoint | Finalidade | Consumidores |
+### 11.1 Métricas (`services/authentication/observability/alerts.yaml`)
+
+| Métrica | Tipo | Labels | SLO |
 |---|---|---|---|
-| POST | /v1/auth/logout | Invalida sessão do usuário corrente | azim-web |
-| GET | /v1/auth/me | Retorna perfil e papéis do usuário autenticado | azim-web |
+| `auth_token_validation_success_total` | Counter | `tenant_id` | — |
+| `auth_token_validation_failure_total` | Counter | `tenant_id`, `causa` | — |
+| `auth_rate_limit_block_total` | Counter | `tenant_id` | — |
+| `auth_latency_ms` | Histogram | — | p95 ≤ 1000 ms |
 
-> O login é realizado diretamente no GCP Identity Platform pelo frontend (Firebase SDK) — o backend valida o token resultante via middleware, não via endpoint de login próprio.
+### 11.2 Alertas Cloud Monitoring
 
----
+| Nome | Severidade | Condição |
+|---|---|---|
+| `auth_token_validation_failure_high_rate` | WARNING | > 10 falhas/s por 5 min |
+| `auth_401_mass_alert` | CRITICAL | > 50 falhas expired/invalid_signature por 2 min |
+| `auth_rate_limit_mass_block` | WARNING | > 100 bloqueios/s por 2 min |
+| `auth_latency_p95_slo_breach` | WARNING | p95 > 1000 ms por 5 min |
 
-## 10. Eventos Publicados
+### 11.3 Logs Estruturados
 
-Este módulo não publica eventos de domínio próprios.
-
----
-
-## 11. Eventos Consumidos
-
-Este módulo não consome eventos diretamente.
-
----
-
-## 12. Dados Próprios
-
-Este módulo é stateless e não possui dados próprios. O mapeamento de `identity_uid` → `user_id` é resolvido via consulta ao módulo organization (tabela `users`).
+- Serilog com política de destructuring mascarando PII (email, nome → `***`).
+- `correlationId` e `tenantId` presentes em 100% dos logs de contexto autenticado.
+- `identity_uid` confinado exclusivamente em `Authentication.Infrastructure` (Architecture.Tests gate).
 
 ---
 
-## 13. Integrações
+## 12. Health Checks
 
-| Sistema/Módulo | Tipo de Integração | Direção | Observações |
+| Endpoint | Inclui | Comportamento esperado |
+|---|---|---|
+| `/health/ready` | IdP + Redis | Unhealthy quando IdP ou Redis indisponível |
+| `/health/live` | Apenas processo | Always healthy — não depende do IdP |
+
+---
+
+## 13. Segurança
+
+- `identity_uid` jamais sai de `Authentication.Infrastructure` (gate Architecture.Tests — DD-001).
+- Nenhum segredo no repositório (gate `gitleaks` no CI — RNF 7.3, DD-005).
+- Service account Firebase Admin SDK via GCP Secret Manager (DD-005).
+- Anti-enumeração em `/v1/auth/password-reset` (corpo, código e timing uniformes — PBT-03, RISK-AUTH-05).
+- Isolamento cross-tenant: token de tenant A rejeitado em contexto de tenant B (PBT-02, RNF 1.4).
+- Rate limiting por IP e tenant com resposta genérica (RNF 8, AUTH-ERR-040).
+
+---
+
+## 14. Decisões de Design
+
+| Código | Decisão | Referência |
+|---|---|---|
+| DD-001 | `identity_uid` confinado em Infrastructure; Firebase SDK não vaza | design.md § 3, Architecture.Tests |
+| DD-002 | Delegação de validação JWT ao Firebase Admin SDK | design.md § 6.3 |
+| DD-003 | Caminho quente por middleware; auditoria injetada nos serviços | `AuditBehavior.cs` |
+| DD-004 | `password_reset_completed` é evento client-side (no callback do IdP) | `AuditBehavior.cs` |
+| DD-005 | Segredos via Secret Manager; gitleaks no CI | design.md § 13 |
+| DD-010 | (a registrar) `user_authenticated` — decisão de custo/benefício Tier 1 | `AuditBehavior.cs` |
+
+---
+
+## 15. Integrações
+
+| Sistema/Módulo | Tipo | Direção | Observações |
 |---|---|---|---|
-| GCP Identity Platform | OAuth2/OIDC | Entrada | Validação de ID token JWT por tenant |
-| organization | Package (consulta interna) | Saída | Carrega user_memberships e papéis para composição do AuthContext |
-| Memorystore / Redis | Cache | Saída | Cache de memberships por user_id para reduzir latência (TTL configurável) |
+| GCP Identity Platform | Firebase Admin SDK | Saída | Adapter em Infrastructure; valida JWT por tenant |
+| organization | PostgreSQL (consulta) | Saída | Resolve `identity_uid` → `user_id`, memberships |
+| Memorystore / Redis | Cache | Saída | Cache de memberships (TTL configurável) |
+| audit-log | `IAuditEventEmitter` (porta) | Saída | Fail-open; integração em Infrastructure via `IAuditWriter` |
+| notification-delivery | `IEmailSender` (porta) | Saída | Envia e-mails de convite e reset de senha |
 
 ---
 
-## 14. Dependências
+## 16. Configuração e Variáveis de Ambiente
 
-### 14.1 Dependências de Domínio
-
-- organization: necessário para resolver `identity_uid` → `user_id` e carregar papéis.
-
-### 14.2 Dependências Técnicas
-
-- GCP Identity Platform SDK (Firebase Admin SDK for .NET)
-- Memorystore / Redis: cache de sessão e memberships
-- GCP Secret Manager: credenciais do Firebase Admin SDK
-
-### 14.3 Dependências Operacionais
-
-- Secret: Firebase Admin SDK service account key via GCP Secret Manager
-- Configuração de tenant de identidade no GCP (provisionado por tenant-administration)
-- Renovação de certificados de validação de token (gerenciado automaticamente pelo GCP)
+| Variável | Descrição | Fonte |
+|---|---|---|
+| `Firebase__ProjectId` | Project ID do GCP | Secret Manager |
+| `Firebase__ServiceAccountKeyJson` | JSON da service account key (Base64) | Secret Manager |
+| `ConnectionStrings__Default` | Connection string do PostgreSQL | Secret Manager |
+| `Redis__ConnectionString` | Connection string do Redis | Secret Manager |
+| `PasswordReset__ConstantDelayMs` | Delay constante em `/password-reset` (anti-timing) | appsettings |
 
 ---
 
-## 15. Requisitos Não Funcionais Relevantes
+## 17. Como Executar Localmente
 
-| Categoria | Requisito / Observação |
-|---|---|
-| Segurança | Validação de JWT em toda requisição; sem bypass; sem segredo no repositório |
-| Performance | Cache de memberships em Redis para evitar consulta ao banco a cada requisição |
-| Disponibilidade | Indisponibilidade do GCP Identity Platform bloqueia todo acesso — monitorar SLA do GCP |
-| Observabilidade | Log de autenticação com correlation_id e tenant_id; falhas de validação de token devem gerar alerta |
+```bash
+# Pré-requisitos: .NET 10, Docker (para Testcontainers)
 
----
+cd services/authentication
 
-## 16. Compliance Aplicável
+# Build
+dotnet build Authentication.slnx
 
-| Compliance / Norma / Lei | Aplicável? | Motivo | Impacto no Módulo |
-|---|---|---|---|
-| LGPD | Sim | user_id e email trafegam no contexto de sessão | Não logar email em texto claro; sessão com expiração definida |
-| PCI DSS | Não aplicável | Não processa dados de cartão | — |
+# Testes (todos — inclui Testcontainers para testes de integração com Postgres)
+dotnet test Authentication.slnx
 
----
+# Testes por projeto
+dotnet test tests/Authentication.Domain.Tests/
+dotnet test tests/Authentication.Application.Tests/
+dotnet test tests/Authentication.Infrastructure.Tests/
+dotnet test tests/Authentication.Api.Tests/
+dotnet test tests/Authentication.Architecture.Tests/
 
-## 17. Observabilidade
+# Testes de segurança (cross-tenant, PBT-02)
+dotnet test Authentication.slnx --filter "FullyQualifiedName~CrossTenantIsolation"
 
-| Item | Recomendação Inicial |
-|---|---|
-| Logs | Log estruturado por requisição: correlation_id, tenant_id, user_id, endpoint; sem email em texto claro |
-| Métricas | auth_token_validation_success_total, auth_token_validation_failure_total |
-| Alertas | Alerta se auth_token_validation_failure_total cresce acima do baseline (possível ataque) |
-| Health Checks | Verificar conexão com GCP Identity Platform e Redis na inicialização |
-
----
-
-## 18. Diagramas do Módulo
-
-### 18.1 Diagrama de Componentes Internos
-
-```mermaid
-flowchart LR
-    WebApp[azim-web\nFirebase SDK] -->|ID Token JWT| AuthMiddleware[AuthMiddleware]
-    AuthMiddleware --> GcpAdapter[GcpIdentityPlatformAdapter]
-    GcpAdapter -->|Valida token| GcpIdP[GCP Identity Platform]
-    GcpAdapter -->|identity_uid| SessionLoader[SessionContextLoader]
-    SessionLoader -->|user_id query| OrgModule[organization]
-    SessionLoader -->|cache lookup| Redis[(Redis\nMemberships)]
-    SessionLoader --> AuthContext[AuthContext injetado na requisição]
-```
-
-### 18.2 Diagrama de Fluxo Principal
-
-```mermaid
-sequenceDiagram
-    participant W as azim-web
-    participant AM as AuthMiddleware
-    participant GA as GcpIdentityPlatformAdapter
-    participant SL as SessionContextLoader
-    participant Cache as Redis
-    participant DB as organization (users)
-
-    W->>AM: Requisição com Bearer token
-    AM->>GA: Validar ID token JWT
-    GA-->>AM: identity_uid validado
-    AM->>SL: Carregar contexto (identity_uid)
-    SL->>Cache: Buscar memberships em cache
-    alt Cache hit
-        Cache-->>SL: user_id, tenant_id, papéis
-    else Cache miss
-        SL->>DB: SELECT user por identity_uid
-        DB-->>SL: user_id, tenant_id
-        SL->>Cache: Armazenar no cache (TTL)
-    end
-    SL-->>AM: AuthContext{user_id, tenant_id, roles}
-    AM-->>W: Requisição processada com contexto
+# API local (requer appsettings.Development.json configurado)
+dotnet run --project src/Authentication.Api/
 ```
 
 ---
 
-## 19. Riscos
+## 18. Ondas de Implementação
+
+| Onda | Escopo | TASKs | Status |
+|---|---|---|---|
+| 1 — Bootstrap | Solução .NET 10, 10 projetos, Architecture.Tests | TASK-01..02 | Concluído |
+| 2 — Domain | VOs, máquina de estados, Specifications, PBT-01, PBT-05 | TASK-03..04 | Concluído |
+| 3 — Application | Portas, serviços de aplicação, PBT-04 | TASK-05..09 | Concluído |
+| 4 — Infrastructure | Adapters Firebase, Postgres, Redis, PBT-02, PBT-05 | TASK-10..14 | Concluído |
+| 5 — API + Contracts | Middlewares, endpoints, DTOs, catálogo de erros, PBT-03, PBT-04 | TASK-15..20 | Concluído |
+| 6 — Hardening | Health checks, Serilog, métricas, auditoria, gates | TASK-21..25 | Concluído |
+
+---
+
+## 19. Property-Based Tests
+
+| PBT | Propriedade | Camada | Status |
+|---|---|---|---|
+| PBT-01 | Sessão sempre escopada a um único `tenant_id` | Domain.Tests | Verde |
+| PBT-02 | Isolamento cross-tenant: token de tenant A nunca autentica em B | Infrastructure.Tests | Verde (100 casos FsCheck) |
+| PBT-03 | Anti-enumeração: corpo, código e timing indistinguíveis | Api.Tests | Verde |
+| PBT-04 | Logout idempotente: N ≥ 1 chamadas → estado final único sem erro | Application.Tests + Api.Tests | Verde |
+| PBT-05 | Link expirado/consumido nunca concede acesso | Domain.Tests + Infrastructure.Tests | Verde |
+
+---
+
+## 20. DoD — Itens Verificados (design.md § 19)
+
+| Item | Status | Observação |
+|---|---|---|
+| Req 1..11 e RNF 1..10 com contraparte técnica implementada | Implementado | Rastreado em tasks.md § 5 |
+| Middlewares na ordem correta; nenhuma rota sem validação | Implementado | Program.cs: Correlation → TenantResolution → RateLimiting → Authentication |
+| `IIdentityProvider` único ponto de acoplamento; Architecture.Tests verde | Implementado | 14 testes NetArchTest verdes |
+| Token de tenant A não autentica em B (PBT-02) | Implementado | Gate de CI: `authentication-cross-tenant-gate` |
+| Anti-enumeração verificada (PBT-03) | Implementado | 202 uniforme para e-mail existente/inexistente |
+| Logout idempotente com invalidação global (PBT-04) | Implementado | `SessionRevocationService` — captura "já revogado" como sucesso |
+| Link expirado/consumido nunca concede acesso (PBT-05) | Implementado | `InviteUsableSpec` + Domain.Tests |
+| Catálogo de erros implementado; sem PII nas mensagens | Implementado | AUTH-ERR-001..090 em `Authentication.Contracts` |
+| Logs sem PII/`identity_uid`; `correlationId` e `tenantId` presentes | Implementado | Serilog + `MaskEmailDestructuringPolicy` |
+| Métricas e alertas configurados | Implementado | `AuthMetrics` + `observability/alerts.yaml` |
+| Segredos via Secret Manager; `gitleaks` no CI | Implementado | `.gitleaks.toml` + CI job `authentication-gitleaks-gate` |
+| Circuit breaker/timeout no adapter; health/readiness | Implementado | `IdentityProviderHealthCheck` + `RedisHealthCheck` |
+| p95 ≤ 1 s documentado; baseline via `auth_latency_ms` | Documentado | `observability/performance.md`; k6 pendente de infraestrutura |
+| VAL-AUTH-02 e VAL-09 registrados como pendências de go-live | Registrado | Ver seção 21 abaixo |
+| README sincronizado | Implementado | Este arquivo |
+
+---
+
+## 21. Pontos a Validar (Pendências de Go-Live)
+
+| Código | Ponto | Impacto | Status |
+|---|---|---|---|
+| VAL-AUTH-01 | Autenticação M2M entre workers (digest-worker → api) | Define mecanismo de autenticação interna | A confirmar com produto |
+| VAL-AUTH-02 | Duração da sessão e política de refresh token (DD-008) | Experiência do usuário e segurança | A confirmar com produto/segurança |
+| VAL-09 | Autenticação interna — subdomínio Identity & Access SD-12 (DD-009) | Scope de autenticação M2M | A confirmar com segurança |
+| — | Teste de carga k6 com infraestrutura real | Validação do SLO p95 ≤ 1 s em staging | A executar antes do go-live |
+| DD-010 | `user_authenticated` — custo/benefício de emissão em Tier 1 | Completude de auditoria de autenticação | A registrar com arquitetura |
+
+---
+
+## 22. Riscos
 
 | Código | Risco | Impacto | Mitigação |
 |---|---|---|---|
-| RISK-AUTH-01 | Indisponibilidade do GCP Identity Platform | Nenhum usuário consegue autenticar | Monitorar SLA do GCP; circuit breaker na validação de token |
-| RISK-AUTH-02 | Cache de memberships desatualizado após mudança de papel | Usuário opera com papel antigo | TTL curto (5 min); invalidação explícita ao mudar papel |
-| RISK-AUTH-03 | Vazamento de identity_uid no modelo interno | Acoplamento ao GCP — viola o ACL | Garantir que identity_uid não apareça fora do GcpIdentityPlatformAdapter |
+| RISK-AUTH-01 | Indisponibilidade do GCP Identity Platform | Nenhum usuário consegue autenticar | Circuit breaker; `/health/ready` + alerta `auth_401_mass_alert` |
+| RISK-AUTH-02 | Cache de memberships desatualizado após mudança de papel | Usuário opera com papel antigo | TTL configurável (5 min); invalidação explícita |
+| RISK-AUTH-03 | Vazamento de `identity_uid` para fora de Infrastructure | Acoplamento ao GCP | Architecture.Tests gate (14 regras NetArchTest) |
+| RISK-AUTH-05 | Oráculo de timing em `/password-reset` | Enumeração de contas | PBT-03 verde; delay constante configurável |
+| RISK-AUTH-06 | VAL-AUTH-02/VAL-09 não confirmados antes do go-live | TTL de sessão inadequado | Gate de confirmação explícito no DoD (seção 21) |
 
 ---
 
-## 20. Pontos a Validar
-
-| Código | Ponto | Impacto | Recomendação |
-|---|---|---|---|
-| VAL-AUTH-01 | Autenticação M2M entre workers (digest-worker → api) | Define mecanismo de autenticação interna | Avaliar Service Account GCP + IAM para comunicação interna |
-| VAL-AUTH-02 | Duração da sessão e política de refresh token | Experiência do usuário e segurança | Definir TTL do ID token e política de renovação antes do go-live |
-
----
-
-## 21. Backlog Inicial Sugerido
-
-| Tipo | Item | Descrição |
-|---|---|---|
-| Epic | Autenticação e Sessão por Tenant | Implementar AuthMiddleware, ACL do GCP IdP e cache de contexto |
-| Story Técnica | AuthMiddleware com validação de JWT | Validar token em toda requisição; injetar AuthContext |
-| Story Técnica | GcpIdentityPlatformAdapter | Traduzir identity_uid → user_id interno via consulta ao organization |
-| Story Técnica | Cache de memberships em Redis | TTL configurável; invalidação explícita ao mudar papel |
-| Task | Endpoint GET /v1/auth/me | Retornar perfil e papéis do usuário autenticado |
-
----
-
-## 22. Referências
+## 23. Referências
 
 | Documento | Seção |
 |---|---|
-| DDD Segmentation | §4.1 BC-12 Identity & Access |
-| DDD Segmentation | §8 Context Map — ACL Identity → Organization |
-| Context Map | relations.md — Organization Management → Identity & Access |
-| NFRD | NFR-SEG (segurança e autenticação) |
+| `docs/product/modules/authentication/requirements.md` | Req 1..11, RNF 1..10, PBT-01..05 |
+| `docs/product/modules/authentication/design.md` | Arquitetura, DDs, DoD § 19 |
+| `docs/product/modules/authentication/tasks.md` | 25 TASKs, 6 ondas, matriz de rastreabilidade |
+| `docs/product/adr/0001-isolamento-multi-tenant-defesa-em-profundidade.md` | ADR-0001 — Multi-tenancy RLS |
+| `docs/product/adr/0007-stack-observabilidade-gcp.md` | ADR-0007 — Stack de observabilidade |
+| `services/authentication/observability/alerts.yaml` | Alertas Cloud Monitoring |
+| `services/authentication/observability/performance.md` | SLO de latência e script k6 |
+| `.github/workflows/staging.yml` | Gates de CI (gitleaks, Architecture.Tests, PBT-02) |

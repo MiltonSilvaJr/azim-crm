@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Authentication.Api.Tests
+    Foco: middlewares (ordem tenant->auth), /v1/auth/me, /v1/auth/logout,
+          anti-enumeração (corpo, código e timing do /password-reset);
+          PBT-03 API e PBT-04 API verdes.
+    Gate de CI: Api.Tests coverage >= 80%.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Authentication.Api.Tests</AssemblyName>
+    <RootNamespace>Authentication.Api.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Authentication.Api\Authentication.Api.csproj" />
+    <ProjectReference Include="..\..\src\Authentication.Application\Authentication.Application.csproj" />
+    <ProjectReference Include="..\..\src\Authentication.Contracts\Authentication.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Authentication.Domain\Authentication.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Authentication.Infrastructure\Authentication.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WebApplicationFactory para testes de integração de API -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
+    <!-- Mocks para serviços e portas -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <PackageReference Include="NSubstitute.Analyzers.CSharp" Version="1.0.17">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <!-- Cache em memória para AuthContextComposer nos testes -->
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.0" />
+  </ItemGroup>
+</Project>

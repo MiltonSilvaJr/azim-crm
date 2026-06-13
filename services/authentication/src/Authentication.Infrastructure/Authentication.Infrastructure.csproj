@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Authentication.Infrastructure
+    Papel: adapters concretos de saída — FirebaseIdentityProvider (ÚNICO ponto de
+           acoplamento ao GCP Identity Platform), JwksTokenVerifier, MembershipCacheRepository
+           (Redis), SecretManagerProvider (GCP Secret Manager), OrganizationUserDirectory,
+           TenantDirectory, RedisRateLimiter, IdentityProviderHealthCheck, extensões de DI.
+    Regra de dependência (DD-001): referencia Application, Domain e Contracts.
+    Confinamento ACL (DD-001): ÚNICO projeto que pode conter tipos do Firebase Admin SDK
+    e o símbolo identity_uid. Architecture.Tests falha o build se vazarem para outros projetos.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Authentication.Infrastructure</AssemblyName>
+    <RootNamespace>Authentication.Infrastructure</RootNamespace>
+    <Description>Adapters de infraestrutura do módulo authentication: FirebaseIdentityProvider, JwksTokenVerifier, Redis, Secret Manager. Único projeto autorizado a usar Firebase Admin SDK e identity_uid (DD-001).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Authentication.Application\Authentication.Application.csproj" />
+    <ProjectReference Include="..\Authentication.Domain\Authentication.Domain.csproj" />
+    <ProjectReference Include="..\Authentication.Contracts\Authentication.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FirebaseAdmin" Version="3.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.0" />
+    <PackageReference Include="Serilog" Version="4.3.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Google.Cloud.SecretManager.V1" Version="2.7.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.7.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <PackageReference Include="Polly" Version="8.5.2" />
+    <PackageReference Include="StackExchange.Redis" Version="2.8.31" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
+  </ItemGroup>
+</Project>
