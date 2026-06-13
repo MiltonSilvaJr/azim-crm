@@ -1,0 +1,115 @@
+# Alertas de autenticação para Cloud Monitoring / GCP
+#
+# Métricas emitidas via .NET Meter API (Authentication.Infrastructure.Metrics.AuthMetrics).
+# Exportadas via OpenTelemetry Collector para Cloud Monitoring.
+#
+# Mapeia: TASK-23, RNF 5, RNF 3.3, RNF 8.3, design.md § 11.
+#
+# Referência de nomes de métricas:
+#   auth_token_validation_success_total  — counter, label: tenant_id
+#   auth_token_validation_failure_total  — counter, labels: tenant_id, causa
+#   auth_rate_limit_block_total          — counter, label: tenant_id
+#   auth_latency_ms                      — histogram (p95 ≤ 1000 ms — RNF 2.1)
+
+alerts:
+  # ---------------------------------------------------------------------------
+  # ALERTA 1: Falha de validação de token acima do baseline (possível ataque)
+  # RNF 5.2: falha de validação acima do baseline → alerta de possível ataque
+  # ---------------------------------------------------------------------------
+  - name: auth_token_validation_failure_high_rate
+    display_name: "Auth: Taxa elevada de falhas de validação de token"
+    severity: WARNING
+    description: >
+      Taxa de auth_token_validation_failure_total acima do baseline por mais de 5 minutos.
+      Pode indicar ataque de força bruta, tokens comprometidos ou misconfiguration do IdP.
+    condition:
+      type: metric_threshold
+      metric: custom.googleapis.com/auth_token_validation_failure_total
+      aggregation:
+        alignment_period: 60s
+        per_series_aligner: ALIGN_RATE
+        cross_series_reducer: REDUCE_SUM
+        group_by_fields: []
+      comparison: COMPARISON_GT
+      threshold_value: 10  # mais de 10 falhas por segundo (ajustar ao baseline real)
+      duration: 300s        # sustentado por 5 minutos
+    notification_channels:
+      - projects/azim-crm/notificationChannels/ops-team
+    runbook_url: "docs/runbooks/auth-token-failure.md"
+
+  # ---------------------------------------------------------------------------
+  # ALERTA 2: Volume elevado de HTTP 401 — investigar IdP
+  # RNF 3.3: 401 em massa → alerta de investigação do IdP
+  # ---------------------------------------------------------------------------
+  - name: auth_401_mass_alert
+    display_name: "Auth: Volume elevado de HTTP 401 (investigar IdP)"
+    severity: CRITICAL
+    description: >
+      Taxa de auth_token_validation_failure_total com causa expired ou invalid_signature
+      muito acima do normal. Pode indicar indisponibilidade ou rotação de chaves do IdP.
+      Verificar health check do IdP em /health/ready.
+    condition:
+      type: metric_threshold
+      metric: custom.googleapis.com/auth_token_validation_failure_total
+      filter: 'metric.labels.causa = "expired" OR metric.labels.causa = "invalid_signature"'
+      aggregation:
+        alignment_period: 60s
+        per_series_aligner: ALIGN_RATE
+        cross_series_reducer: REDUCE_SUM
+        group_by_fields: []
+      comparison: COMPARISON_GT
+      threshold_value: 50  # ajustar ao baseline real
+      duration: 120s
+    notification_channels:
+      - projects/azim-crm/notificationChannels/ops-team
+    runbook_url: "docs/runbooks/auth-idp-degradation.md"
+
+  # ---------------------------------------------------------------------------
+  # ALERTA 3: Rate limiting em massa — possível ataque/abuso
+  # RNF 8.3: rate limit em massa → alerta de possível ataque
+  # ---------------------------------------------------------------------------
+  - name: auth_rate_limit_mass_block
+    display_name: "Auth: Rate limiting bloqueando volume elevado de requisições"
+    severity: WARNING
+    description: >
+      auth_rate_limit_block_total acima do threshold, indicando possível ataque DDoS
+      ou abuso de endpoints públicos (/password-reset, /invites/activate).
+    condition:
+      type: metric_threshold
+      metric: custom.googleapis.com/auth_rate_limit_block_total
+      aggregation:
+        alignment_period: 60s
+        per_series_aligner: ALIGN_RATE
+        cross_series_reducer: REDUCE_SUM
+        group_by_fields: []
+      comparison: COMPARISON_GT
+      threshold_value: 100  # ajustar ao baseline real
+      duration: 120s
+    notification_channels:
+      - projects/azim-crm/notificationChannels/ops-team
+    runbook_url: "docs/runbooks/auth-rate-limit.md"
+
+  # ---------------------------------------------------------------------------
+  # ALERTA 4: Latência p95 acima do SLO
+  # RNF 2.1: p95 ≤ 1 s nas operações de auth do backend
+  # ---------------------------------------------------------------------------
+  - name: auth_latency_p95_slo_breach
+    display_name: "Auth: Latência p95 acima de 1 s (violação de SLO)"
+    severity: WARNING
+    description: >
+      auth_latency_ms (percentil 95) acima de 1000 ms. Violação do SLO de latência
+      definido em RNF 2.1. Investigar cache de JWKS, Redis, conexão ao IdP.
+    condition:
+      type: metric_threshold
+      metric: custom.googleapis.com/auth_latency_ms
+      aggregation:
+        alignment_period: 60s
+        per_series_aligner: ALIGN_PERCENTILE_99  # usar p95 quando disponível
+        cross_series_reducer: REDUCE_MAX
+        group_by_fields: []
+      comparison: COMPARISON_GT
+      threshold_value: 1000  # ms
+      duration: 300s
+    notification_channels:
+      - projects/azim-crm/notificationChannels/ops-team
+    runbook_url: "docs/runbooks/auth-latency.md"
