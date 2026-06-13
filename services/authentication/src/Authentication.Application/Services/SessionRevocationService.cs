@@ -50,14 +50,24 @@ public sealed class SessionRevocationService
     {
         var wasNewRevocation = await TryRevokeAsync(command.UserId, cancellationToken);
 
-        // Evento auditável emitido somente na primeira revogação bem-sucedida
+        // Evento auditável emitido somente na primeira revogação bem-sucedida.
+        // Fail-open: falha de auditoria não bloqueia o fluxo principal (design.md § 6.6).
         if (wasNewRevocation)
         {
-            await _auditEmitter.EmitAsync(
-                eventType: "session_revoked",
-                tenantId: command.TenantId,
-                userId: command.UserId,
-                cancellationToken: cancellationToken);
+            try
+            {
+                await _auditEmitter.EmitAsync(
+                    eventType: "session_revoked",
+                    tenantId: command.TenantId,
+                    userId: command.UserId,
+                    cancellationToken: cancellationToken);
+            }
+            catch
+            {
+                // Auditoria é fail-open: o logout já ocorreu com sucesso no IdP.
+                // A falha de auditoria é silenciada aqui; o operador deve monitorar
+                // o módulo audit-log separadamente.
+            }
         }
     }
 
