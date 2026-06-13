@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using TenantAdministration.Api.Extensions;
 using TenantAdministration.Api.Infrastructure;
 
@@ -20,6 +22,13 @@ builder.Services.AddProblemDetails();
 // Response cache (brand.json — design.md §8.3)
 builder.Services.AddResponseCaching();
 
+// Métricas OpenTelemetry-compatíveis (TASK-22, design.md §11)
+builder.Services.AddMetrics();
+
+// Health checks base — endpoints /health/live e /health/ready (TASK-22, design.md §11)
+// Checks específicos de dependências são adicionados em AddTenantAdministrationInfrastructure.
+builder.Services.AddHealthChecks();
+
 // ─── Build ───────────────────────────────────────────────────────────────────
 
 var app = builder.Build();
@@ -38,6 +47,25 @@ app.UseAuthorization();
 app.UseResponseCaching();
 
 app.MapControllers();
+
+// ─── Health Checks (TASK-22, design.md §11) ──────────────────────────────────
+// /health/live — liveness: aplicação está rodando (independente de dependências)
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false  // não executa nenhum check — apenas responde 200 se o processo está vivo
+});
+
+// /health/ready — readiness: verifica conectividade com dependências externas
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResultStatusCodes =
+    {
+        [HealthStatus.Healthy] = StatusCodes.Status200OK,
+        [HealthStatus.Degraded] = StatusCodes.Status200OK,
+        [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable
+    }
+});
 
 app.Run();
 

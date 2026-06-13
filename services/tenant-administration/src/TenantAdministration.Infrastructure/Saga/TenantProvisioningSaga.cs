@@ -1,9 +1,11 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TenantAdministration.Application.Ports;
 using TenantAdministration.Domain.Aggregates;
 using TenantAdministration.Domain.ValueObjects;
 using TenantAdministration.Infrastructure.Identity;
+using TenantAdministration.Infrastructure.Observability;
 using TenantAdministration.Infrastructure.Outbox;
 using TenantAdministration.Infrastructure.Persistence;
 
@@ -29,6 +31,7 @@ public sealed class TenantProvisioningSaga : ITenantProvisioningSaga
     private readonly ITenantContext _tenantContext;
     private readonly IClock _clock;
     private readonly ILogger<TenantProvisioningSaga> _logger;
+    private readonly TenantAdministrationMetrics _metrics;
 
     /// <param name="db">DbContext para persistência.</param>
     /// <param name="idp">Adapter do Identity Platform.</param>
@@ -36,13 +39,15 @@ public sealed class TenantProvisioningSaga : ITenantProvisioningSaga
     /// <param name="tenantContext">Contexto de correlação.</param>
     /// <param name="clock">Relógio injetado.</param>
     /// <param name="logger">Logger estruturado.</param>
+    /// <param name="metrics">Métricas do módulo (TASK-22).</param>
     public TenantProvisioningSaga(
         TenantAdministrationDbContext db,
         IIdentityTenantProvisioner idp,
         IEventOutbox outbox,
         ITenantContext tenantContext,
         IClock clock,
-        ILogger<TenantProvisioningSaga> logger)
+        ILogger<TenantProvisioningSaga> logger,
+        TenantAdministrationMetrics metrics)
     {
         _db = db;
         _idp = idp;
@@ -50,6 +55,7 @@ public sealed class TenantProvisioningSaga : ITenantProvisioningSaga
         _tenantContext = tenantContext;
         _clock = clock;
         _logger = logger;
+        _metrics = metrics;
     }
 
     /// <inheritdoc/>
@@ -63,6 +69,8 @@ public sealed class TenantProvisioningSaga : ITenantProvisioningSaga
         string idempotencyKey,
         CancellationToken ct = default)
     {
+        var stopwatch = Stopwatch.StartNew();
+
         // ── (1) Verificar idempotência ────────────────────────────────────────
         var existing = await _db.ProvisioningRequests
             .FirstOrDefaultAsync(r => r.IdempotencyKey == idempotencyKey, ct);
@@ -110,6 +118,13 @@ public sealed class TenantProvisioningSaga : ITenantProvisioningSaga
                 "Saga: falha no IdP — nenhum tenant criado. Slug={Slug} CorrelationId={CorrelationId}",
                 slug,
                 _tenantContext.CorrelationId);
+
+            stopwatch.Stop();
+            _metrics.ProvisioningFailedTotal.Add(1,
+                new KeyValuePair<string, object?>("reason", "idp_failure"));
+            _metrics.ProvisioningDurationSeconds.Record(
+                stopwatch.Elapsed.TotalSeconds,
+                new KeyValuePair<string, object?>("result", "failed"));
 
             throw new InvalidOperationException(
                 $"TA-ERR-009: Falha ao criar tenant de identidade para slug '{slug}'.", ex);
@@ -164,6 +179,12 @@ public sealed class TenantProvisioningSaga : ITenantProvisioningSaga
                 slug,
                 _tenantContext.CorrelationId);
 
+            stopwatch.Stop();
+            _metrics.ProvisionedTotal.Add(1);
+            _metrics.ProvisioningDurationSeconds.Record(
+                stopwatch.Elapsed.TotalSeconds,
+                new KeyValuePair<string, object?>("result", "success"));
+
             return new ProvisioningResult(tenant.Id, identityTenantId);
         }
         catch (Exception ex)
@@ -197,6 +218,13 @@ public sealed class TenantProvisioningSaga : ITenantProvisioningSaga
 
             request.Status = ProvisioningRequestStatus.Failed;
             try { await _db.SaveChangesAsync(ct); } catch { /* best-effort */ }
+
+            stopwatch.Stop();
+            _metrics.ProvisioningFailedTotal.Add(1,
+                new KeyValuePair<string, object?>("reason", "persistence_failure"));
+            _metrics.ProvisioningDurationSeconds.Record(
+                stopwatch.Elapsed.TotalSeconds,
+                new KeyValuePair<string, object?>("result", "failed_compensation"));
 
             throw new InvalidOperationException(
                 $"TA-ERR-010: Provisionamento revertido por falha de persistência para slug '{slug}'.", ex);

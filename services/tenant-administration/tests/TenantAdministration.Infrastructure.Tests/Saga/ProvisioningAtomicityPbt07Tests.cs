@@ -4,6 +4,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using TenantAdministration.Infrastructure.Identity;
+using TenantAdministration.Infrastructure.Observability;
 using TenantAdministration.Infrastructure.Outbox;
 using TenantAdministration.Infrastructure.Persistence.Repositories;
 using TenantAdministration.Infrastructure.Saga;
@@ -63,8 +64,9 @@ public sealed class ProvisioningAtomicityPbt07Tests
             using var db = _fixture.CreateDbContext();
             var clock = new Infrastructure.Clock.SystemClock();
             var outbox = new OutboxRepository(db, tenantCtx);
+            var metrics = new TenantAdministrationMetrics(new TenantAdministration.Infrastructure.Tests.Fixtures.FakeMeterFactory());
             var saga = new TenantProvisioningSaga(db, idp, outbox, tenantCtx, clock,
-                NullLogger<TenantProvisioningSaga>.Instance);
+                NullLogger<TenantProvisioningSaga>.Instance, metrics);
 
             await saga.ExecuteAsync(
                 Guid.NewGuid(), slug, "PBT07 Test", "America/Sao_Paulo", "07:00",
@@ -124,8 +126,9 @@ public sealed class ProvisioningAtomicityPbt07Tests
 
         // Act
         using var db = _fixture.CreateDbContext();
+        var metrics = new TenantAdministrationMetrics(new TenantAdministration.Infrastructure.Tests.Fixtures.FakeMeterFactory());
         var saga = new TenantProvisioningSaga(db, idp, new OutboxRepository(db, tenantCtx), tenantCtx,
-            new Infrastructure.Clock.SystemClock(), NullLogger<TenantProvisioningSaga>.Instance);
+            new Infrastructure.Clock.SystemClock(), NullLogger<TenantProvisioningSaga>.Instance, metrics);
 
         var act = async () => await saga.ExecuteAsync(
             Guid.NewGuid(), slug, "IdP Fail Det", "America/Sao_Paulo", "07:00",

@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TenantAdministration.Application.Ports;
 using TenantAdministration.Infrastructure.Clock;
 using TenantAdministration.Infrastructure.Identity;
+using TenantAdministration.Infrastructure.Observability;
 using TenantAdministration.Infrastructure.Outbox;
 using TenantAdministration.Infrastructure.Persistence;
 using TenantAdministration.Infrastructure.Persistence.Repositories;
@@ -64,6 +65,18 @@ public static class InfrastructureServiceExtensions
 
         // ── Clock ─────────────────────────────────────────────────────────────
         services.AddSingleton<IClock, SystemClock>();
+
+        // ── Métricas (TASK-22, design.md §11) ─────────────────────────────────
+        // IMeterFactory é provido pelo runtime via AddMetrics() no Program.cs
+        services.AddSingleton<TenantAdministrationMetrics>();
+
+        // ── Health Check de Banco (TASK-22) ───────────────────────────────────
+        // AddHealthChecks() base é registrado no Program.cs para que o endpoint
+        // funcione mesmo em ambientes sem Infrastructure (ex.: testes de API).
+        services.AddHealthChecks()
+            .AddCheck<DatabaseHealthCheck>(
+                name: "database",
+                tags: ["ready"]);
 
         return services;
     }

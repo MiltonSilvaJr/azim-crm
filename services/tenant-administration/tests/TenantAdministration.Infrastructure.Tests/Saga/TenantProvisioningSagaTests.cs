@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using TenantAdministration.Infrastructure.Identity;
+using TenantAdministration.Infrastructure.Observability;
 using TenantAdministration.Infrastructure.Outbox;
 using TenantAdministration.Infrastructure.Persistence;
 using TenantAdministration.Infrastructure.Persistence.Repositories;
@@ -37,6 +38,9 @@ public sealed class TenantProvisioningSagaTests
         return letters.ToString()[..length] + "x";
     }
 
+    private static TenantAdministrationMetrics CreateFakeMetrics() =>
+        new(new TenantAdministration.Infrastructure.Tests.Fixtures.FakeMeterFactory());
+
     private TenantProvisioningSaga CreateSaga(
         TenantAdministrationDbContext db,
         FakeIdentityTenantProvisioner idp,
@@ -45,7 +49,8 @@ public sealed class TenantProvisioningSagaTests
         var clock = new Infrastructure.Clock.SystemClock();
         var outbox = new OutboxRepository(db, tenantCtx);
         return new TenantProvisioningSaga(db, idp, outbox, tenantCtx, clock,
-            NullLogger<TenantProvisioningSaga>.Instance);
+            NullLogger<TenantProvisioningSaga>.Instance,
+            CreateFakeMetrics());
     }
 
     [Fact(DisplayName = "Saga cria tenant no IdP e persiste no banco — estado consistente")]

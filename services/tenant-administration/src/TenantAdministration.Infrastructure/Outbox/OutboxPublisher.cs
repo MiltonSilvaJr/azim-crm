@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using TenantAdministration.Infrastructure.Observability;
 using TenantAdministration.Infrastructure.Persistence;
 
 namespace TenantAdministration.Infrastructure.Outbox;
@@ -16,6 +17,7 @@ public sealed class OutboxPublisher : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<OutboxPublisher> _logger;
+    private readonly TenantAdministrationMetrics _metrics;
 
     /// <summary>Número máximo de tentativas antes de marcar como <c>failed</c>.</summary>
     public const int MaxRetries = 3;
@@ -25,10 +27,15 @@ public sealed class OutboxPublisher : BackgroundService
 
     /// <param name="scopeFactory">Factory de escopo para resolver dependências por iteração.</param>
     /// <param name="logger">Logger estruturado.</param>
-    public OutboxPublisher(IServiceScopeFactory scopeFactory, ILogger<OutboxPublisher> logger)
+    /// <param name="metrics">Métricas do módulo (design.md §11, TASK-22).</param>
+    public OutboxPublisher(
+        IServiceScopeFactory scopeFactory,
+        ILogger<OutboxPublisher> logger,
+        TenantAdministrationMetrics metrics)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
+        _metrics = metrics;
     }
 
     /// <inheritdoc/>
@@ -105,7 +112,9 @@ public sealed class OutboxPublisher : BackgroundService
                         outboxEvent.RetryCount,
                         outboxEvent.CorrelationId);
 
-                    // TODO Onda 6: incrementar métrica outbox_failed_total
+                    // Métrica de falha do Outbox — alerta quando > 0 (design.md §11, TASK-22)
+                    _metrics.OutboxFailedTotal.Add(1,
+                        new KeyValuePair<string, object?>("event_type", outboxEvent.EventType));
                 }
                 else
                 {
