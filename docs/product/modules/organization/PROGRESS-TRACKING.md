@@ -12,8 +12,8 @@
 
 | Onda | Foco | TASKs | Status |
 |------|------|-------|--------|
-| 1 | Bootstrap | TASK-01..02 | [ ] |
-| 2 | Domain (PBT-04/06/07) | TASK-03..06 | [ ] |
+| 1 | Bootstrap | TASK-01..02 | [X] (`90a8338`,`b72992c`) — 10 Architecture; EF 9.0.6 |
+| 2 | Domain (PBT-04/06/07) | TASK-03..06 | [-] |
 | 3 | Application (PBT-02/03) | TASK-07..14 | [ ] |
 | 4 | Infrastructure (RLS, Outbox/Inbox) | TASK-15..19 | [ ] |
 | 5 | API + Contracts | TASK-20..24 | [ ] |
