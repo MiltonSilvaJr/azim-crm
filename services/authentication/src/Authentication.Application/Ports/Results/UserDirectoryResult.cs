@@ -26,4 +26,11 @@ public sealed record UserDirectoryResult
 
     /// <summary>Indica se o usuário está ativo no tenant.</summary>
     public required bool IsActive { get; init; }
+
+    /// <summary>
+    /// Provedor de autenticação do usuário (ex.: "password", "google.com").
+    /// Usado pela <c>EmailMethodSpec</c> no <c>PasswordResetService</c> (Req 8.4).
+    /// Pode ser nulo quando não disponível (ex.: resolve por providerUserRef).
+    /// </summary>
+    public string? SignInProvider { get; init; }
 }

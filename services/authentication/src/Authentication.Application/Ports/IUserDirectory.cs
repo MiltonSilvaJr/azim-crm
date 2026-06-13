@@ -46,4 +46,24 @@ public interface IUserDirectory
         string email,
         Guid tenantId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resolve o usuário a partir do e-mail no tenant.
+    ///
+    /// Usado pelo <c>PasswordResetService</c> para verificar o método de autenticação
+    /// sem revelar existência de conta (anti-enumeração — PBT-03, Req 10.2).
+    ///
+    /// Retorna <see langword="null"/> quando o e-mail não existe ou está inativo.
+    /// </summary>
+    /// <param name="email">E-mail do usuário.</param>
+    /// <param name="tenantId">UUID do tenant.</param>
+    /// <param name="cancellationToken">Token de cancelamento.</param>
+    /// <returns>
+    /// Resultado com dados do usuário (incluindo <c>SignInProvider</c>),
+    /// ou <see langword="null"/> quando não encontrado.
+    /// </returns>
+    Task<UserDirectoryResult?> FindUserByEmailAsync(
+        string email,
+        Guid tenantId,
+        CancellationToken cancellationToken = default);
 }
