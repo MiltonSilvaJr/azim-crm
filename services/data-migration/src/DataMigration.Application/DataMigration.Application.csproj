@@ -17,6 +17,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- MediatR: mediação de commands/queries/behaviors (design §5) -->
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <!-- FluentValidation: validação sintática na borda (design §5.4, TASK-12) -->
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\DataMigration.Domain\DataMigration.Domain.csproj" />
     <ProjectReference Include="..\DataMigration.Contracts\DataMigration.Contracts.csproj" />
   </ItemGroup>
