@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    ActivityManagement.Architecture.Tests
+    Foco: regra de dependência entre camadas conforme design §3 do módulo activity-management.
+    Executa em 100% dos PRs; falha o CI em caso de violação.
+    Mapeia: design §2 (princípios), design §3 (regras de dependência), TASK-01 (ST-01).
+
+    Regra de dependência validada:
+      Api            -> Application, Infrastructure, Contracts (permitido)
+      Application    -> Domain, Contracts (permitido; NUNCA Infrastructure)
+      Infrastructure -> Application, Domain, Contracts (permitido)
+      Domain         -> (nenhum projeto interno)
+      Contracts      -> (nenhum projeto interno)
+
+    Coverlet configurado via Directory.Build.props.
+  -->
+  <PropertyGroup>
+    <AssemblyName>ActivityManagement.Architecture.Tests</AssemblyName>
+    <RootNamespace>ActivityManagement.Architecture.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- NetArchTest para regras de arquitetura -->
+    <PackageReference Include="NetArchTest.Rules" Version="1.3.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Referencia todos os projetos de produção para inspeção de assemblies -->
+    <ProjectReference Include="..\..\src\ActivityManagement.Contracts\ActivityManagement.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\ActivityManagement.Domain\ActivityManagement.Domain.csproj" />
+    <ProjectReference Include="..\..\src\ActivityManagement.Application\ActivityManagement.Application.csproj" />
+    <ProjectReference Include="..\..\src\ActivityManagement.Infrastructure\ActivityManagement.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\ActivityManagement.Api\ActivityManagement.Api.csproj" />
+  </ItemGroup>
+</Project>

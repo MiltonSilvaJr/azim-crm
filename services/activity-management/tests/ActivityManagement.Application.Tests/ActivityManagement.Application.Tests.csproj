@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    ActivityManagement.Application.Tests
+    Foco: handlers de Command/Query (CreateActivity, UpdateActivity, DeleteActivity,
+          CompleteActivity, RescheduleActivity, ProcessDigestAction, ScanOverdueActivities,
+          GetMyDay, GetMyWeek, GetOverdueByUser, GetTodayByUser, GetLastCompletedActivity,
+          SuggestNextActivity, GetOpportunitiesWithoutFollowup, ListActivities),
+          pipeline behaviors (CorrelationLogging, TenantScope, Validation,
+          Authorization, Transaction), validação de token.
+    PBTs obrigatórios: PBT-02 (idempotência da conclusão — lista e token),
+    PBT-03 (uso único e anti-enumeração do token), PBT-05 (saúde do funil).
+    Meta de cobertura: Application >= 85% (critério de fechamento da Onda 3).
+    Mapeia: design §13 (testes), TASK-06..TASK-12.
+  -->
+  <PropertyGroup>
+    <AssemblyName>ActivityManagement.Application.Tests</AssemblyName>
+    <RootNamespace>ActivityManagement.Application.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ActivityManagement.Application\ActivityManagement.Application.csproj" />
+    <ProjectReference Include="..\..\src\ActivityManagement.Domain\ActivityManagement.Domain.csproj" />
+    <ProjectReference Include="..\..\src\ActivityManagement.Contracts\ActivityManagement.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- NSubstitute: mock de ports e repositórios (sem dependência de EF Core) -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <!-- FluentValidation: validators de application -->
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+  </ItemGroup>
+</Project>

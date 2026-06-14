@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    ActivityManagement.Api.Tests
+    Foco: contratos de endpoint (ActivitiesController, DigestActionsController,
+          InternalController), códigos HTTP, RBAC enforcement, formato de erro
+          padronizado (ACT-ERR-001..011), middleware CorrelationId e
+          ExceptionHandlingMiddleware. Anti-enumeração do token (PBT-03).
+    Infra de teste: WebApplicationFactory para testes de integração de API.
+    PBTs obrigatórios: PBT-03 (anti-enumeração — forma e tempo constante).
+    Meta de cobertura: Api >= 80% (critério de fechamento da Onda 5).
+    Mapeia: design §8 (API Contracts), design §12 (catálogo de erros), TASK-18..TASK-21.
+  -->
+  <PropertyGroup>
+    <AssemblyName>ActivityManagement.Api.Tests</AssemblyName>
+    <RootNamespace>ActivityManagement.Api.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ActivityManagement.Api\ActivityManagement.Api.csproj" />
+    <ProjectReference Include="..\..\src\ActivityManagement.Application\ActivityManagement.Application.csproj" />
+    <ProjectReference Include="..\..\src\ActivityManagement.Infrastructure\ActivityManagement.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\ActivityManagement.Contracts\ActivityManagement.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WebApplicationFactory para testes de integração de API -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
+    <!-- NSubstitute: mock de handlers MediatR e serviços de aplicação -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+  </ItemGroup>
+</Project>

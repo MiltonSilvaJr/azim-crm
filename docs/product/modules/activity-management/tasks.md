@@ -132,30 +132,30 @@ TASK-NN — <título>        ← unidade atômica de invocação do task-coder
 
 | TASK | Título | Onda | Branch | Status |
 |------|--------|------|--------|--------|
-| TASK-01 | Criar solution e 5 projetos Clean Architecture | Onda 1 | `feat/activity-management/01-bootstrap` | [ ] |
-| TASK-02 | Objetos de valor e state machine (PBT-01) | Onda 2 | `feat/activity-management/02-value-objects` | [ ] |
-| TASK-03 | Domain events e exceptions | Onda 2 | `feat/activity-management/03-domain-events` | [ ] |
-| TASK-04 | Agregado Activity — factory e invariantes I1–I6 | Onda 2 | `feat/activity-management/04-aggregate` | [ ] |
-| TASK-05 | Specifications: Overdue, FunnelHealth, Scope (PBT-04, PBT-05) | Onda 2 | `feat/activity-management/05-specifications` | [ ] |
-| TASK-06 | Pipeline behaviors e ports interfaces | Onda 3 | `feat/activity-management/06-behaviors-ports` | [ ] |
-| TASK-07 | Commands/Handlers CRUD e validators | Onda 3 | `feat/activity-management/07-crud-handlers` | [ ] |
-| TASK-08 | CompleteActivity idempotente e SuggestNextActivity (PBT-02) | Onda 3 | `feat/activity-management/08-complete-suggest` | [ ] |
-| TASK-09 | ProcessDigestAction — validar e consumir token (PBT-02, PBT-03) | Onda 3 | `feat/activity-management/09-digest-action` | [ ] |
-| TASK-10 | RescheduleActivity — reagendamento e ação via token | Onda 3 | `feat/activity-management/10-reschedule` | [ ] |
-| TASK-11 | Queries de visão do vendedor (GetMyDay, GetMyWeek, ListActivities) | Onda 3 | `feat/activity-management/11-seller-queries` | [ ] |
-| TASK-12 | Queries de sistema e ScanOverdueActivities | Onda 3 | `feat/activity-management/12-system-scan` | [ ] |
-| TASK-13 | EF Core DbContext, ActivityRepository e migrations base | Onda 4 | `feat/activity-management/13-ef-repository` | [ ] |
-| TASK-14 | Migration DD-001 — status/priority, backfill, constraints, token_hash | Onda 4 | `feat/activity-management/14-migration-dd001` | [ ] |
-| TASK-15 | Índices, RLS falha-fechada e TenantConnectionInterceptor | Onda 4 | `feat/activity-management/15-rls-tenant` | [ ] |
-| TASK-16 | Outbox transacional, PiiMasker e AuditPublisher | Onda 4 | `feat/activity-management/16-outbox-audit` | [ ] |
-| TASK-17 | DigestActionTokenAdapter e adapters de leitura (Opportunity, Account) | Onda 4 | `feat/activity-management/17-adapters` | [ ] |
-| TASK-18 | ActivitiesController, middleware e OpenAPI | Onda 5 | `feat/activity-management/18-activities-ctrl` | [ ] |
-| TASK-19 | DigestActionsController, InternalController e anti-enumeração | Onda 5 | `feat/activity-management/19-digest-internal-ctrl` | [ ] |
-| TASK-20 | Contratos de evento v1 e Pact provider tests | Onda 5 | `feat/activity-management/20-event-contracts` | [ ] |
-| TASK-21 | Testes de API — RBAC, erros, cross-tenant CI gate | Onda 5 | `feat/activity-management/21-api-tests` | [ ] |
-| TASK-22 | Observabilidade — métricas, logs, traces, alertas | Onda 6 | `feat/activity-management/22-observability` | [ ] |
-| TASK-23 | Hardening de segurança — tempo constante, anti-PII, privilégio mínimo | Onda 6 | `feat/activity-management/23-security-hardening` | [ ] |
-| TASK-24 | DoD final — coverage gates, PBT-01..05 completos, data-model atualizado | Onda 6 | `feat/activity-management/24-dod-final` | [ ] |
+| TASK-01 | Criar solution e 5 projetos Clean Architecture | Onda 1 | `feat/activity-management/01-bootstrap` | [X] |
+| TASK-02 | Objetos de valor e state machine (PBT-01) | Onda 2 | `feat/activity-management/02-value-objects` | [X] |
+| TASK-03 | Domain events e exceptions | Onda 2 | `feat/activity-management/03-domain-events` | [X] |
+| TASK-04 | Agregado Activity — factory e invariantes I1–I6 | Onda 2 | `feat/activity-management/04-aggregate` | [X] |
+| TASK-05 | Specifications: Overdue, FunnelHealth, Scope (PBT-04, PBT-05) | Onda 2 | `feat/activity-management/05-specifications` | [X] |
+| TASK-06 | Pipeline behaviors e ports interfaces | Onda 3 | `feat/activity-management/06-behaviors-ports` | [X] |
+| TASK-07 | Commands/Handlers CRUD e validators | Onda 3 | `feat/activity-management/07-crud-handlers` | [X] |
+| TASK-08 | CompleteActivity idempotente e SuggestNextActivity (PBT-02) | Onda 3 | `feat/activity-management/08-complete-suggest` | [X] |
+| TASK-09 | ProcessDigestAction — validar e consumir token (PBT-02, PBT-03) | Onda 3 | `feat/activity-management/09-digest-action` | [X] |
+| TASK-10 | RescheduleActivity — reagendamento e ação via token | Onda 3 | `feat/activity-management/10-reschedule` | [X] |
+| TASK-11 | Queries de visão do vendedor (GetMyDay, GetMyWeek, ListActivities) | Onda 3 | `feat/activity-management/11-seller-queries` | [X] |
+| TASK-12 | Queries de sistema e ScanOverdueActivities | Onda 3 | `feat/activity-management/12-system-scan` | [X] |
+| TASK-13 | EF Core DbContext, ActivityRepository e migrations base | Onda 4 | `feat/activity-management/13-ef-repository` | [X] |
+| TASK-14 | Migration DD-001 — status/priority, backfill, constraints, token_hash | Onda 4 | `feat/activity-management/14-migration-dd001` | [X] |
+| TASK-15 | Índices, RLS falha-fechada e TenantConnectionInterceptor | Onda 4 | `feat/activity-management/15-rls-tenant` | [X] |
+| TASK-16 | Outbox transacional, PiiMasker e AuditPublisher | Onda 4 | `feat/activity-management/16-outbox-audit` | [X] |
+| TASK-17 | DigestActionTokenAdapter e adapters de leitura (Opportunity, Account) | Onda 4 | `feat/activity-management/17-adapters` | [X] |
+| TASK-18 | ActivitiesController, middleware e OpenAPI | Onda 5 | `feat/activity-management/18-activities-ctrl` | [X] |
+| TASK-19 | DigestActionsController, InternalController e anti-enumeração | Onda 5 | `feat/activity-management/19-digest-internal-ctrl` | [X] |
+| TASK-20 | Contratos de evento v1 e Pact provider tests | Onda 5 | `feat/activity-management/20-event-contracts` | [X] |
+| TASK-21 | Testes de API — RBAC, erros, cross-tenant CI gate | Onda 5 | `feat/activity-management/21-api-tests` | [X] |
+| TASK-22 | Observabilidade — métricas, logs, traces, alertas | Onda 6 | `feat/activity-management/22-observability` | [X] |
+| TASK-23 | Hardening de segurança — tempo constante, anti-PII, privilégio mínimo | Onda 6 | `feat/activity-management/23-security-hardening` | [X] |
+| TASK-24 | DoD final — coverage gates, PBT-01..05 completos, data-model atualizado | Onda 6 | `feat/activity-management/24-dod-final` | [X] |
 
 ## 3. Ondas de Implementação
 
@@ -992,28 +992,28 @@ TASK de encerramento do módulo. Verificar que todos os itens do DoD do design.m
 | Req 12 | Expor última atividade concluída por oportunidade (estagnação) | TASK-12, TASK-15, TASK-18 | [ ] |
 | Req 13 | Visibilidade conforme papel e BU (RBAC, ScopeSpecification) | TASK-05, TASK-06, TASK-21 | [ ] |
 | Req 14 | Publicar eventos de domínio (Created, Completed, Overdue) | TASK-03, TASK-16, TASK-20 | [ ] |
-| RNF 1 | Isolamento por tenant (tenant_id + EF filter + RLS) | TASK-15, TASK-21 | [ ] |
-| RNF 2 | Auditoria imutável de toda escrita (audit_logs append-only) | TASK-16 | [ ] |
-| RNF 3 | Idempotência da conclusão via token | TASK-08, TASK-09 | [ ] |
-| RNF 4 | Performance da consulta de última atividade (índice obrigatório) | TASK-15 | [ ] |
-| RNF 5 | Token de ação de uso único e expirável (anti-enumeração) | TASK-09, TASK-17, TASK-23 | [ ] |
-| RNF 6 | Observabilidade (métricas, logs correlacionados, traces, alertas) | TASK-22 | [ ] |
-| RNF 7 | Privacidade em texto livre (PII mascarada em logs e eventos) | TASK-16, TASK-23 | [ ] |
-| PBT-01 | Integridade da state machine (sequências arbitrárias de transição) | TASK-02 | [ ] |
-| PBT-02 | Idempotência da conclusão (N chamadas → 1 ActivityCompleted) | TASK-08, TASK-09 | [ ] |
-| PBT-03 | Anti-enumeração do token (forma e tempo indistinguíveis) | TASK-09, TASK-19, TASK-23 | [ ] |
-| PBT-04 | Invariante de atividade vencida (overdue sse dueAt < ref e não terminal) | TASK-05 | [ ] |
-| PBT-05 | Saúde do funil após sugestão aceita (≥1 follow-up futuro preservado) | TASK-05, TASK-08 | [ ] |
-| DD-001 | Adicionar status/priority à tabela activities + backfill | TASK-14 | [ ] |
-| DD-002 | Isolamento multi-tenant em defesa em profundidade | TASK-15 | [ ] |
-| DD-003 | Validação e consumo do digest_action_token por hash | TASK-09, TASK-17 | [ ] |
-| DD-004 | Conclusão idempotente por estado + dedup de evento | TASK-04, TASK-08, TASK-09 | [ ] |
-| DD-005 | ActivityOverdue derivado de scan/consulta, não de transição de estado | TASK-12 | [ ] |
-| DD-006 | Sugestão de próxima atividade é não-bloqueante (UI-driven) | TASK-08 | [ ] |
-| DD-007 | Publicação de eventos via Outbox transacional + Pub/Sub | TASK-16 | [ ] |
-| DD-008 | Faixas de data no fuso horário IANA do tenant | TASK-05, TASK-11 | [ ] |
-| DD-009 | Texto livre (título/descrição) tratado como PII potencial | TASK-16, TASK-22, TASK-23 | [ ] |
-| ADR-0001 | Isolamento multi-tenant em defesa em profundidade (gate CI) | TASK-15, TASK-21 | [ ] |
+| RNF 1 | Isolamento por tenant (tenant_id + EF filter + RLS) | TASK-15, TASK-21 | [X] |
+| RNF 2 | Auditoria imutável de toda escrita (audit_logs append-only) | TASK-16 | [X] |
+| RNF 3 | Idempotência da conclusão via token | TASK-08, TASK-09 | [X] |
+| RNF 4 | Performance da consulta de última atividade (índice obrigatório) | TASK-15 | [X] |
+| RNF 5 | Token de ação de uso único e expirável (anti-enumeração) | TASK-09, TASK-17, TASK-23 | [X] |
+| RNF 6 | Observabilidade (métricas, logs correlacionados, traces, alertas) | TASK-22 | [X] |
+| RNF 7 | Privacidade em texto livre (PII mascarada em logs e eventos) | TASK-16, TASK-23 | [X] |
+| PBT-01 | Integridade da state machine (sequências arbitrárias de transição) | TASK-02 | [X] ≥500 casos |
+| PBT-02 | Idempotência da conclusão (N chamadas → 1 ActivityCompleted) | TASK-08, TASK-09 | [X] ≥500 casos |
+| PBT-03 | Anti-enumeração do token (forma e tempo indistinguíveis) | TASK-09, TASK-19, TASK-23 | [X] ≥500 casos |
+| PBT-04 | Invariante de atividade vencida (overdue sse dueAt < ref e não terminal) | TASK-05 | [X] ≥500 casos |
+| PBT-05 | Saúde do funil após sugestão aceita (≥1 follow-up futuro preservado) | TASK-05, TASK-08 | [X] ≥500 casos |
+| DD-001 | Adicionar status/priority à tabela activities + backfill | TASK-14 | [X] |
+| DD-002 | Isolamento multi-tenant em defesa em profundidade | TASK-15 | [X] |
+| DD-003 | Validação e consumo do digest_action_token por hash | TASK-09, TASK-17 | [X] |
+| DD-004 | Conclusão idempotente por estado + dedup de evento | TASK-04, TASK-08, TASK-09 | [X] |
+| DD-005 | ActivityOverdue derivado de scan/consulta, não de transição de estado | TASK-12 | [X] |
+| DD-006 | Sugestão de próxima atividade é não-bloqueante (UI-driven) | TASK-08 | [X] |
+| DD-007 | Publicação de eventos via Outbox transacional + Pub/Sub | TASK-16 | [X] |
+| DD-008 | Faixas de data no fuso horário IANA do tenant | TASK-05, TASK-11 | [X] |
+| DD-009 | Texto livre (título/descrição) tratado como PII potencial | TASK-16, TASK-22, TASK-23 | [X] |
+| ADR-0001 | Isolamento multi-tenant em defesa em profundidade (gate CI) | TASK-15, TASK-21 | [X] |
 
 ## 6. Coverage Gates
 

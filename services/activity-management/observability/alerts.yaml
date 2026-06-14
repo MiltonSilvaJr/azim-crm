@@ -1,0 +1,108 @@
+# Alertas de observabilidade — activity-management (BC-04)
+# Mapeia: RNF 6.4, design §11, TASK-22.
+# Formato: Cloud Monitoring / Prometheus alerting rules.
+#
+# Os alertas cobrem os 4 cenários críticos descritos no design §11:
+#   1. activities_overdue_total crescendo acima da linha de base (possível falha do digest).
+#   2. Falha de relay do Outbox (eventos não publicados).
+#   3. Latência p95 da última-atividade acima do SLO.
+#   4. Taxa de erro de criação > 5%.
+
+groups:
+  - name: activity_management_alerts
+    interval: 1m
+    rules:
+
+      # ── 1. Atividades vencidas crescendo acima da linha de base ──────────────
+      # Indica possível falha do worker do digest em processar notificações (RNF 6.4).
+      - alert: ActivitiesOverdueSpiking
+        expr: |
+          increase(activities_overdue_total[15m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: activity-management
+          team: crm-backend
+        annotations:
+          summary: "Spike em atividades vencidas detectadas"
+          description: >
+            O contador activities_overdue_total cresceu mais de 100 unidades
+            nos últimos 15 minutos. Isso pode indicar falha no worker do digest
+            ou acúmulo de atividades sem follow-up.
+            Verifique o log do ScanOverdueActivitiesCommand e o relay do Outbox.
+
+      # ── 2. Relay do Outbox com falha — eventos não publicados ──────────────
+      # Mensagens pendentes há mais de 5 minutos indicam falha de relay.
+      - alert: OutboxRelayStalled
+        expr: |
+          (outbox_messages_pending_total > 0) and (time() - outbox_last_relay_success_timestamp > 300)
+        for: 2m
+        labels:
+          severity: critical
+          service: activity-management
+          team: crm-backend
+        annotations:
+          summary: "Relay do Outbox paralisado"
+          description: >
+            Existem mensagens pendentes no outbox há mais de 5 minutos sem
+            publicação bem-sucedida. Verificar OutboxRelayWorker e conexão com Cloud Pub/Sub.
+
+      # ── 3. Latência p95 da consulta de última atividade acima do SLO ───────
+      # SLO: p95 < 200ms (RNF 4, design §15).
+      - alert: LastActivityQueryLatencyHigh
+        expr: |
+          histogram_quantile(0.95,
+            rate(http_request_duration_seconds_bucket{
+              handler="GetLastCompletedActivity"
+            }[5m])
+          ) > 0.2
+        for: 3m
+        labels:
+          severity: warning
+          service: activity-management
+          team: crm-backend
+        annotations:
+          summary: "Latência p95 de GetLastCompletedActivity acima do SLO"
+          description: >
+            A latência p95 da consulta de última atividade está acima de 200ms.
+            Verificar índice idx_activities_tenant_opportunity_completed e carga no banco.
+
+      # ── 4. Taxa de erro de criação de atividade > 5% ──────────────────────
+      # Erros de criação acima de 5% indicam problema sistêmico (design §11).
+      - alert: ActivityCreationErrorRateHigh
+        expr: |
+          rate(http_requests_total{
+            handler="CreateActivity",
+            status=~"4..|5.."
+          }[5m])
+          /
+          rate(http_requests_total{
+            handler="CreateActivity"
+          }[5m])
+          > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          service: activity-management
+          team: crm-backend
+        annotations:
+          summary: "Taxa de erro de criação de atividade > 5%"
+          description: >
+            Mais de 5% das requisições de criação de atividade estão falhando.
+            Verificar validação de vínculos (opportunity/account), banco de dados e logs de erro.
+
+      # ── 5. Dead man's switch: scan de vencidas não executou ─────────────────
+      # Scheduler deve acionar ScanOverdueActivities diariamente.
+      - alert: OverdueScanMissed
+        expr: |
+          (time() - activities_overdue_last_scan_timestamp) > 90000
+        for: 1m
+        labels:
+          severity: critical
+          service: activity-management
+          team: crm-backend
+        annotations:
+          summary: "Scan de atividades vencidas não executou nas últimas 25h"
+          description: >
+            O scheduler activity-overdue não acionou o scan nas últimas 25 horas.
+            Verificar Cloud Scheduler, endpoint /internal/overdue-scan e autenticação.

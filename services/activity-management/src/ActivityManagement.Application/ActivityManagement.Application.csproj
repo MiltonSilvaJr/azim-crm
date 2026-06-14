@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    ActivityManagement.Application
+    Papel: commands (CreateActivity, UpdateActivity, DeleteActivity, CompleteActivity,
+           RescheduleActivity, ProcessDigestAction, ScanOverdueActivities),
+           queries (ListActivities, GetMyDay, GetMyWeek, GetOverdueByUser, GetTodayByUser,
+           GetLastCompletedActivity, SuggestNextActivity, GetOpportunitiesWithoutFollowup),
+           handlers MediatR, pipeline behaviors (CorrelationLogging, TenantScope, Validation,
+           Authorization, Transaction), ports (IOpportunityReadPort, IAccountReadPort,
+           IDigestActionTokenPort, IAuditPublisher, IClock, ITenantClock) e validators
+           FluentValidation.
+    Regra de dependência: Application -> Domain, Contracts. NUNCA referencia Infrastructure.
+    Mapeia: design §3, design §5.
+  -->
+  <PropertyGroup>
+    <AssemblyName>ActivityManagement.Application</AssemblyName>
+    <RootNamespace>ActivityManagement.Application</RootNamespace>
+    <Description>Casos de uso, ports (interfaces) e pipeline behaviors do módulo activity-management. Nenhuma referência a Infrastructure (Clean Architecture).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ActivityManagement.Domain\ActivityManagement.Domain.csproj" />
+    <ProjectReference Include="..\ActivityManagement.Contracts\ActivityManagement.Contracts.csproj" />
+  </ItemGroup>
+
+  <!-- InternalsVisibleTo: expõe internal sealed handlers ao projeto de testes -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>ActivityManagement.Application.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- MediatR: desacopla controllers de handlers (clean-architecture rule §10) -->
+    <PackageReference Include="MediatR" Version="12.5.0" />
+    <!-- FluentValidation: validação sintática na borda (ValidationBehavior) -->
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <!-- FluentValidation DI: AddValidatorsFromAssembly para registro em ApplicationServiceExtensions -->
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <!-- Abstrações de DI: IServiceCollection para ApplicationServiceExtensions -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <!-- Abstrações de logging estruturado (observabilidade — RNF 6) -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <!-- Options pattern para configurações -->
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+  </ItemGroup>
+</Project>
