@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using AccountManagement.Application.Ports;
 using Microsoft.Extensions.Logging;
 
@@ -57,6 +58,14 @@ internal sealed class ActivityReadAdapter : IActivityReadPort
         {
             _logger.LogWarning(ex,
                 "Falha ao consultar activity-management para conta {AccountId}. Degradação parcial.",
+                accountId);
+            return Array.Empty<ActivityReadModel>();
+        }
+        catch (JsonException ex)
+        {
+            // Corpo de resposta inválido ou vazio — degradação parcial (design §15)
+            _logger.LogWarning(ex,
+                "Resposta inválida do activity-management para conta {AccountId}. Degradação parcial.",
                 accountId);
             return Array.Empty<ActivityReadModel>();
         }

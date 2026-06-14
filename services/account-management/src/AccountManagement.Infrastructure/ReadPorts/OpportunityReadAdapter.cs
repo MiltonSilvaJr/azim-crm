@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using AccountManagement.Application.Ports;
 using Microsoft.Extensions.Logging;
 
@@ -72,6 +73,14 @@ internal sealed class OpportunityReadAdapter : IOpportunityReadPort
             // Falha de conectividade — degradação parcial
             _logger.LogWarning(ex,
                 "Falha ao consultar opportunity-pipeline para conta {AccountId}. Degradação parcial.",
+                accountId);
+            return Array.Empty<OpportunityReadModel>();
+        }
+        catch (JsonException ex)
+        {
+            // Corpo de resposta inválido ou vazio — degradação parcial (design §15)
+            _logger.LogWarning(ex,
+                "Resposta inválida do opportunity-pipeline para conta {AccountId}. Degradação parcial.",
                 accountId);
             return Array.Empty<OpportunityReadModel>();
         }
