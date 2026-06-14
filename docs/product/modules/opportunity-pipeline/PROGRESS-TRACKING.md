@@ -14,8 +14,8 @@
 | Onda | Foco | TASKs | Status |
 |------|------|-------|--------|
 | 1 | Bootstrap | TASK-01 | [X] (`ec77a18`) — 10 Architecture; EF 9.0.6 |
-| 2 | Domain (PBT-02..08) | TASK-02..07 | [-] |
-| 3 | Application (PBT-09) | TASK-08..12 | [ ] |
+| 2 | Domain (PBT-02..08) | TASK-02..07 | [X] (6 commits) — 176 Domain + PBT-02..08/11; money-as-cents/NBR-5891/snapshot imutável/VAL-07 |
+| 3 | Application (PBT-09) | TASK-08..12 | [-] |
 | 4 | Infrastructure (RLS, numeração atômica, outbox; PBT-01/07/11) | TASK-13..18 | [ ] |
 | 5 | API + Contracts | TASK-19..21 | [ ] |
 | 6 | Hardening (PBT-10, carga Kanban) | TASK-22..24 | [ ] |
