@@ -15,8 +15,8 @@
 | 1 | Bootstrap | TASK-01..02 | [X] (`fafa6bb`,`137f955`) — 9 Architecture; EF 9.0.6 + NodaTime |
 | 2 | Domínio | TASK-03..08 | [X] (6 commits) — 78 Domain + PBT-01/03; money-as-cents + token hash |
 | 3 | Application | TASK-09..13 | [X] (5 commits) — 55 App + PBT-02/04/06; idempotência envio |
-| 4 | Infrastructure (RLS, outbox, template) | TASK-14..20 | [-] |
-| 5 | Api + Contratos (OIDC/WIF, Pub/Sub) | TASK-21..23 | [ ] |
+| 4 | Infrastructure (RLS, outbox, template) | TASK-14..20 | [X] (7 commits) — 59 Infra (RLS Testcontainers, PBT-05, Polly read adapters); EF 9.0.6 |
+| 5 | Api + Contratos (OIDC/WIF, Pub/Sub) | TASK-21..23 | [-] |
 | 6 | Hardening (purge, isolamento, observ) | TASK-24..27 | [ ] |
 
 ## Detalhe por onda
