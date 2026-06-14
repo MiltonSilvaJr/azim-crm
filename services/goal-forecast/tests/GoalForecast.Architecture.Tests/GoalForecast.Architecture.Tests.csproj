@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    GoalForecast.Architecture.Tests
+    Foco: regras de dependência entre camadas conforme design §3 (DD-001).
+    Executa em 100% dos PRs; falha o CI em caso de violação (TASK-02).
+
+    Regra de dependência validada (design §3):
+      Api            -> Application, Infrastructure, Contracts (permitido)
+      Application    -> Domain, Contracts (NUNCA Infrastructure ou Api)
+      Infrastructure -> Application, Domain, Contracts (permitido)
+      Domain         -> ∅ (nenhum projeto interno)
+      Contracts      -> ∅ (nenhum projeto interno)
+
+    Coverlet configurado via Directory.Build.props.
+  -->
+  <PropertyGroup>
+    <AssemblyName>GoalForecast.Architecture.Tests</AssemblyName>
+    <RootNamespace>GoalForecast.Architecture.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- NetArchTest para regras de arquitetura -->
+    <PackageReference Include="NetArchTest.Rules" Version="1.3.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Referencia todos os projetos de produção para inspeção de assemblies -->
+    <ProjectReference Include="..\..\src\GoalForecast.Contracts\GoalForecast.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\GoalForecast.Domain\GoalForecast.Domain.csproj" />
+    <ProjectReference Include="..\..\src\GoalForecast.Application\GoalForecast.Application.csproj" />
+    <ProjectReference Include="..\..\src\GoalForecast.Infrastructure\GoalForecast.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\GoalForecast.Api\GoalForecast.Api.csproj" />
+  </ItemGroup>
+</Project>

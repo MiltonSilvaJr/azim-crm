@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    GoalForecast.Domain.Tests
+    Foco: invariantes de Goal, Money, GoalPeriod, GoalScope; GoalAggregation;
+          PBT-02 (soma trimestral/anual), PBT-05 (round-trip Money).
+    Cobertura mínima: ≥ 95% da camada Domain (tasks.md §1, TASK-03..07).
+    Mapeia: design §13, TASK-01.
+  -->
+  <PropertyGroup>
+    <AssemblyName>GoalForecast.Domain.Tests</AssemblyName>
+    <RootNamespace>GoalForecast.Domain.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\GoalForecast.Domain\GoalForecast.Domain.csproj" />
+  </ItemGroup>
+</Project>

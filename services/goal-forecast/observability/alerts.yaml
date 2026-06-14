@@ -1,0 +1,100 @@
+# Alertas de observabilidade — módulo goal-forecast (BC-05)
+#
+# Mapeia: TASK-28, RNF 7, design §11.
+# Formato compatível com Prometheus AlertManager / Google Cloud Monitoring.
+# Todos os nomes de métrica em snake_case conforme GoalForecastMetrics.
+#
+# Severidades:
+#   P1 — incidente crítico (violação de isolamento, degradação total)
+#   P2 — incidente alto (latência acima do SLO, falhas de pipeline elevadas)
+#   P3 — aviso (anomalia monitorada sem impacto imediato)
+
+alerts:
+
+  # ── Isolamento multi-tenant ───────────────────────────────────────────────────
+  - name: GoalForecastTenantIsolationViolation
+    severity: P1
+    description: >
+      Violação de isolamento multi-tenant detectada no módulo goal-forecast.
+      Dados de um tenant podem ter sido expostos para outro tenant.
+      Acionar plano de resposta a incidentes (RNF-1.3, ADR-0001).
+    # Esta alerta é acionada por log estruturado com campo de isolamento — não por métrica
+    condition: "log.message contains 'tenant_isolation_violation'"
+    action: >
+      Isolar o serviço, acionar time de segurança, investigar Global Query Filter e RLS.
+
+  # ── Circuit breaker do pipeline reader ───────────────────────────────────────
+  - name: GoalForecastPipelineCircuitOpen
+    severity: P2
+    metric: pipeline_circuit_open_total
+    description: >
+      O circuit breaker do PipelineForecastReader abriu.
+      O painel comparativo está em modo de degradação graciosa (pipelineUnavailable=true).
+      Avaliar disponibilidade do opportunity-pipeline (RISK-GOAL-01).
+    condition: "rate(pipeline_circuit_open_total[5m]) > 0"
+    action: >
+      Verificar saúde do opportunity-pipeline. Avaliar se a degradação afeta SLOs de negócio.
+
+  # ── Taxa de falhas do pipeline reader ────────────────────────────────────────
+  - name: GoalForecastPipelineFailureRateHigh
+    severity: P2
+    metric: pipeline_reader_failures_total
+    description: >
+      Taxa elevada de falhas na leitura do pipeline (timeout ou exceção).
+      Threshold: mais de 10 falhas por minuto (RNF 6, design §11).
+    condition: "rate(pipeline_reader_failures_total[1m]) > 10"
+    action: >
+      Verificar logs do PipelineForecastReader para detalhe de exceção.
+      Avaliar se circuit breaker deve abrir com threshold menor.
+
+  # ── Latência do painel (SLO p95 ≤ 3.000 ms) ─────────────────────────────────
+  - name: GoalForecastPanelLatencyP95ExceedsSlo
+    severity: P2
+    metric: forecast_panel_latency_ms
+    description: >
+      p95 de latência do painel comparativo excedeu o SLO de 3.000 ms (RNF-3.1).
+      Investigar índices (tenant_id, bu_id, year, month) e plano de query.
+    condition: "histogram_quantile(0.95, forecast_panel_latency_ms) > 3000"
+    action: >
+      Executar EXPLAIN ANALYZE na query do painel. Verificar índices críticos (design §15).
+      Avaliar se o gargalo está na leitura do pipeline ou na persistência de metas.
+
+  # ── Ausência de métricas de criação/atualização ───────────────────────────────
+  - name: GoalForecastNoGoalActivity
+    severity: P3
+    metric: goals_created_total
+    description: >
+      Nenhuma meta criada ou atualizada nas últimas 24 horas.
+      Pode indicar problema no fluxo de cadastro ou ausência de atividade esperada.
+    condition: "increase(goals_created_total[24h]) == 0 AND increase(goals_updated_total[24h]) == 0"
+    action: >
+      Verificar se o comportamento é esperado (fora do horário comercial, etc.)
+      ou se há erro silencioso na camada de escrita.
+
+  # ── Health check ─────────────────────────────────────────────────────────────
+dashboards:
+  - name: GoalForecast Overview
+    panels:
+      - title: "Metas criadas (rate 5m)"
+        metric: "rate(goals_created_total[5m])"
+      - title: "Metas atualizadas (rate 5m)"
+        metric: "rate(goals_updated_total[5m])"
+      - title: "Falhas no pipeline reader (rate 5m)"
+        metric: "rate(pipeline_reader_failures_total[5m])"
+      - title: "Circuit breaker aberto (count)"
+        metric: "pipeline_circuit_open_total"
+      - title: "Latência do painel p95 (ms)"
+        metric: "histogram_quantile(0.95, forecast_panel_latency_ms)"
+      - title: "Requisições ao painel (rate 5m)"
+        metric: "rate(forecast_panel_requests_total[5m])"
+
+health_checks:
+  - name: database
+    description: >
+      Verifica conectividade com o banco de dados PostgreSQL (tabela goals).
+      O módulo goal-forecast é unhealthy se o banco estiver inacessível.
+  - name: pipeline_reader
+    description: >
+      O módulo NÃO fica unhealthy por indisponibilidade do pipeline.
+      Degrada graciosamente via circuit breaker (DD-007, RNF 6).
+      Monitore pipeline_circuit_open_total para alertas de degradação.

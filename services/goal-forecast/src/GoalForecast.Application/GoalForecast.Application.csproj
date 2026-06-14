@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    GoalForecast.Application
+    Papel: cases de uso CQRS (CreateOrUpdateGoalCommand, ListGoalsQuery,
+           GetForecastPanelQuery, GetGoalAggregateQuery, GetGoalDigestBlockQuery),
+           portas de saída (IGoalRepository, IPipelineForecastReader, IBuMembershipReader)
+           e pipeline behaviors (Logging, TenantContext, Validation, Authorization, Audit).
+    Regra de dependência: Application -> Domain, Contracts (NUNCA Infrastructure ou Api).
+    Mapeia: DD-001, design §3, §5, TASK-01.
+  -->
+  <PropertyGroup>
+    <AssemblyName>GoalForecast.Application</AssemblyName>
+    <RootNamespace>GoalForecast.Application</RootNamespace>
+    <Description>Cases de uso CQRS, portas de saída e pipeline behaviors do módulo goal-forecast. Depende apenas de Domain e Contracts (Clean Architecture, design §3).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GoalForecast.Domain\GoalForecast.Domain.csproj" />
+    <ProjectReference Include="..\GoalForecast.Contracts\GoalForecast.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <PackageReference Include="MediatR" Version="12.5.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+  </ItemGroup>
+</Project>
