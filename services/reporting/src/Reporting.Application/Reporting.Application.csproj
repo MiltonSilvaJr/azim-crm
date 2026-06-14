@@ -23,5 +23,8 @@
     <PackageReference Include="MediatR" Version="12.4.1" />
     <!-- FluentValidation: validação sintática de requests (design §5.5) -->
     <PackageReference Include="FluentValidation" Version="11.12.0" />
+    <!-- Logging e Options: abstrações para behaviors (TASK-12, design §5.4) -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
   </ItemGroup>
 </Project>
