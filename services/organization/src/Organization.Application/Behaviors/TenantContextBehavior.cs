@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Organization.Application.Abstractions;
 using Organization.Application.Ports;
 
 namespace Organization.Application.Behaviors;
@@ -36,6 +37,13 @@ public sealed class TenantContextBehavior<TRequest, TResponse>
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
+        // Requests anônimos (AllowAnonymous = true) não possuem tenant_id — passam sem contexto de tenant.
+        // Exemplo: AcceptInvitationCommand, ListStagesQuery (endpoints públicos, design §9).
+        var requestType = typeof(TRequest);
+        var requiresRoleAttr = (RequiresRoleAttribute?)Attribute.GetCustomAttribute(requestType, typeof(RequiresRoleAttribute));
+        if (requiresRoleAttr is { AllowAnonymous: true })
+            return await next(cancellationToken);
+
         var tenantId = _tenantContext.TenantId;
 
         if (tenantId == Guid.Empty)
