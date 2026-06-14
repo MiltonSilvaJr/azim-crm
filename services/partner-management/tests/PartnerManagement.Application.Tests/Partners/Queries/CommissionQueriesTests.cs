@@ -43,8 +43,10 @@ public sealed class CommissionQueriesTests
         DateTimeOffset? from = null, DateTimeOffset? to = null) =>
         new(partnerId, tenantId, from ?? _from, to ?? _to);
 
+    private readonly IPartnerMetrics _metrics = Substitute.For<IPartnerMetrics>();
+
     private GetPartnerCommissionViewHandler CreateViewSut() =>
-        new(_repository, _readPort, NullLogger<GetPartnerCommissionViewHandler>.Instance);
+        new(_repository, _readPort, _metrics, NullLogger<GetPartnerCommissionViewHandler>.Instance);
 
     private GetPartnerCommissionReportHandler CreateReportSut() =>
         new(_repository, _readPort, NullLogger<GetPartnerCommissionReportHandler>.Instance);

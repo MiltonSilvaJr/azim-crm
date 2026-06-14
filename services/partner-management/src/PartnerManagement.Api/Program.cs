@@ -2,16 +2,20 @@
 // Módulo: BC-03 Partner Management (Supporting Subdomain).
 // Design §3: Api -> Application, Infrastructure, Contracts.
 // Onda 5: PartnersController, middleware de correlação/tenant/exceções, RBAC.
+// Onda 6: métricas Prometheus, health/readiness/liveness, OpenTelemetry (TASK-26).
 
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using PartnerManagement.Api.Infrastructure;
 using PartnerManagement.Api.Middleware;
 using PartnerManagement.Application.Behaviors;
 using PartnerManagement.Application.Ports;
 using PartnerManagement.Infrastructure;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,6 +82,16 @@ if (!builder.Environment.IsEnvironment("Testing"))
 builder.Services.AddAuthorization();
 
 // =====================================================================
+// Health checks mínimos para o app routing funcionar em qualquer ambiente.
+// Os checks concretos (SQL, read port) são registrados pelo Infrastructure
+// no ambiente de produção. Em ambiente Testing, os checks ficam vazios.
+// =====================================================================
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddHealthChecks();
+}
+
+// =====================================================================
 // Controllers e OpenAPI
 // =====================================================================
 builder.Services.AddControllers();
@@ -109,10 +123,31 @@ app.UseAuthorization();
 // 4. Resolução de tenant (após auth — precisa do principal autenticado)
 app.UseMiddleware<TenantResolutionMiddleware>();
 
-// 5. Controllers
+// 5. Métricas Prometheus — /metrics (design §11, TASK-26)
+app.UseMetricServer();
+app.UseHttpMetrics();
+
+// 6. Controllers
 app.MapControllers();
 
-// 6. Health check
+// 7. Health/readiness/liveness (design §11, TASK-26)
+// /healthz/live — liveness (app up)
+app.MapGet("/healthz/live", () => Results.Ok(new { status = "alive" }))
+    .WithTags("health");
+
+// /healthz/ready — readiness: Cloud SQL + read port do pipeline
+app.MapHealthChecks("/healthz/ready", new HealthCheckOptions
+{
+    Predicate = hc => hc.Tags.Contains("readiness"),
+    ResultStatusCodes =
+    {
+        [HealthStatus.Healthy] = StatusCodes.Status200OK,
+        [HealthStatus.Degraded] = StatusCodes.Status200OK,   // Degradado ainda serve tráfego
+        [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable
+    }
+});
+
+// /health — compatibilidade (usado em Ondas anteriores)
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 
 await app.RunAsync();

@@ -21,6 +21,7 @@ public sealed class DeactivateReactivateHandlerTests
     private readonly IPartnerRepository _repository = Substitute.For<IPartnerRepository>();
     private readonly IAuditPublisher _auditPublisher = Substitute.For<IAuditPublisher>();
     private readonly ICanonicalRoleProvider _roleProvider = Substitute.For<ICanonicalRoleProvider>();
+    private readonly IPartnerMetrics _metrics = Substitute.For<IPartnerMetrics>();
 
     public DeactivateReactivateHandlerTests()
     {
@@ -41,7 +42,7 @@ public sealed class DeactivateReactivateHandlerTests
         Partner partner = BuildActivePartner(tenantId);
         _repository.GetByIdAsync(partner.Id, Arg.Any<CancellationToken>()).Returns(partner);
 
-        DeactivatePartnerHandler sut = new(_repository, _auditPublisher,
+        DeactivatePartnerHandler sut = new(_repository, _auditPublisher, _metrics,
             NullLogger<DeactivatePartnerHandler>.Instance);
 
         // Act
@@ -67,7 +68,7 @@ public sealed class DeactivateReactivateHandlerTests
 
         _repository.GetByIdAsync(partner.Id, Arg.Any<CancellationToken>()).Returns(partner);
 
-        DeactivatePartnerHandler sut = new(_repository, _auditPublisher,
+        DeactivatePartnerHandler sut = new(_repository, _auditPublisher, _metrics,
             NullLogger<DeactivatePartnerHandler>.Instance);
 
         // Act — tentativa idempotente
@@ -92,7 +93,7 @@ public sealed class DeactivateReactivateHandlerTests
 
         _repository.GetByIdAsync(partner.Id, Arg.Any<CancellationToken>()).Returns(partner);
 
-        DeactivatePartnerHandler sut = new(_repository, _auditPublisher,
+        DeactivatePartnerHandler sut = new(_repository, _auditPublisher, _metrics,
             NullLogger<DeactivatePartnerHandler>.Instance);
 
         // Act
@@ -112,7 +113,7 @@ public sealed class DeactivateReactivateHandlerTests
     {
         // Arrange
         _repository.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((Partner?)null);
-        DeactivatePartnerHandler sut = new(_repository, _auditPublisher,
+        DeactivatePartnerHandler sut = new(_repository, _auditPublisher, _metrics,
             NullLogger<DeactivatePartnerHandler>.Instance);
 
         // Act & Assert — PM-ERR-007
@@ -135,7 +136,7 @@ public sealed class DeactivateReactivateHandlerTests
 
         _repository.GetByIdAsync(partner.Id, Arg.Any<CancellationToken>()).Returns(partner);
 
-        ReactivatePartnerHandler sut = new(_repository, _auditPublisher,
+        ReactivatePartnerHandler sut = new(_repository, _auditPublisher, _metrics,
             NullLogger<ReactivatePartnerHandler>.Instance);
 
         // Act
@@ -160,7 +161,7 @@ public sealed class DeactivateReactivateHandlerTests
 
         _repository.GetByIdAsync(partner.Id, Arg.Any<CancellationToken>()).Returns(partner);
 
-        ReactivatePartnerHandler sut = new(_repository, _auditPublisher,
+        ReactivatePartnerHandler sut = new(_repository, _auditPublisher, _metrics,
             NullLogger<ReactivatePartnerHandler>.Instance);
 
         // Act
@@ -184,7 +185,7 @@ public sealed class DeactivateReactivateHandlerTests
 
         _repository.GetByIdAsync(partner.Id, Arg.Any<CancellationToken>()).Returns(partner);
 
-        ReactivatePartnerHandler sut = new(_repository, _auditPublisher,
+        ReactivatePartnerHandler sut = new(_repository, _auditPublisher, _metrics,
             NullLogger<ReactivatePartnerHandler>.Instance);
 
         // Act
@@ -204,7 +205,7 @@ public sealed class DeactivateReactivateHandlerTests
     {
         // Arrange
         _repository.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((Partner?)null);
-        ReactivatePartnerHandler sut = new(_repository, _auditPublisher,
+        ReactivatePartnerHandler sut = new(_repository, _auditPublisher, _metrics,
             NullLogger<ReactivatePartnerHandler>.Instance);
 
         // Act & Assert — PM-ERR-007

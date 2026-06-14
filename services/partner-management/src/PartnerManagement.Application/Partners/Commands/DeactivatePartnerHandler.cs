@@ -10,11 +10,13 @@ namespace PartnerManagement.Application.Partners.Commands;
 /// Handler do comando <see cref="DeactivatePartnerCommand"/>.
 /// Invoca <c>Partner.Deactivate()</c> (idempotente); registra auditoria sempre.
 /// Em transição idempotente (já inativo), não emite evento de domínio — apenas auditoria (DD-006).
-/// Mapeia: Req 3, PBT-02, design §5.1, DD-006.
+/// Incrementa métrica <c>partners_deactivated_total</c> apenas em transição efetiva (RNF 5.2).
+/// Mapeia: Req 3, PBT-02, design §5.1, DD-006, TASK-26.
 /// </summary>
 internal sealed class DeactivatePartnerHandler(
     IPartnerRepository partnerRepository,
     IAuditPublisher auditPublisher,
+    IPartnerMetrics metrics,
     ILogger<DeactivatePartnerHandler> logger)
     : IRequestHandler<DeactivatePartnerCommand, DeactivatePartnerResult>
 {
@@ -45,6 +47,9 @@ internal sealed class DeactivatePartnerHandler(
         if (transitionEffective)
         {
             await partnerRepository.UpdateAsync(partner, cancellationToken).ConfigureAwait(false);
+
+            // Métrica: conta apenas transições efetivas (DD-006, RNF 5.2)
+            metrics.RecordPartnerDeactivated();
 
             logger.LogInformation(
                 "Parceiro {PartnerId} inativado no tenant {TenantId}",

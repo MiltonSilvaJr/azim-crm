@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using PartnerManagement.Application.Partners;
 using PartnerManagement.Application.Partners.Commands;
+using PartnerManagement.Application.Ports;
 using PartnerManagement.Domain.Partners;
 using PartnerManagement.Domain.Partners.Exceptions;
 using PartnerManagement.Domain.Partners.Repositories;
@@ -19,9 +20,10 @@ public sealed class CreatePartnerHandlerTests
 {
     private readonly IPartnerRepository _repository = Substitute.For<IPartnerRepository>();
     private readonly ICanonicalRoleProvider _roleProvider = Substitute.For<ICanonicalRoleProvider>();
+    private readonly IPartnerMetrics _metrics = Substitute.For<IPartnerMetrics>();
 
     private CreatePartnerHandler CreateSut() =>
-        new(_repository, _roleProvider, NullLogger<CreatePartnerHandler>.Instance);
+        new(_repository, _roleProvider, _metrics, NullLogger<CreatePartnerHandler>.Instance);
 
     private CreatePartnerCommand ValidCommand(
         string name = "Acme Ltda",

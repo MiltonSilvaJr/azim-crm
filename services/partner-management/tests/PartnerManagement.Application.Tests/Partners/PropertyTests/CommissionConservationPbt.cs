@@ -50,7 +50,9 @@ public sealed class CommissionConservationPbt
             Arg.Any<DateTimeOffset>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(lines);
 
-        return new GetPartnerCommissionViewHandler(repo, port,
+        IPartnerMetrics metrics = Substitute.For<IPartnerMetrics>();
+
+        return new GetPartnerCommissionViewHandler(repo, port, metrics,
             NullLogger<GetPartnerCommissionViewHandler>.Instance);
     }
 

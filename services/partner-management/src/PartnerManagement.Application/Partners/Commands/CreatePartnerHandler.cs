@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using PartnerManagement.Application.Ports;
 using PartnerManagement.Domain.Partners;
 using PartnerManagement.Domain.Partners.Repositories;
 using PartnerManagement.Domain.Partners.ValueObjects;
@@ -11,11 +12,13 @@ namespace PartnerManagement.Application.Partners.Commands;
 /// Orquestra: verifica duplicidade de nome (alerta MSG-021 não bloqueante),
 /// invoca <c>Partner.Create</c> e persiste via <c>IPartnerRepository</c>.
 /// Regras de negócio vivem no agregado, não aqui.
-/// Mapeia: Req 1, Req 11, design §5.1, design §5.3.
+/// Incrementa métrica <c>partners_created_total</c> após criação bem-sucedida (RNF 5.2).
+/// Mapeia: Req 1, Req 11, design §5.1, design §5.3, TASK-26.
 /// </summary>
 internal sealed class CreatePartnerHandler(
     IPartnerRepository partnerRepository,
     ICanonicalRoleProvider roleProvider,
+    IPartnerMetrics metrics,
     ILogger<CreatePartnerHandler> logger)
     : IRequestHandler<CreatePartnerCommand, CreatePartnerResult>
 {
@@ -59,6 +62,9 @@ internal sealed class CreatePartnerHandler(
 
         // Persistir (TransactionBehavior coleta os domain events via Outbox)
         await partnerRepository.AddAsync(partner, cancellationToken).ConfigureAwait(false);
+
+        // Métrica obrigatória (RNF 5.2, design §11)
+        metrics.RecordPartnerCreated();
 
         logger.LogInformation(
             "Parceiro {PartnerId} criado no tenant {TenantId}",

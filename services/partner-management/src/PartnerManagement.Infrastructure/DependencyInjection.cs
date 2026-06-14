@@ -8,6 +8,7 @@ using PartnerManagement.Domain.Partners.Repositories;
 using PartnerManagement.Infrastructure.Audit;
 using PartnerManagement.Infrastructure.Clock;
 using PartnerManagement.Infrastructure.Idempotency;
+using PartnerManagement.Infrastructure.Observability;
 using PartnerManagement.Infrastructure.Outbox;
 using PartnerManagement.Infrastructure.Persistence;
 using PartnerManagement.Infrastructure.ReadPorts;
@@ -112,6 +113,33 @@ public static class DependencyInjection
         // Outbox relay — background service
         // =====================================================================
         services.AddHostedService<OutboxPublisher>();
+
+        // =====================================================================
+        // Métricas (RNF 5, design §11, TASK-26)
+        // Singleton: contadores são acumulados durante toda a vida do processo.
+        // =====================================================================
+        services.AddSingleton<PartnerMetrics>();
+        services.AddSingleton<IPartnerMetrics>(sp => sp.GetRequiredService<PartnerMetrics>());
+
+        // =====================================================================
+        // Health checks (design §11, TASK-26)
+        // - partner_sql: disponibilidade do Cloud SQL (via Npgsql)
+        // - partner_commission_read_port: disponibilidade do read model do pipeline
+        // =====================================================================
+        // Registrar PartnerReadPortHealthCheck para injeção pelo AddCheck<T>
+        services.AddScoped<PartnerReadPortHealthCheck>();
+
+        string connString = configuration.GetConnectionString("PartnerManagement")
+            ?? throw new InvalidOperationException("Connection string 'PartnerManagement' não configurada.");
+
+        services.AddHealthChecks()
+            .AddNpgSql(
+                connectionString: connString,
+                name: "partner_sql",
+                tags: ["readiness", "database"])
+            .AddCheck<PartnerReadPortHealthCheck>(
+                name: "partner_commission_read_port",
+                tags: ["readiness", "external"]);
 
         return services;
     }
