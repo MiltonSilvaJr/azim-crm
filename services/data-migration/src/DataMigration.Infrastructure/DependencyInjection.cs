@@ -1,5 +1,6 @@
 using DataMigration.Application.Ports;
 using DataMigration.Infrastructure.Adapters;
+using DataMigration.Infrastructure.Observability;
 using DataMigration.Infrastructure.Outbox;
 using DataMigration.Infrastructure.Parsing;
 using DataMigration.Infrastructure.Persistence;
@@ -94,6 +95,12 @@ public static class DependencyInjection
         // Feature flags (implementação padrão habilitada)
         // =========================================================================
         services.AddSingleton<IFeatureFlags, DefaultFeatureFlags>();
+
+        // =========================================================================
+        // Métricas e traces de migração (RNF 6, design §11, TASK-25)
+        // =========================================================================
+        services.AddSingleton<MigrationMetrics>();
+        services.AddSingleton<IMigrationMetrics>(sp => sp.GetRequiredService<MigrationMetrics>());
 
         return services;
     }
