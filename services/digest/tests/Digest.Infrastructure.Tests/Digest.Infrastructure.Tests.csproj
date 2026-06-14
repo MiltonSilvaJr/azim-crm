@@ -35,8 +35,7 @@
     <PackageReference Include="Testcontainers.PostgreSql" Version="4.4.0" />
     <!-- NSubstitute: stubs auxiliares -->
     <PackageReference Include="NSubstitute" Version="5.3.0" />
-    <!-- FsCheck: property-based testing (PBT-05) -->
-    <PackageReference Include="FsCheck" Version="3.2.0" />
-    <PackageReference Include="FsCheck.Xunit" Version="3.2.0" />
+    <!-- FsCheck: property-based testing (PBT-05) — mesma versão do Domain.Tests e Application.Tests -->
+    <PackageReference Include="FsCheck.Xunit" Version="2.16.6" />
   </ItemGroup>
 </Project>
