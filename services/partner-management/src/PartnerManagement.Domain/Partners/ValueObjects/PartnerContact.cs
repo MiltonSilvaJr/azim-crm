@@ -21,6 +21,16 @@ public sealed class PartnerContact : IEquatable<PartnerContact>
     }
 
     /// <summary>
+    /// Construtor sem parâmetros para rehidratação pelo EF Core (owned type).
+    /// Não deve ser chamado diretamente — use <see cref="Create"/>.
+    /// </summary>
+#pragma warning disable CS8618
+    private PartnerContact()
+    {
+    }
+#pragma warning restore CS8618
+
+    /// <summary>
     /// Cria um <see cref="PartnerContact"/> com os dados fornecidos.
     /// </summary>
     /// <param name="emailValue">Endereço de e-mail; validado por <see cref="Email.Create"/>.</param>
