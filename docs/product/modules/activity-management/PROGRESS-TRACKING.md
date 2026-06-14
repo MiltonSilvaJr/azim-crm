@@ -1,0 +1,28 @@
+# PROGRESS-TRACKING — activity-management
+
+> Tracker do `/forge:coding-loop activity-management` (modo autônomo).
+> Legenda: `[ ]` pendente · `[-]` em progresso · `[X]` concluído · `[!]` falhou (HALT).
+
+- Módulo: `activity-management` (ACT, Supporting — Sprint 10/11/12)
+- tasks.md base: v0.1.1 (Aprovado para desenvolvimento)
+- Raiz da solution: `services/activity-management/`
+- Estratégia: branch contínua `feat/activity-management/all-waves`, PR único ao fim, merge **isolado** + sanidade + cleanup separado.
+
+## Ondas
+
+| Onda | Foco | TASKs | Status |
+|------|------|-------|--------|
+| 1 | Bootstrap | TASK-01 | [ ] |
+| 2 | Domínio (PBT-01/04/05) | TASK-02..05 | [ ] |
+| 3 | Application (PBT-02/03) | TASK-06..12 | [ ] |
+| 4 | Infrastructure (RLS) | TASK-13..17 | [ ] |
+| 5 | API + Contratos (Pact) | TASK-18..21 | [ ] |
+| 6 | Hardening | TASK-22..24 | [ ] |
+
+## Detalhe por onda
+
+_(preenchido conforme execução)_
+
+## Última falha
+
+_(nenhuma)_

@@ -1,8 +1,8 @@
 # Tasks — ACT — Activity Management
 
-- Versão: 0.1.0
-- Data: 2026-06-11
-- Status: Rascunho para revisão
+- Versão: 0.1.1
+- Data: 2026-06-14
+- Status: Aprovado para desenvolvimento
 - Referência base requirements: docs/product/modules/activity-management/requirements.md v0.1.0
 - Referência base design: docs/product/modules/activity-management/design.md v0.1.0
 - ADRs aplicáveis: ADR-0001 (isolamento multi-tenant em defesa em profundidade — Aceito), ADR-0003 (auditoria imutável — a confirmar), ADR-0004 (outbox e idempotência de eventos — a confirmar), ADR-0006 (token de link autenticado — a confirmar)
@@ -13,6 +13,7 @@
 | Versão | Data | Status | Descrição da alteração |
 |--------|------|--------|------------------------|
 | 0.1.0 | 2026-06-11 | Rascunho para revisão | Criação inicial do plano de tasks derivado de requirements.md v0.1.0 e design.md v0.1.0 |
+| 0.1.1 | 2026-06-14 | Aprovado para desenvolvimento | Aprovação humana (HITL #1); execução via `/forge:coding-loop` autônomo (6 ondas). |
 
 ## 1. Convenções de Implementação
 
