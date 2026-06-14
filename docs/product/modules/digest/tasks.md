@@ -1,8 +1,8 @@
 # Tasks — DIG — Digest
 
-- Versão: 0.1.0
-- Data: 2026-06-11
-- Status: Rascunho para revisão
+- Versão: 0.1.1
+- Data: 2026-06-14
+- Status: Aprovado para desenvolvimento
 - Referência base requirements: docs/product/modules/digest/requirements.md v0.1.0
 - Referência base design: docs/product/modules/digest/design.md v0.1.0
 - ADRs aplicáveis: ADR-0001 (isolamento multi-tenant — Aceito), ADR-0004 (outbox/idempotência — a formalizar), ADR-0005 (IEmailSender — a formalizar), ADR-0006 (token de link autenticado — a formalizar), ADR-0008 (scheduling por fuso IANA — a formalizar)
@@ -13,6 +13,7 @@
 | Versão | Data | Status | Descrição da alteração |
 |--------|------|--------|------------------------|
 | 0.1.0 | 2026-06-11 | Rascunho para revisão | Criação inicial do plano de tasks a partir de requirements.md v0.1.0 e design.md v0.1.0 (Req 1..11, RNF 1..10, PBT-01..06, DD-001..012) — 27 TASKs em 6 ondas |
+| 0.1.1 | 2026-06-14 | Aprovado para desenvolvimento | Aprovação humana (HITL #1); execução via `/forge:coding-loop` autônomo (6 ondas). |
 
 ## 1. Convenções de Implementação
 
