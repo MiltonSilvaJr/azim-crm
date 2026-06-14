@@ -1,6 +1,8 @@
 using System.Net.Http.Json;
-using System.Text.Json;
 using PartnerManagement.Application.Ports;
+using Polly;
+using Polly.CircuitBreaker;
+using Polly.Timeout;
 
 namespace PartnerManagement.Infrastructure.ReadPorts;
 
@@ -9,11 +11,15 @@ namespace PartnerManagement.Infrastructure.ReadPorts;
 /// Implementa <see cref="IPartnerCommissionReadPort"/> consultando a API interna do pipeline via HTTP.
 /// Nunca implementa fórmula de comissão — apenas lê e mapeia o resultado (DD-003, P3).
 /// Propaga <c>correlation_id</c> e <c>tenant_id</c> em toda chamada (design §6.4).
-/// Mapeia: Req 9, Req 10, DD-003, design §6.4, TASK-19.
+/// Aplica resiliência via Polly: timeout por tentativa → retry com backoff → circuit breaker (TASK-28).
+/// Em qualquer falha (timeout, 5xx, circuit breaker aberto), retorna lista vazia para que
+/// o handler aplique degradação parcial sem retornar 5xx ao cliente (design §6.4, RISK-PM-06).
+/// Mapeia: Req 9, Req 10, DD-003, design §6.4, TASK-19, TASK-28.
 /// </summary>
 public sealed class PartnerCommissionReadAdapter : IPartnerCommissionReadPort
 {
     private readonly HttpClient _httpClient;
+    private readonly ResiliencePipeline<HttpResponseMessage> _pipeline;
 
     /// <summary>
     /// Nome do cabeçalho de correlação propagado ao pipeline.
@@ -26,13 +32,27 @@ public sealed class PartnerCommissionReadAdapter : IPartnerCommissionReadPort
     private const string TenantIdHeader = "X-Tenant-Id";
 
     /// <summary>
-    /// Inicializa o adaptador com o HttpClient configurado para o pipeline.
-    /// O HttpClient deve ter a base address do opportunity-pipeline configurada no DI.
+    /// Inicializa o adaptador com o HttpClient e pipeline de resiliência padrão.
+    /// Usado pelo DI em produção.
     /// </summary>
     /// <param name="httpClient">Cliente HTTP (registrado via IHttpClientFactory).</param>
     public PartnerCommissionReadAdapter(HttpClient httpClient)
+        : this(httpClient, CommissionReadResiliencePipeline.Build(new CommissionReadResilienceOptions()))
+    {
+    }
+
+    /// <summary>
+    /// Inicializa o adaptador com HttpClient e pipeline de resiliência customizado.
+    /// Usado em testes para injetar políticas específicas (ex.: sem delay).
+    /// </summary>
+    /// <param name="httpClient">Cliente HTTP.</param>
+    /// <param name="pipeline">Pipeline de resiliência Polly.</param>
+    internal PartnerCommissionReadAdapter(
+        HttpClient httpClient,
+        ResiliencePipeline<HttpResponseMessage> pipeline)
     {
         _httpClient = httpClient;
+        _pipeline = pipeline;
     }
 
     /// <inheritdoc/>
@@ -44,38 +64,62 @@ public sealed class PartnerCommissionReadAdapter : IPartnerCommissionReadPort
         string? correlationId,
         CancellationToken cancellationToken = default)
     {
-        // Propaga correlation_id e tenant_id ao pipeline (design §6.4)
-        using HttpRequestMessage request = BuildRequest(tenantId, partnerId, from, to, correlationId);
-
-        HttpResponseMessage response = await _httpClient
-            .SendAsync(request, cancellationToken)
-            .ConfigureAwait(false);
-
-        // Adapter não implementa fórmula; apenas mapeia o resultado (DD-003)
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            // Em degradação: retorna lista vazia; o handler aplica degradação parcial
+            HttpResponseMessage response = await _pipeline.ExecuteAsync(
+                async ct =>
+                {
+                    using HttpRequestMessage request = BuildRequest(tenantId, partnerId, from, to, correlationId);
+                    return await _httpClient.SendAsync(request, ct).ConfigureAwait(false);
+                },
+                cancellationToken).ConfigureAwait(false);
+
+            // Adapter não implementa fórmula; apenas mapeia o resultado (DD-003)
+            if (!response.IsSuccessStatusCode)
+            {
+                // Em degradação: retorna lista vazia; o handler aplica degradação parcial
+                return [];
+            }
+
+            CommissionLineDto[]? dtos = await response.Content
+                .ReadFromJsonAsync<CommissionLineDto[]>(cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+
+            if (dtos is null or { Length: 0 })
+            {
+                return [];
+            }
+
+            // Mapeia DTO → CommissionLine (sem soma — soma fica no handler)
+            CommissionLine[] lines = dtos.Select(dto => new CommissionLine(
+                OpportunityId: dto.OpportunityId,
+                CommissionCents: dto.CommissionCents,
+                IsSnapshot: dto.IsSnapshot,
+                OccurredAt: dto.OccurredAt
+            )).ToArray();
+
+            return lines;
+        }
+        catch (BrokenCircuitException)
+        {
+            // Circuit breaker aberto: degradação parcial imediata, sem retentativa
             return [];
         }
-
-        CommissionLineDto[]? dtos = await response.Content
-            .ReadFromJsonAsync<CommissionLineDto[]>(cancellationToken: cancellationToken)
-            .ConfigureAwait(false);
-
-        if (dtos is null or { Length: 0 })
+        catch (TimeoutRejectedException)
         {
+            // Timeout Polly: todas as tentativas esgotaram o tempo configurado
             return [];
         }
-
-        // Mapeia DTO → CommissionLine (sem soma — soma fica no handler)
-        CommissionLine[] lines = dtos.Select(dto => new CommissionLine(
-            OpportunityId: dto.OpportunityId,
-            CommissionCents: dto.CommissionCents,
-            IsSnapshot: dto.IsSnapshot,
-            OccurredAt: dto.OccurredAt
-        )).ToArray();
-
-        return lines;
+        catch (HttpRequestException)
+        {
+            // Falha de rede após retentativas esgotadas
+            return [];
+        }
+        catch (TaskCanceledException)
+        {
+            // Cancelamento do CancellationToken do chamador ou timeout do HttpClient
+            return [];
+        }
     }
 
     private static HttpRequestMessage BuildRequest(
