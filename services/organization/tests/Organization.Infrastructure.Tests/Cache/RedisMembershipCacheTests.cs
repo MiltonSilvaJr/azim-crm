@@ -42,7 +42,9 @@ public sealed class RedisMembershipCacheTests : IAsyncLifetime
         {
             Ttl = ttl ?? TimeSpan.FromMinutes(5),
         });
-        return new RedisMembershipCache(_multiplexer, opts, NullLogger<RedisMembershipCache>.Instance);
+        return new RedisMembershipCache(
+            _multiplexer, opts, NullLogger<RedisMembershipCache>.Instance,
+            Substitute.For<IOrganizationMetrics>());
     }
 
     private static MembershipCacheEntry MakeEntry(params (Guid buId, string role)[] memberships)
@@ -172,7 +174,9 @@ public sealed class RedisMembershipCacheTests : IAsyncLifetime
             .Returns<RedisValue>(_ => throw new RedisConnectionException(ConnectionFailureType.UnableToConnect, "host down"));
 
         var opts = Options.Create(new MembershipCacheOptions { Ttl = TimeSpan.FromMinutes(5) });
-        var cache = new RedisMembershipCache(failingRedis, opts, NullLogger<RedisMembershipCache>.Instance);
+        var cache = new RedisMembershipCache(
+            failingRedis, opts, NullLogger<RedisMembershipCache>.Instance,
+            Substitute.For<IOrganizationMetrics>());
 
         // Act — não deve lançar exceção
         var result = await cache.GetAsync(Guid.NewGuid(), Guid.NewGuid());
@@ -194,7 +198,9 @@ public sealed class RedisMembershipCacheTests : IAsyncLifetime
             .Returns<bool>(_ => throw new RedisConnectionException(ConnectionFailureType.UnableToConnect, "host down"));
 
         var opts = Options.Create(new MembershipCacheOptions { Ttl = TimeSpan.FromMinutes(5) });
-        var cache = new RedisMembershipCache(failingRedis, opts, NullLogger<RedisMembershipCache>.Instance);
+        var cache = new RedisMembershipCache(
+            failingRedis, opts, NullLogger<RedisMembershipCache>.Instance,
+            Substitute.For<IOrganizationMetrics>());
         var entry = MakeEntry((Guid.NewGuid(), "Viewer"));
 
         // Act + Assert — não deve lançar

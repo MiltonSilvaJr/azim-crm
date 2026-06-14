@@ -11,6 +11,7 @@ namespace Organization.Application.Commands.BusinessUnit;
 /// Cria a BU com seeds de estágios (DD-002), canais de origem e motivos de perda.
 /// Valida unicidade de nome via repositório (ORG-ERR-001).
 /// Emite <c>BusinessUnitCreated</c> via <see cref="IEventOutbox"/>.
+/// Incrementa métrica <c>bu_created_total</c> (design §11).
 /// </summary>
 public sealed class CreateBusinessUnitCommandHandler : IRequestHandler<CreateBusinessUnitCommand, Guid>
 {
@@ -18,18 +19,21 @@ public sealed class CreateBusinessUnitCommandHandler : IRequestHandler<CreateBus
     private readonly IEventOutbox _outbox;
     private readonly ITenantContext _tenantContext;
     private readonly IClock _clock;
+    private readonly IOrganizationMetrics _metrics;
 
     /// <summary>Inicializa o handler com os ports necessários.</summary>
     public CreateBusinessUnitCommandHandler(
         IBusinessUnitRepository repository,
         IEventOutbox outbox,
         ITenantContext tenantContext,
-        IClock clock)
+        IClock clock,
+        IOrganizationMetrics metrics)
     {
         _repository = repository;
         _outbox = outbox;
         _tenantContext = tenantContext;
         _clock = clock;
+        _metrics = metrics;
     }
 
     /// <inheritdoc/>
@@ -71,6 +75,8 @@ public sealed class CreateBusinessUnitCommandHandler : IRequestHandler<CreateBus
         bu.ClearDomainEvents();
 
         await _repository.SaveAsync(bu, cancellationToken);
+
+        _metrics.IncrementBuCreated();
 
         return bu.Id;
     }

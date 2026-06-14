@@ -9,6 +9,7 @@ namespace Organization.Application.Commands.Invitation;
 /// Handler para <see cref="InviteUserCommand"/>.
 /// Cria o convite com token hash e enfileira o e-mail via Outbox na mesma transação (DD-004).
 /// Bloqueia e-mail de usuário ativo (ORG-ERR-003) sem revelar existência da conta.
+/// Incrementa métrica <c>users_invited_total</c> (design §11).
 /// </summary>
 public sealed class InviteUserCommandHandler : IRequestHandler<InviteUserCommand, Guid>
 {
@@ -17,6 +18,7 @@ public sealed class InviteUserCommandHandler : IRequestHandler<InviteUserCommand
     private readonly ITenantContext _tenantContext;
     private readonly IClock _clock;
     private readonly ITokenHasher _tokenHasher;
+    private readonly IOrganizationMetrics _metrics;
 
     /// <summary>Inicializa o handler.</summary>
     public InviteUserCommandHandler(
@@ -24,13 +26,15 @@ public sealed class InviteUserCommandHandler : IRequestHandler<InviteUserCommand
         IEventOutbox outbox,
         ITenantContext tenantContext,
         IClock clock,
-        ITokenHasher tokenHasher)
+        ITokenHasher tokenHasher,
+        IOrganizationMetrics metrics)
     {
         _invitationRepository = invitationRepository;
         _outbox = outbox;
         _tenantContext = tenantContext;
         _clock = clock;
         _tokenHasher = tokenHasher;
+        _metrics = metrics;
     }
 
     /// <inheritdoc/>
@@ -68,6 +72,8 @@ public sealed class InviteUserCommandHandler : IRequestHandler<InviteUserCommand
 
         invitation.ClearDomainEvents();
         await _invitationRepository.SaveAsync(invitation, cancellationToken);
+
+        _metrics.IncrementUsersInvited();
 
         return invitation.Id;
     }

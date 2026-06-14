@@ -11,12 +11,14 @@ namespace Organization.Infrastructure.Cache;
 /// Chave: <c>org:rbac:{tenant_id}:{user_id}</c>.
 /// Sem PII — apenas identificadores Guid e papéis canônicos (Req 13.3).
 /// Degradação segura: exceções Redis são silenciadas; falha retorna null ou é ignorada (RNF 5.3).
+/// Instrumenta métricas <c>membership_cache_hit_total</c> e <c>membership_cache_miss_total</c> (design §11).
 /// </summary>
 public sealed class RedisMembershipCache : IMembershipCache
 {
     private readonly IConnectionMultiplexer _redis;
     private readonly ILogger<RedisMembershipCache> _logger;
     private readonly TimeSpan _ttl;
+    private readonly IOrganizationMetrics _metrics;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -24,15 +26,17 @@ public sealed class RedisMembershipCache : IMembershipCache
         WriteIndented = false,
     };
 
-    /// <summary>Inicializa o adapter com a conexão Redis e opções de TTL.</summary>
+    /// <summary>Inicializa o adapter com a conexão Redis, opções de TTL e métricas.</summary>
     public RedisMembershipCache(
         IConnectionMultiplexer redis,
         IOptions<MembershipCacheOptions> options,
-        ILogger<RedisMembershipCache> logger)
+        ILogger<RedisMembershipCache> logger,
+        IOrganizationMetrics metrics)
     {
         _redis = redis;
         _logger = logger;
         _ttl = options.Value.Ttl;
+        _metrics = metrics;
     }
 
     /// <inheritdoc/>
@@ -48,8 +52,12 @@ public sealed class RedisMembershipCache : IMembershipCache
             var value = await db.StringGetAsync(key);
 
             if (value.IsNullOrEmpty)
+            {
+                _metrics.IncrementMembershipCacheMiss();
                 return null;
+            }
 
+            _metrics.IncrementMembershipCacheHit();
             return JsonSerializer.Deserialize<MembershipCacheEntry>((string)value!, JsonOptions);
         }
         catch (Exception ex)
@@ -60,6 +68,7 @@ public sealed class RedisMembershipCache : IMembershipCache
                 "Cache miss degradado: falha ao ler memberships do Redis para tenant {TenantId}.",
                 tenantId);
 
+            _metrics.IncrementMembershipCacheMiss();
             return null;
         }
     }

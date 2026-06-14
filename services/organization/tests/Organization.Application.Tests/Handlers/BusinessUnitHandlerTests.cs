@@ -18,6 +18,7 @@ public sealed class BusinessUnitHandlerTests
     private readonly ITenantContext _tenantContext = Substitute.For<ITenantContext>();
     private readonly IClock _clock = Substitute.For<IClock>();
     private readonly IOpportunityCounter _opportunityCounter = Substitute.For<IOpportunityCounter>();
+    private readonly IOrganizationMetrics _metrics = Substitute.For<IOrganizationMetrics>();
 
     private readonly Guid _tenantId = Guid.NewGuid();
     private readonly DateTimeOffset _now = DateTimeOffset.UtcNow;
@@ -228,7 +229,7 @@ public sealed class BusinessUnitHandlerTests
     // ── Factories ──
 
     private CreateBusinessUnitCommandHandler CreateHandler()
-        => new(_repository, _outbox, _tenantContext, _clock);
+        => new(_repository, _outbox, _tenantContext, _clock, _metrics);
 
     private RenameBusinessUnitCommandHandler CreateRenameHandler()
         => new(_repository, _tenantContext, _clock);

@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Organization.Application.Ports;
 using Organization.Infrastructure.Adapters;
 using Organization.Infrastructure.Adapters.Identity;
 using Organization.Infrastructure.Cache;
 using Organization.Infrastructure.Messaging;
+using Organization.Infrastructure.Observability;
 using Organization.Infrastructure.Persistence;
 using Organization.Infrastructure.Repositories;
 using StackExchange.Redis;
@@ -92,10 +94,53 @@ public static class InfrastructureExtensions
         // IClock
         services.AddSingleton<IClock, SystemClock>();
 
-        // ITokenHasher — usar stub SHA256 simples para MVP (sem pepper de Secret Manager)
+        // ITokenHasher — substituído por HmacSha256TokenHasher na TASK-26 (Onda 6)
         services.AddSingleton<ITokenHasher, Sha256TokenHasher>();
 
+        // ── Observabilidade ───────────────────────────────────────────────────
+        services.AddSingleton<OrganizationMetrics>();
+        services.AddSingleton<IOrganizationMetrics, OrganizationMetricsAdapter>();
+        services.AddSingleton<ILastTenantAdminAlertService, LastTenantAdminAlertService>();
+
+        // Health checks concretos registrados no DI
+        services.AddScoped<PostgresHealthCheck>();
+        services.AddSingleton<RedisHealthCheck>();
+
         return services;
+    }
+
+    /// <summary>
+    /// Registra os health checks do módulo Organization.
+    /// <para>
+    /// - <c>/health/live</c>: registrado em Program.cs sem dependências externas (liveness).
+    /// - <c>/health/ready</c>: registrado aqui com Postgres e Redis (readiness).
+    /// </para>
+    /// <para>
+    /// <see cref="PostgresHealthCheck"/> requer <see cref="OrganizationDbContext"/> (Scoped),
+    /// portanto é registrado via factory que cria um scope isolado por execução.
+    /// </para>
+    /// </summary>
+    public static IHealthChecksBuilder AddOrganizationHealthChecks(
+        this IHealthChecksBuilder builder)
+    {
+        // PostgresHealthCheck usa OrganizationDbContext (Scoped) — factory com scope
+        builder.Add(new Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckRegistration(
+            "postgres",
+            sp =>
+            {
+                var scope = sp.CreateScope();
+                return scope.ServiceProvider.GetRequiredService<PostgresHealthCheck>();
+            },
+            HealthStatus.Unhealthy,
+            tags: ["ready"]));
+
+        // RedisHealthCheck usa IConnectionMultiplexer (Singleton) — simples
+        builder.AddCheck<RedisHealthCheck>(
+            "redis",
+            HealthStatus.Unhealthy,
+            tags: ["ready"]);
+
+        return builder;
     }
 }
 

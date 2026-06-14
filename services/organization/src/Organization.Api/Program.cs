@@ -12,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ── Application Layer (MediatR, behaviors, validators) ───────────────────────
 builder.Services.AddOrganizationApplication();
 
-// ── Infrastructure Layer (DbContext, repositórios, Redis, adapters) ──────────
+// ── Infrastructure Layer (DbContext, repositórios, Redis, adapters, métricas) ─
 builder.Services.AddOrganizationInfrastructure(builder.Configuration);
 
 // ── JWT Tenant Context (ITenantContext por request) ──────────────────────────
@@ -88,7 +88,11 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 // ── Health Checks ────────────────────────────────────────────────────────────
-builder.Services.AddHealthChecks();
+// Live: sem dependências externas (apenas processo em pé).
+// Ready: Postgres + Redis disponíveis (tags: ["ready"]).
+builder.Services
+    .AddHealthChecks()
+    .AddOrganizationHealthChecks();
 
 var app = builder.Build();
 
@@ -115,9 +119,18 @@ app.UseJwtTenantContext();
 
 app.MapControllers();
 
-// Health checks — live (sem dependências externas) e ready (Postgres + Redis)
-app.MapHealthChecks("/health/live");
-app.MapHealthChecks("/health/ready");
+// Health checks — liveness (sem dependências externas) e readiness (Postgres + Redis)
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    // Liveness: apenas verifica que o processo está respondendo (sem dependências externas)
+    Predicate = _ => false,
+});
+
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    // Readiness: executa apenas os checks com tag "ready" (Postgres + Redis)
+    Predicate = hc => hc.Tags.Contains("ready"),
+});
 
 await app.RunAsync();
 

@@ -21,6 +21,7 @@ public sealed class InvitationHandlerTests
     private readonly ITenantContext _tenantContext = Substitute.For<ITenantContext>();
     private readonly IClock _clock = Substitute.For<IClock>();
     private readonly ITokenHasher _tokenHasher = Substitute.For<ITokenHasher>();
+    private readonly IOrganizationMetrics _metrics = Substitute.For<IOrganizationMetrics>();
 
     private readonly Guid _tenantId = Guid.NewGuid();
     private readonly DateTimeOffset _now = DateTimeOffset.UtcNow;
@@ -285,7 +286,7 @@ public sealed class InvitationHandlerTests
     }
 
     private InviteUserCommandHandler CreateInviteHandler()
-        => new(_invitationRepo, _outbox, _tenantContext, _clock, _tokenHasher);
+        => new(_invitationRepo, _outbox, _tenantContext, _clock, _tokenHasher, _metrics);
 
     private RevokeInvitationCommandHandler CreateRevokeHandler()
         => new(_invitationRepo, _tenantContext, _clock);

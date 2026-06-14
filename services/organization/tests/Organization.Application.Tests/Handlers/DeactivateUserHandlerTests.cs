@@ -20,6 +20,8 @@ public sealed class DeactivateUserHandlerTests
     private readonly IEventOutbox _outbox = Substitute.For<IEventOutbox>();
     private readonly IClock _clock = Substitute.For<IClock>();
     private readonly ITenantContext _tenantContext = Substitute.For<ITenantContext>();
+    private readonly IOrganizationMetrics _metrics = Substitute.For<IOrganizationMetrics>();
+    private readonly ILastTenantAdminAlertService _lastAdminAlert = Substitute.For<ILastTenantAdminAlertService>();
 
     private readonly Guid _tenantId = Guid.NewGuid();
     private readonly DateTimeOffset _now = DateTimeOffset.UtcNow;
@@ -142,5 +144,5 @@ public sealed class DeactivateUserHandlerTests
         => User.Activate("user@test.com", "Usuário Teste", "uid-test", _tenantId, _now);
 
     private DeactivateUserCommandHandler CreateHandler()
-        => new(_userRepo, _adminCounter, _activityCounter, _cache, _outbox, _clock, _tenantContext);
+        => new(_userRepo, _adminCounter, _activityCounter, _cache, _outbox, _clock, _tenantContext, _metrics, _lastAdminAlert);
 }

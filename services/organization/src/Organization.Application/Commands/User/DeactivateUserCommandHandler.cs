@@ -21,6 +21,8 @@ public sealed class DeactivateUserCommandHandler : IRequestHandler<DeactivateUse
     private readonly IEventOutbox _outbox;
     private readonly IClock _clock;
     private readonly ITenantContext _tenantContext;
+    private readonly IOrganizationMetrics _metrics;
+    private readonly ILastTenantAdminAlertService _lastAdminAlert;
 
     /// <summary>Inicializa o handler.</summary>
     public DeactivateUserCommandHandler(
@@ -30,7 +32,9 @@ public sealed class DeactivateUserCommandHandler : IRequestHandler<DeactivateUse
         IMembershipCache cache,
         IEventOutbox outbox,
         IClock clock,
-        ITenantContext tenantContext)
+        ITenantContext tenantContext,
+        IOrganizationMetrics metrics,
+        ILastTenantAdminAlertService lastAdminAlert)
     {
         _userRepository = userRepository;
         _adminCounter = adminCounter;
@@ -39,6 +43,8 @@ public sealed class DeactivateUserCommandHandler : IRequestHandler<DeactivateUse
         _outbox = outbox;
         _clock = clock;
         _tenantContext = tenantContext;
+        _metrics = metrics;
+        _lastAdminAlert = lastAdminAlert;
     }
 
     /// <inheritdoc/>
@@ -52,6 +58,19 @@ public sealed class DeactivateUserCommandHandler : IRequestHandler<DeactivateUse
 
         // Guard 1 — LastTenantAdminPolicy (ORG-ERR-009)
         var isTAdmin = user.Memberships.Any(m => m.Role == Role.TAdmin);
+
+        // Alerta operacional: detecta quando o tenant está com apenas 1 TAdmin ativo (RNF 6.3)
+        if (isTAdmin)
+        {
+            var currentAdminCount = await _adminCounter.CountActiveTenantAdminsAsync(tenantId, cancellationToken);
+            if (currentAdminCount == 1)
+            {
+                // Estado crítico: único TAdmin alvo de desativação — política vai rejeitar abaixo,
+                // mas emitimos o alerta antes para fins de observabilidade (design §11)
+                await _lastAdminAlert.AlertLastAdminAsync(tenantId, currentAdminCount, cancellationToken);
+            }
+        }
+
         await LastTenantAdminPolicy.EnforceAsync(
             _adminCounter,
             tenantId,
@@ -78,5 +97,7 @@ public sealed class DeactivateUserCommandHandler : IRequestHandler<DeactivateUse
 
         // Invalida cache de RBAC
         await _cache.InvalidateAsync(tenantId, request.UserId, cancellationToken);
+
+        _metrics.IncrementUsersDeactivated();
     }
 }

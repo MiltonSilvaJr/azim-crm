@@ -1,0 +1,55 @@
+{
+  "meter": "organization",
+  "description": "Métricas do módulo Organization (design §11, RNF 6.2). Todas em snake_case. Sem PII.",
+  "instruments": [
+    {
+      "name": "users_invited_total",
+      "type": "Counter",
+      "unit": "convites",
+      "description": "Total de convites de usuário emitidos com sucesso. Incrementado em InviteUserCommandHandler.",
+      "labels": []
+    },
+    {
+      "name": "users_deactivated_total",
+      "type": "Counter",
+      "unit": "usuários",
+      "description": "Total de usuários desativados (soft-delete). Incrementado em DeactivateUserCommandHandler.",
+      "labels": []
+    },
+    {
+      "name": "bu_created_total",
+      "type": "Counter",
+      "unit": "BUs",
+      "description": "Total de Business Units criadas. Incrementado em CreateBusinessUnitCommandHandler.",
+      "labels": []
+    },
+    {
+      "name": "membership_cache_hit_total",
+      "type": "Counter",
+      "unit": "hits",
+      "description": "Acertos no cache Redis de contexto RBAC. Incrementado em RedisMembershipCache.GetAsync.",
+      "labels": []
+    },
+    {
+      "name": "membership_cache_miss_total",
+      "type": "Counter",
+      "unit": "misses",
+      "description": "Misses ou erros no cache Redis. Inclui degradação segura. Incrementado em RedisMembershipCache.GetAsync.",
+      "labels": []
+    },
+    {
+      "name": "tenant_rls_violation_count",
+      "type": "Counter",
+      "unit": "violações",
+      "description": "Violações de isolamento de tenant detectadas. Alerta imediato se > 0 (design §11, DEC-006).",
+      "labels": []
+    }
+  ],
+  "derived": [
+    {
+      "name": "membership_cache_hit_ratio",
+      "formula": "membership_cache_hit_total / (membership_cache_hit_total + membership_cache_miss_total)",
+      "description": "Taxa de acerto do cache de memberships. Referência design §11."
+    }
+  ]
+}
