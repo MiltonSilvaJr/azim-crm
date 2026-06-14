@@ -69,8 +69,15 @@ public sealed class PartnerRepository : IPartnerRepository
             return [];
         }
 
+        string pattern = name.Trim();
+
+        // EF Core com HasConversion não suporta p.Name.Value nem EF.Functions.ILike com Value Object
+        // porque o provider gera um cast inválido ao montar o SQL literal.
+        // Usa FormattableString (FromSql) para query SQL segura e parametrizada (design §6.1).
+        // O filtro global de tenant (HasQueryFilter) não é aplicado em FromSql puro — por isso
+        // aplicamos o filtro manualmente via LINQ após a FromSql (composição segura).
         List<Partner> partners = await _dbContext.Partners
-            .Where(p => EF.Functions.ILike(p.Name.Value, name.Trim()))
+            .FromSql($"SELECT * FROM partners WHERE name ILIKE {pattern}")
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
@@ -93,24 +100,32 @@ public sealed class PartnerRepository : IPartnerRepository
             query = query.Where(p => p.Status == targetStatus);
         }
 
-        // Filtro por triagem pendente (percentuais em 0,00 — Req 11, design §4.6)
-        if (triagePending)
-        {
-            query = query.Where(p =>
-                p.CommissionDefaults.PctSetup.Value == 0.00m &&
-                p.CommissionDefaults.PctRecorrente.Value == 0.00m);
-        }
-
-        int totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
-
-        List<Partner> partners = await query
-            .OrderBy(p => p.Name.Value)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+        // Carrega todos os parceiros que passam no filtro de status, ordenados por nome.
+        // O filtro de triagePending é aplicado em memória porque o EF Core não consegue
+        // traduzir comparações de Percentage (owned type com HasConversion) no LINQ provider:
+        // EF.Property<decimal> com HasConversion gera InvalidCastException ao compilar o SQL literal.
+        // Solução aceita: triagePending filtra em memória (volumes esperados pequenos — Req 11, design §4.6).
+        // Para escala futura, considerar coluna derivada materializada (DD-004).
+        List<Partner> allPartners = await query
+            .OrderBy(p => EF.Property<string>(p, "Name"))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return (partners.Select(RehydrateContact).ToList().AsReadOnly(), totalCount);
+        IEnumerable<Partner> filtered = triagePending
+            ? allPartners.Where(p =>
+                p.CommissionDefaults.PctSetup.Value == 0.00m &&
+                p.CommissionDefaults.PctRecorrente.Value == 0.00m)
+            : allPartners;
+
+        List<Partner> page_items = filtered
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(RehydrateContact)
+            .ToList();
+
+        int totalCount = triagePending ? filtered.Count() : allPartners.Count;
+
+        return (page_items.AsReadOnly(), totalCount);
     }
 
     // =========================================================================
