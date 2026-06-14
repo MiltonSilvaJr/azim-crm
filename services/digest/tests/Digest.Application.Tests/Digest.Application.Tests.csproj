@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Digest.Application.Tests
+    Foco: composição por dia/papel (PBT-06), omissão gracosa de metas (PBT-04),
+          idempotência de reserva (PBT-02), degradação gracosa de read model.
+    Cobertura alvo: >= 85% em Digest.Application (TASK-11 criterios de aceite).
+    Coverlet configurado via Directory.Build.props.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Digest.Application.Tests</AssemblyName>
+    <RootNamespace>Digest.Application.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Application sob teste -->
+    <ProjectReference Include="..\..\src\Digest.Application\Digest.Application.csproj" />
+    <!-- Domínio: tipos necessários nos stubs in-memory -->
+    <ProjectReference Include="..\..\src\Digest.Domain\Digest.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- FsCheck.Xunit: property-based testing (PBT-02, PBT-04, PBT-06) -->
+    <PackageReference Include="FsCheck.Xunit" Version="2.16.6" />
+    <!-- NSubstitute: stubs das portas de leitura -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+  </ItemGroup>
+</Project>

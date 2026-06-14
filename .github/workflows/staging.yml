@@ -423,6 +423,56 @@ jobs:
         #   - Domain não contém namespaces de EF Core, Redis, GCP SDK, ASP.NET Core ou MediatR
 
   # ---------------------------------------------------------------------------
+  # Gate de isolamento RLS cross-tenant do módulo digest (TASK-25, RNF 1.3, ADR-0001)
+  # Bloqueia merge se qualquer cenário de isolamento falhar.
+  # Gate de nível sev-1: JAMAIS marcar como skip (design §14, ADR-0001, RISK-DIGEST-04, RNF 1.1).
+  # ---------------------------------------------------------------------------
+  digest-cross-tenant-isolation-gate:
+    name: digest / RLS cross-tenant isolation (SecurityGate — ADR-0001, TASK-25)
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/staging' ||
+      github.ref == 'refs/heads/develop' ||
+      startsWith(github.ref, 'refs/heads/feat/digest') ||
+      startsWith(github.ref, 'refs/heads/test/digest') ||
+      startsWith(github.ref, 'refs/heads/docs/digest') ||
+      github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Build digest
+        working-directory: services/digest
+        run: dotnet build Digest.slnx --configuration Release
+
+      - name: Gate isolamento cross-tenant (sev-1 — ADR-0001, RNF 1.3, TASK-25)
+        working-directory: services/digest
+        run: |
+          dotnet test tests/Digest.Infrastructure.Tests/ \
+            --no-build --configuration Release \
+            --filter "Category=SecurityGate" \
+            --logger "console;verbosity=normal"
+        # Gate de segurança obrigatório (TASK-25, RISK-DIGEST-04):
+        # Cenários: (a) tenant A vs B nos logs, (b) tokens inacessíveis cross-tenant,
+        #           (c) RLS WITH CHECK rejeita inserção com tenant errado,
+        #           (d) sem SET app.current_tenant → 0 linhas (falha-fechada).
+        # Testcontainers cria PostgreSQL real com RLS ativa.
+        # Violação = incidente sev-1 de vazamento de dados entre tenants.
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+
+      - name: Architecture.Tests do digest (gate de dependências — Clean Architecture)
+        working-directory: services/digest
+        run: |
+          dotnet test tests/Digest.Architecture.Tests/ \
+            --no-build --configuration Release \
+            --logger "console;verbosity=normal"
+
+  # ---------------------------------------------------------------------------
   # Gate anti-PII em logs do módulo partner-management (TASK-27, RNF 4.1, DD-008)
   # Falha o build se PII de parceiro aparecer em texto claro em logs ou delta_json.
   # Gate obrigatório: JAMAIS marcar como skip (design §11, RISK-PM-02).

@@ -1,0 +1,31 @@
+# .gitignore — Digest Worker
+# Artefatos de build e cache do .NET (não versionados)
+
+# Build outputs
+bin/
+obj/
+
+# NuGet packages
+*.nupkg
+*.snupkg
+packages/
+
+# Configurações locais que não devem ser versionadas
+appsettings.Local.json
+appsettings.local.json
+*.user
+
+# Coberturas de teste (artefatos de CI — não versionados)
+coverage/
+*.coveragexml
+*.cobertura.xml
+TestResults/
+
+# Rider / VS / VS Code
+.idea/
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates

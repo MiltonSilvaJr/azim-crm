@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Digest.Application
+    Papel: handlers, queries, composers, pipeline behaviors e portas de leitura.
+    Contém: RunDigestForTenantHandler, SendUserDigestHandler, UpdateDeliveryStatusHandler,
+            SelectEligibleTenantsQuery, SelectRecipientsQuery, DigestContentComposer,
+            AzimuteSectionBuilder, IActivityReadPort, IOpportunityReadPort, IForecastReadPort,
+            IUserDirectoryPort, IUserDigestPreferencePort, IActionTokenFactory,
+            pipeline behaviors (TenantScope, Logging, Validation, UnitOfWork).
+
+    Regra de dependência (design §3.1): Application -> Domain, Contracts.
+    Proibição: sem referência a Infrastructure, EF Core, HTTP direto.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Digest.Application</AssemblyName>
+    <RootNamespace>Digest.Application</RootNamespace>
+    <Description>Camada Application do módulo digest: handlers, queries, composers, pipeline behaviors e portas de leitura (design §3.1).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Application -> Domain (regra de dependência design §3.1) -->
+    <ProjectReference Include="..\Digest.Domain\Digest.Domain.csproj" />
+    <!-- Application -> Contracts (regra de dependência design §3.1) -->
+    <ProjectReference Include="..\Digest.Contracts\Digest.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- MediatR: mecanismo de mediação para commands e queries (design §5) -->
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <!-- FluentValidation: ValidationBehavior (design §5.4) -->
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <!-- Microsoft.Extensions.Logging.Abstractions: LoggingBehavior (sem PII — RNF 3, DD-011) -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
+  </ItemGroup>
+</Project>

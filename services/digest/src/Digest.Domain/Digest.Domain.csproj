@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Digest.Domain
+    Papel: núcleo de domínio do módulo digest (BC-06).
+    Contém: DigestJob (aggregate root), EmailDigestLog, DigestActionToken (entidades),
+            TenantEligibility, DigestDate, ActionToken, MoneyCents, DigestSection,
+            DigestContent (objetos de valor), RecipientSelectionPolicy (domain policy),
+            DigestEmailSent (domain event).
+
+    Regra de dependência (design §3.1): Domain -> ∅ (sem dependências internas).
+    Proibição explícita: sem EF Core, sem HTTP client, sem Pub/Sub SDK (TASK-02).
+    Isolamento testável: sem framework de infraestrutura; todos os tipos são puros.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Digest.Domain</AssemblyName>
+    <RootNamespace>Digest.Domain</RootNamespace>
+    <Description>Núcleo de domínio do módulo digest: aggregates, entidades, objetos de valor, policies e domain events. Sem dependências de infraestrutura (design §3.1).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- NodaTime: conversão IANA DST-neutral para TenantEligibility (DD-012, Req 2, PBT-01) -->
+    <PackageReference Include="NodaTime" Version="3.2.2" />
+  </ItemGroup>
+</Project>

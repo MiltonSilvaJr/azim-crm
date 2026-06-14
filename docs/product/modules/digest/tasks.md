@@ -115,33 +115,33 @@ Onda é atributo da TASK (campo `**Onda**` no header) e seção de agrupamento v
 
 | TASK | Título | Onda | Branch | Status |
 |------|--------|------|--------|--------|
-| TASK-01 | Criar solution e projetos Clean Architecture | Onda 1 | `feat/digest/01-bootstrap-solution` | [ ] |
-| TASK-02 | Testes de arquitetura e CI mínimo | Onda 1 | `test/digest/02-architecture-tests` | [ ] |
-| TASK-03 | TenantEligibility e DigestDate — PBT-01 | Onda 2 | `feat/digest/03-tenant-eligibility` | [ ] |
-| TASK-04 | MoneyCents, ActionToken, DigestSection e DigestContent | Onda 2 | `feat/digest/04-value-objects` | [ ] |
-| TASK-05 | EmailDigestLog — entidade e state machine | Onda 2 | `feat/digest/05-email-digest-log` | [ ] |
-| TASK-06 | DigestActionToken — entidade e ciclo de vida | Onda 2 | `feat/digest/06-digest-action-token` | [ ] |
-| TASK-07 | RecipientSelectionPolicy — PBT-03 | Onda 2 | `feat/digest/07-recipient-selection-policy` | [ ] |
-| TASK-08 | DigestJob (aggregate root) e DigestEmailSent | Onda 2 | `feat/digest/08-digest-job-aggregate` | [ ] |
-| TASK-09 | Portas de leitura — 6 interfaces de Application | Onda 3 | `feat/digest/09-read-ports` | [ ] |
-| TASK-10 | SelectEligibleTenantsQuery e SelectRecipientsQuery | Onda 3 | `feat/digest/10-selection-queries` | [ ] |
-| TASK-11 | DigestContentComposer e AzimuteSectionBuilder — PBT-04 e PBT-06 | Onda 3 | `feat/digest/11-content-composer` | [ ] |
-| TASK-12 | SendUserDigestHandler e idempotência — PBT-02 | Onda 3 | `feat/digest/12-send-user-digest-handler` | [ ] |
-| TASK-13 | RunDigestForTenantHandler, UpdateDeliveryStatusHandler e pipeline behaviors | Onda 3 | `feat/digest/13-orchestration-handlers` | [ ] |
-| TASK-14 | DbContext, Global Query Filter e migrations SQL | Onda 4 | `feat/digest/14-dbcontext-migrations` | [ ] |
-| TASK-15 | RLS falha-fechada e TenantConnectionInterceptor | Onda 4 | `feat/digest/15-rls-tenant-interceptor` | [ ] |
-| TASK-16 | ActionTokenFactory — PBT-05 | Onda 4 | `feat/digest/16-action-token-factory` | [ ] |
-| TASK-17 | EmailDigestLogRepository e DigestActionTokenRepository | Onda 4 | `feat/digest/17-repositories` | [ ] |
-| TASK-18 | OutboxPublisher — DigestEmailSent para digest.email_sent.v1 | Onda 4 | `feat/digest/18-outbox-publisher` | [ ] |
-| TASK-19 | Adaptadores das portas de leitura com resiliência Polly | Onda 4 | `feat/digest/19-read-port-adapters` | [ ] |
-| TASK-20 | EmailTemplateRenderer — HTML e branding do tenant | Onda 4 | `feat/digest/20-email-template-renderer` | [ ] |
-| TASK-21 | DigestTriggerEndpoint OIDC/WIF e health checks | Onda 5 | `feat/digest/21-trigger-endpoint` | [ ] |
-| TASK-22 | PerTenantConsumer Pub/Sub e fan-out | Onda 5 | `feat/digest/22-per-tenant-consumer` | [ ] |
-| TASK-23 | Contratos — DTOs, evento digest.email_sent.v1 e enums | Onda 5 | `feat/digest/23-contracts` | [ ] |
-| TASK-24 | Purge de email_digest_logs (90 dias) e digest_action_tokens | Onda 6 | `feat/digest/24-purge-jobs` | [ ] |
-| TASK-25 | Gate de isolamento CI cross-tenant | Onda 6 | `test/digest/25-cross-tenant-isolation-gate` | [ ] |
-| TASK-26 | Observabilidade completa — métricas, traces, alertas e logs sem PII | Onda 6 | `feat/digest/26-observability` | [ ] |
-| TASK-27 | Documentação final e DoD | Onda 6 | `docs/digest/27-dod-final` | [ ] |
+| TASK-01 | Criar solution e projetos Clean Architecture | Onda 1 | `feat/digest/01-bootstrap-solution` | [X] |
+| TASK-02 | Testes de arquitetura e CI mínimo | Onda 1 | `test/digest/02-architecture-tests` | [X] |
+| TASK-03 | TenantEligibility e DigestDate — PBT-01 | Onda 2 | `feat/digest/03-tenant-eligibility` | [X] |
+| TASK-04 | MoneyCents, ActionToken, DigestSection e DigestContent | Onda 2 | `feat/digest/04-value-objects` | [X] |
+| TASK-05 | EmailDigestLog — entidade e state machine | Onda 2 | `feat/digest/05-email-digest-log` | [X] |
+| TASK-06 | DigestActionToken — entidade e ciclo de vida | Onda 2 | `feat/digest/06-digest-action-token` | [X] |
+| TASK-07 | RecipientSelectionPolicy — PBT-03 | Onda 2 | `feat/digest/07-recipient-selection-policy` | [X] |
+| TASK-08 | DigestJob (aggregate root) e DigestEmailSent | Onda 2 | `feat/digest/08-digest-job-aggregate` | [X] |
+| TASK-09 | Portas de leitura — 6 interfaces de Application | Onda 3 | `feat/digest/09-read-ports` | [X] |
+| TASK-10 | SelectEligibleTenantsQuery e SelectRecipientsQuery | Onda 3 | `feat/digest/10-selection-queries` | [X] |
+| TASK-11 | DigestContentComposer e AzimuteSectionBuilder — PBT-04 e PBT-06 | Onda 3 | `feat/digest/11-content-composer` | [X] |
+| TASK-12 | SendUserDigestHandler e idempotência — PBT-02 | Onda 3 | `feat/digest/12-send-user-digest-handler` | [X] |
+| TASK-13 | RunDigestForTenantHandler, UpdateDeliveryStatusHandler e pipeline behaviors | Onda 3 | `feat/digest/13-orchestration-handlers` | [X] |
+| TASK-14 | DbContext, Global Query Filter e migrations SQL | Onda 4 | `feat/digest/14-dbcontext-migrations` | [X] |
+| TASK-15 | RLS falha-fechada e TenantConnectionInterceptor | Onda 4 | `feat/digest/15-rls-tenant-interceptor` | [X] |
+| TASK-16 | ActionTokenFactory — PBT-05 | Onda 4 | `feat/digest/16-action-token-factory` | [X] |
+| TASK-17 | EmailDigestLogRepository e DigestActionTokenRepository | Onda 4 | `feat/digest/17-repositories` | [X] |
+| TASK-18 | OutboxPublisher — DigestEmailSent para digest.email_sent.v1 | Onda 4 | `feat/digest/18-outbox-publisher` | [X] |
+| TASK-19 | Adaptadores das portas de leitura com resiliência Polly | Onda 4 | `feat/digest/19-read-port-adapters` | [X] |
+| TASK-20 | EmailTemplateRenderer — HTML e branding do tenant | Onda 4 | `feat/digest/20-email-template-renderer` | [X] |
+| TASK-21 | DigestTriggerEndpoint OIDC/WIF e health checks | Onda 5 | `feat/digest/21-trigger-endpoint` | [X] |
+| TASK-22 | PerTenantConsumer Pub/Sub e fan-out | Onda 5 | `feat/digest/22-per-tenant-consumer` | [X] |
+| TASK-23 | Contratos — DTOs, evento digest.email_sent.v1 e enums | Onda 5 | `feat/digest/23-contracts` | [X] |
+| TASK-24 | Purge de email_digest_logs (90 dias) e digest_action_tokens | Onda 6 | `feat/digest/24-purge-jobs` | [X] |
+| TASK-25 | Gate de isolamento CI cross-tenant | Onda 6 | `test/digest/25-cross-tenant-isolation-gate` | [X] |
+| TASK-26 | Observabilidade completa — métricas, traces, alertas e logs sem PII | Onda 6 | `feat/digest/26-observability` | [X] |
+| TASK-27 | Documentação final e DoD | Onda 6 | `docs/digest/27-dod-final` | [X] |
 
 ## 3. Ondas de Implementação
 
@@ -1056,49 +1056,49 @@ Verificar e registrar o atendimento de todos os itens do DoD do design §19. Atu
 
 | Origem | Descrição | TASKs | Status |
 |--------|-----------|-------|--------|
-| Req 1 | Trigger horário do Cloud Scheduler | TASK-21, TASK-22 | [ ] |
-| Req 2 | Seleção de tenants por fuso IANA e dia útil | TASK-03, TASK-10 | [ ] |
-| Req 3 | Seleção de destinatários por papel e pendências | TASK-07, TASK-10 | [ ] |
-| Req 4 | Digest de pendências (terça a sexta) | TASK-11, TASK-20 | [ ] |
-| Req 5 | Azimute da semana (segunda-feira) | TASK-04, TASK-08, TASK-11 | [ ] |
-| Req 6 | Consumo via read model dos módulos donos | TASK-02, TASK-09, TASK-19 | [ ] |
-| Req 7 | Token de ação de um clique | TASK-04, TASK-06, TASK-16 | [ ] |
-| Req 8 | Envio via IEmailSender e registro do envio | TASK-12, TASK-20 | [ ] |
-| Req 9 | Idempotência por usuário e data | TASK-05, TASK-12, TASK-17 | [ ] |
-| Req 10 | Opt-out individual do digest | TASK-07, TASK-09 | [ ] |
-| Req 11 | Registro de status de entrega e auditoria | TASK-14, TASK-18, TASK-22 | [ ] |
-| RNF 1 | Isolamento por tenant | TASK-14, TASK-15, TASK-25 | [ ] |
-| RNF 2 | Idempotência resiliente a retentativas | TASK-12, TASK-17 | [ ] |
-| RNF 3 | Ausência de PII em logs | TASK-13, TASK-26 | [ ] |
-| RNF 4 | Pontualidade e desempenho (≤ 5 min / 1.000 dest.) | TASK-21, TASK-22, TASK-26 | [ ] |
-| RNF 5 | Resiliência de envio e isolamento de falhas | TASK-13, TASK-19 | [ ] |
-| RNF 6 | Observabilidade do worker | TASK-26 | [ ] |
-| RNF 7 | Segurança do trigger e do token | TASK-16, TASK-21 | [ ] |
-| RNF 8 | Execução assíncrona obrigatória | TASK-21, TASK-22 | [ ] |
-| RNF 9 | Retenção e minimização dos logs de digest | TASK-24 | [ ] |
-| RNF 10 | Auditoria do envio (DigestEmailSent sem PII) | TASK-18 | [ ] |
-| PBT-01 | Elegibilidade neutra a DST | TASK-03 | [ ] |
-| PBT-02 | Idempotência sob N retentativas | TASK-12, TASK-17 | [ ] |
-| PBT-03 | Regra de inclusão de destinatário (total) | TASK-07 | [ ] |
-| PBT-04 | Omissão graciosa do bloco de metas | TASK-11 | [ ] |
-| PBT-05 | Token não previsível e expirável (anti-enumeração) | TASK-16 | [ ] |
-| PBT-06 | Azimute apenas na segunda-feira com papel de gestão | TASK-11 | [ ] |
-| DD-001 | Leitura direta de read model (resolve VAL-TRD-13) | TASK-09, TASK-19 | [ ] |
-| DD-002 | Isolamento multi-tenant em defesa em profundidade | TASK-14, TASK-15, TASK-25 | [ ] |
-| DD-003 | Opt-out pertence ao organization (IUserDigestPreferencePort) | TASK-09 | [ ] |
-| DD-004 | TTL do token = 48h | TASK-06, TASK-16 | [ ] |
-| DD-005 | Fan-out por tenant via Pub/Sub | TASK-21, TASK-22 | [ ] |
-| DD-006 | Trigger HTTP direto + fan-out interno | TASK-21 | [ ] |
-| DD-007 | Token opaco persistido por hash SHA-256 | TASK-04, TASK-16 | [ ] |
-| DD-008 | Idempotência por reserva antes do envio | TASK-12, TASK-17 | [ ] |
-| DD-009 | DigestEmailSent via Outbox transacional | TASK-18 | [ ] |
-| DD-010 | Valores monetários do azimute em centavos inteiros | TASK-04, TASK-11 | [ ] |
-| DD-011 | Telemetria sem PII (destructuring policy) | TASK-26 | [ ] |
-| DD-012 | Conversão de fuso via NodaTime (TZDB IANA) | TASK-01, TASK-03 | [ ] |
-| ADR-0001 | Isolamento multi-tenant (RLS falha-fechada) | TASK-14, TASK-15, TASK-25 | [ ] |
-| ADR-0004 | Outbox/idempotência | TASK-18 | [ ] |
-| ADR-0006 | Token de link autenticado | TASK-06, TASK-16 | [ ] |
-| ADR-0008 | Scheduling por Cloud Scheduler UTC + fuso IANA | TASK-03, TASK-10 | [ ] |
+| Req 1 | Trigger horário do Cloud Scheduler | TASK-21, TASK-22 | [X] |
+| Req 2 | Seleção de tenants por fuso IANA e dia útil | TASK-03, TASK-10 | [X] |
+| Req 3 | Seleção de destinatários por papel e pendências | TASK-07, TASK-10 | [X] |
+| Req 4 | Digest de pendências (terça a sexta) | TASK-11, TASK-20 | [X] |
+| Req 5 | Azimute da semana (segunda-feira) | TASK-04, TASK-08, TASK-11 | [X] |
+| Req 6 | Consumo via read model dos módulos donos | TASK-02, TASK-09, TASK-19 | [X] |
+| Req 7 | Token de ação de um clique | TASK-04, TASK-06, TASK-16 | [X] |
+| Req 8 | Envio via IEmailSender e registro do envio | TASK-12, TASK-20 | [X] |
+| Req 9 | Idempotência por usuário e data | TASK-05, TASK-12, TASK-17 | [X] |
+| Req 10 | Opt-out individual do digest | TASK-07, TASK-09 | [X] |
+| Req 11 | Registro de status de entrega e auditoria | TASK-14, TASK-18, TASK-22 | [X] |
+| RNF 1 | Isolamento por tenant | TASK-14, TASK-15, TASK-25 | [X] |
+| RNF 2 | Idempotência resiliente a retentativas | TASK-12, TASK-17 | [X] |
+| RNF 3 | Ausência de PII em logs | TASK-13, TASK-26 | [X] |
+| RNF 4 | Pontualidade e desempenho (≤ 5 min / 1.000 dest.) | TASK-21, TASK-22, TASK-26 | [X] |
+| RNF 5 | Resiliência de envio e isolamento de falhas | TASK-13, TASK-19 | [X] |
+| RNF 6 | Observabilidade do worker | TASK-26 | [X] |
+| RNF 7 | Segurança do trigger e do token | TASK-16, TASK-21 | [X] |
+| RNF 8 | Execução assíncrona obrigatória | TASK-21, TASK-22 | [X] |
+| RNF 9 | Retenção e minimização dos logs de digest | TASK-24 | [X] |
+| RNF 10 | Auditoria do envio (DigestEmailSent sem PII) | TASK-18 | [X] |
+| PBT-01 | Elegibilidade neutra a DST | TASK-03 | [X] |
+| PBT-02 | Idempotência sob N retentativas | TASK-12, TASK-17 | [X] |
+| PBT-03 | Regra de inclusão de destinatário (total) | TASK-07 | [X] |
+| PBT-04 | Omissão graciosa do bloco de metas | TASK-11 | [X] |
+| PBT-05 | Token não previsível e expirável (anti-enumeração) | TASK-16 | [X] |
+| PBT-06 | Azimute apenas na segunda-feira com papel de gestão | TASK-11 | [X] |
+| DD-001 | Leitura direta de read model (resolve VAL-TRD-13) | TASK-09, TASK-19 | [X] |
+| DD-002 | Isolamento multi-tenant em defesa em profundidade | TASK-14, TASK-15, TASK-25 | [X] |
+| DD-003 | Opt-out pertence ao organization (IUserDigestPreferencePort) | TASK-09 | [X] |
+| DD-004 | TTL do token = 48h | TASK-06, TASK-16 | [X] |
+| DD-005 | Fan-out por tenant via Pub/Sub | TASK-21, TASK-22 | [X] |
+| DD-006 | Trigger HTTP direto + fan-out interno | TASK-21 | [X] |
+| DD-007 | Token opaco persistido por hash SHA-256 | TASK-04, TASK-16 | [X] |
+| DD-008 | Idempotência por reserva antes do envio | TASK-12, TASK-17 | [X] |
+| DD-009 | DigestEmailSent via Outbox transacional | TASK-18 | [X] |
+| DD-010 | Valores monetários do azimute em centavos inteiros | TASK-04, TASK-11 | [X] |
+| DD-011 | Telemetria sem PII (destructuring policy) | TASK-26 | [X] |
+| DD-012 | Conversão de fuso via NodaTime (TZDB IANA) | TASK-01, TASK-03 | [X] |
+| ADR-0001 | Isolamento multi-tenant (RLS falha-fechada) | TASK-14, TASK-15, TASK-25 | [X] |
+| ADR-0004 | Outbox/idempotência | TASK-18 | [X] |
+| ADR-0006 | Token de link autenticado | TASK-06, TASK-16 | [X] |
+| ADR-0008 | Scheduling por Cloud Scheduler UTC + fuso IANA | TASK-03, TASK-10 | [X] |
 
 ## 6. Coverage Gates
 

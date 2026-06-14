@@ -1,0 +1,29 @@
+<Solution>
+  <!--
+    Digest.slnx — formato XML nativo .NET 10
+    Módulo: digest (BC-06, Supporting Subdomain SD-06)
+    Deployable: azim-digest-worker (.NET 10, Cloud Run)
+
+    Estrutura design §3: 5 projetos de produção + 5 de teste.
+    Regra de dependência (design §3.1):
+      Api          -> Application, Infrastructure, Contracts
+      Application  -> Domain, Contracts
+      Infrastructure -> Application, Domain
+      Domain       -> (nenhum projeto interno)
+      Contracts    -> (nenhum projeto interno)
+  -->
+  <Folder Name="/src/">
+    <Project Path="src/Digest.Domain/Digest.Domain.csproj" />
+    <Project Path="src/Digest.Application/Digest.Application.csproj" />
+    <Project Path="src/Digest.Infrastructure/Digest.Infrastructure.csproj" />
+    <Project Path="src/Digest.Api/Digest.Api.csproj" />
+    <Project Path="src/Digest.Contracts/Digest.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Digest.Domain.Tests/Digest.Domain.Tests.csproj" />
+    <Project Path="tests/Digest.Application.Tests/Digest.Application.Tests.csproj" />
+    <Project Path="tests/Digest.Infrastructure.Tests/Digest.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Digest.Api.Tests/Digest.Api.Tests.csproj" />
+    <Project Path="tests/Digest.Architecture.Tests/Digest.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>
