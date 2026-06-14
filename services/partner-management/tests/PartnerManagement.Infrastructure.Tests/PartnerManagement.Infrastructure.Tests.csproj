@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    PartnerManagement.Infrastructure.Tests
+    Foco: PartnerRepository, filtro global de tenant + RLS (ADR-0001),
+          Outbox transacional, PartnerCommissionReadAdapter (read model do pipeline).
+    PBT: PBT-04 (isolamento por tenant — gate CI obrigatório, KPI-06) via FsCheck.Xunit (TASK-21).
+    Infra: Testcontainers + PostgreSQL real (TASK-15..TASK-21).
+    Meta de cobertura: ≥ 70% (critério de fechamento da Onda 4).
+    Mapeia: RNF 1, RNF 2, Req 9, design §6, design §7, design §13, ADR-0001.
+  -->
+  <PropertyGroup>
+    <AssemblyName>PartnerManagement.Infrastructure.Tests</AssemblyName>
+    <RootNamespace>PartnerManagement.Infrastructure.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PartnerManagement.Infrastructure\PartnerManagement.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\PartnerManagement.Application\PartnerManagement.Application.csproj" />
+    <ProjectReference Include="..\..\src\PartnerManagement.Domain\PartnerManagement.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Testcontainers: sobe PostgreSQL real para testes de integração (TASK-15..21) -->
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.4.0" />
+    <!-- NSubstitute: mocks para ports e serviços externos -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+  </ItemGroup>
+</Project>
