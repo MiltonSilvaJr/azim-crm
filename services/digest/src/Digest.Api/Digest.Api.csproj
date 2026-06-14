@@ -27,5 +27,12 @@
   <ItemGroup>
     <!-- MediatR 12.x: DI nativo embutido (AddMediatR disponível em MediatR 12+) -->
     <PackageReference Include="MediatR" Version="12.4.1" />
+    <!-- Autenticação OIDC/WIF: valida token JWT do Cloud Scheduler (RNF 7.1, design §10) -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.6" />
+    <!-- FluentValidation: AddValidatorsFromAssembly no startup -->
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <!-- Health Checks: live/ready com verificação de DbContext (design §8.2) -->
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="9.0.6" />
   </ItemGroup>
 </Project>
