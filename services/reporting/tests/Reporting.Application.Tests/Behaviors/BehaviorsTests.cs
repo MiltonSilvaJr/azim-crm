@@ -6,6 +6,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Reporting.Application.Behaviors;
 using Reporting.Application.Exceptions;
+using Reporting.Application.Observability;
 using Reporting.Application.Ports;
 using Reporting.Domain.Enums;
 using Reporting.Domain.ValueObjects;
@@ -143,7 +144,8 @@ public sealed class BehaviorsTests
     public async Task LoggingMetrics_CallsNextAndReturnsResult()
     {
         var logger   = NullLogger<LoggingMetricsBehavior<TestQuery, bool>>.Instance;
-        var behavior = new LoggingMetricsBehavior<TestQuery, bool>(logger);
+        var metrics  = new ReportingMetrics();
+        var behavior = new LoggingMetricsBehavior<TestQuery, bool>(logger, metrics);
         var request  = new TestQuery(TenantId, UserId, "corr-1");
 
         var result = await behavior.Handle(request, () => Task.FromResult(true), CancellationToken.None);
@@ -160,7 +162,8 @@ public sealed class BehaviorsTests
         // Nenhum desses campos é display_name, e-mail, telefone ou PII (RNF 4.2, DD-008)
 
         var logger   = NullLogger<LoggingMetricsBehavior<TestQuery, bool>>.Instance;
-        var behavior = new LoggingMetricsBehavior<TestQuery, bool>(logger);
+        var metrics  = new ReportingMetrics();
+        var behavior = new LoggingMetricsBehavior<TestQuery, bool>(logger, metrics);
         var request  = new TestQuery(TenantId, UserId, "corr-1");
 
         // Se nenhuma exceção for lançada, o behavior não tentou acessar PII

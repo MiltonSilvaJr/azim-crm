@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Reporting.Application.Ports;
+using Reporting.Infrastructure.HealthChecks;
 using Reporting.Infrastructure.Persistence;
 using Reporting.Infrastructure.Storage;
 
@@ -60,12 +61,37 @@ public static class InfrastructureServiceExtensions
         // Storage de CSV
         if (useInMemoryStorage)
         {
-            services.AddSingleton<ICsvStorage>(new InMemoryCsvStorage());
+            // InMemoryCsvStorage implementa tanto ICsvStorage quanto ICsvStorageHealthProbe
+            var inMemory = new InMemoryCsvStorage();
+            services.AddSingleton<ICsvStorage>(inMemory);
+            services.AddSingleton<ICsvStorageHealthProbe>(inMemory);
         }
         else
         {
-            services.AddSingleton<ICsvStorage, GcsCsvStorage>();
+            // GcsCsvStorage implementa tanto ICsvStorage quanto ICsvStorageHealthProbe
+            services.AddSingleton<GcsCsvStorage>();
+            services.AddSingleton<ICsvStorage>(sp => sp.GetRequiredService<GcsCsvStorage>());
+            services.AddSingleton<ICsvStorageHealthProbe>(sp => sp.GetRequiredService<GcsCsvStorage>());
         }
+
+        // Health checks: Cloud SQL e GCS (design §11, RNF 7, TRD §11)
+        services.AddHealthChecks()
+            .Add(new Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckRegistration(
+                name: "cloud-sql",
+                factory: sp => new CloudSqlHealthCheck(
+                    connectionString,
+                    sp.GetRequiredService<ILogger<CloudSqlHealthCheck>>()),
+                failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
+                tags: ["ready", "database"],
+                timeout: TimeSpan.FromSeconds(5)))
+            .Add(new Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckRegistration(
+                name: "cloud-storage-gcs",
+                factory: sp => new GcsHealthCheck(
+                    sp.GetRequiredService<ICsvStorageHealthProbe>(),
+                    sp.GetRequiredService<ILogger<GcsHealthCheck>>()),
+                failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded,
+                tags: ["ready", "storage"],
+                timeout: TimeSpan.FromSeconds(5)));
 
         return services;
     }

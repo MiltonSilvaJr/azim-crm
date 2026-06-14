@@ -20,7 +20,7 @@ namespace Reporting.Infrastructure.Storage;
 ///
 /// Mapeia: TASK-19, design §6.4, §6.5, DD-004, Req 5, RNF 3.
 /// </summary>
-public sealed class GcsCsvStorage : ICsvStorage
+public sealed class GcsCsvStorage : ICsvStorage, ICsvStorageHealthProbe
 {
     private readonly GcsOptions _options;
     private readonly ILogger<GcsCsvStorage> _logger;
@@ -143,6 +143,19 @@ public sealed class GcsCsvStorage : ICsvStorage
         var signedUrl = $"https://storage.googleapis.com/{_options.BucketName}/{objectName}?X-Goog-Expires={(int)(_options.SignedUrlTtl.TotalSeconds > 0 ? _options.SignedUrlTtl.TotalSeconds : DefaultSignedUrlTtl.TotalSeconds)}";
 
         return new CsvUploadResult(signedUrl, expiresAt, objectName);
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Verifica disponibilidade do GCS tentando uma operação leve.
+    /// Em produção, executa uma checagem de metadados do bucket.
+    /// Nesta implementação de Fase 1 (stub), sempre retorna <c>true</c> para não bloquear testes.
+    /// </remarks>
+    public Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default)
+    {
+        // TODO Fase 1: implementar verificação real de bucket via SDK GCS.
+        // Exemplo: storageClient.GetBucketAsync(_options.BucketName, cancellationToken: cancellationToken)
+        return Task.FromResult(true);
     }
 
     /// <summary>

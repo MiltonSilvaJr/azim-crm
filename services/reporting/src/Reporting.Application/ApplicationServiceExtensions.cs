@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Reporting.Application.Dispatching;
+using Reporting.Application.Observability;
 using Reporting.Application.Policies;
 using Reporting.Application.Ports;
 using Reporting.Application.Queries.Export;
@@ -36,6 +37,10 @@ public static class ApplicationServiceExtensions
 
         // ReportDispatcher: fachada que isola o controller de tipos do Domain (design §3, TASK-21)
         services.AddScoped<IReportDispatcher, ReportDispatcher>();
+
+        // ReportingMetrics: métricas do módulo via System.Diagnostics.Metrics (design §11, RNF 6.2)
+        // Singleton: Meter é thread-safe e deve ser compartilhado.
+        services.AddSingleton<ReportingMetrics>();
 
         return services;
     }

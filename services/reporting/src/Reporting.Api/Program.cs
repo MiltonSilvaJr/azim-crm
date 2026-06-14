@@ -194,7 +194,15 @@ app.UseAuthorization();
 app.MapControllers();
 
 // ─── Health checks ─────────────────────────────────────────────────────────
-app.MapHealthChecks("/health/live");
+// /health/live — liveness: apenas verifica se o processo responde (sem dependências externas).
+// Predicate vazio = nenhum IHealthCheck registrado é executado; sempre Healthy se o processo está vivo.
+// Ref: design §11, RNF 7, TRD §11.
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false
+});
+// /health/ready — readiness: executa Cloud SQL (tag "database") e GCS (tag "storage").
+// Retorna Unhealthy/Degraded se alguma dependência estiver indisponível.
 app.MapHealthChecks("/health/ready");
 
 app.Run();

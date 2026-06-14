@@ -12,7 +12,7 @@ namespace Reporting.Infrastructure.Storage;
 ///
 /// Mapeia: TASK-19, design §6.5, DD-004 (idempotência de upload).
 /// </summary>
-public sealed class InMemoryCsvStorage : ICsvStorage
+public sealed class InMemoryCsvStorage : ICsvStorage, ICsvStorageHealthProbe
 {
     private readonly Dictionary<string, byte[]> _store = new(StringComparer.Ordinal);
     private readonly TimeSpan _signedUrlTtl;
@@ -54,4 +54,9 @@ public sealed class InMemoryCsvStorage : ICsvStorage
 
     /// <summary>Número de objetos armazenados.</summary>
     public int Count => _store.Count;
+
+    /// <inheritdoc/>
+    /// <remarks>InMemoryCsvStorage está sempre disponível (uso em testes e dev).</remarks>
+    public Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(true);
 }
