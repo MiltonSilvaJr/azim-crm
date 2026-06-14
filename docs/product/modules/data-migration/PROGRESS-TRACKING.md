@@ -14,8 +14,8 @@
 | Onda | Foco | TASKs | Status |
 |------|------|-------|--------|
 | 1 | Bootstrap | TASK-01..02 | [X] (`bf43e21`,`cec503e`) — 13 Architecture; EF 9.0.6 |
-| 2 | Domain | TASK-03..07 | [-] |
-| 3 | Application | TASK-08..13 | [ ] |
+| 2 | Domain | TASK-03..07 | [X] (5 commits) — 179 Domain + PBT-03/05/06/07; money-as-cents |
+| 3 | Application | TASK-08..13 | [-] |
 | 4 | Infrastructure (RLS) | TASK-14..20 | [ ] |
 | 5 | API + Contratos | TASK-21..23 | [ ] |
 | 6 | Hardening | TASK-24..28 | [ ] |
