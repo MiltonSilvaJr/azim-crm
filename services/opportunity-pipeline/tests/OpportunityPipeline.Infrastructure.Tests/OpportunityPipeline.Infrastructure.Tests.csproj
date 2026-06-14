@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    OpportunityPipeline.Infrastructure.Tests
+    Foco: numeração atômica por tenant (PBT-01), trigger trg_block_snapshot_mutation
+          (PBT-07), RLS falha-fechada (PBT-10 parcial), Outbox, migrations.
+    Coverage gate: ≥ 70% nas classes de Infrastructure (Onda 4 — TASK-13..18).
+    Usa Testcontainers para PostgreSQL real em testes de integração.
+    Mapeia: design §13, TASK-13..18.
+  -->
+  <PropertyGroup>
+    <AssemblyName>OpportunityPipeline.Infrastructure.Tests</AssemblyName>
+    <RootNamespace>OpportunityPipeline.Infrastructure.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!--
+      EF1002: SQL interpolado via ExecuteSqlRawAsync/SqlQueryRaw.
+      Nesses testes de integração todo o SQL usa GUIDs gerados internamente (sem input externo).
+      O risco real de SQL injection é zero; a supressão é intencional e revisada.
+    -->
+    <NoWarn>$(NoWarn);EF1002</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OpportunityPipeline.Infrastructure\OpportunityPipeline.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\OpportunityPipeline.Domain\OpportunityPipeline.Domain.csproj" />
+    <ProjectReference Include="..\..\src\OpportunityPipeline.Application\OpportunityPipeline.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Testcontainers.PostgreSql: banco real para testes de integração (TASK-13..18) -->
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.4.0" />
+    <!-- EF Core InMemory para testes unitários de contexto -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- xunit.runner.json: desabilita paralelismo para evitar race condition no Testcontainers -->
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

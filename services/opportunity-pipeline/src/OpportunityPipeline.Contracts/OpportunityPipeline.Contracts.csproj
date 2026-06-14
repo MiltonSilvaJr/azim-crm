@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    OpportunityPipeline.Contracts
+    Papel: DTOs públicos (Requests, Responses), envelopes de eventos públicos (.v1),
+           catálogo de erros OP-ERR-001..017.
+    Regra de dependência: Contracts -> (nenhum projeto interno).
+    Nenhum tipo de infraestrutura, EF Core, Redis, mensageria ou MediatR pode aparecer aqui.
+    Mapeia: design §3, §8, §12, TASK-19.
+  -->
+  <PropertyGroup>
+    <AssemblyName>OpportunityPipeline.Contracts</AssemblyName>
+    <RootNamespace>OpportunityPipeline.Contracts</RootNamespace>
+    <Description>DTOs públicos, contratos de evento (.v1) e catálogo de erros OP-ERR do módulo opportunity-pipeline. Sem dependências internas (Clean Architecture).</Description>
+  </PropertyGroup>
+</Project>

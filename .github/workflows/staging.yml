@@ -473,6 +473,61 @@ jobs:
             --logger "console;verbosity=normal"
 
   # ---------------------------------------------------------------------------
+  # KPI-06 — Gate de isolamento cross-tenant do módulo opportunity-pipeline (TASK-22)
+  # PBT-10: para quaisquer tenants A e B, query de A nunca retorna dados de B.
+  # Bloqueia merge se qualquer cenário de isolamento falhar.
+  # Gate de nível sev-1: JAMAIS marcar como skip (ADR-0001, RNF 3, design §14, PBT-10).
+  # Violação = incidente sev-1 de vazamento de dados entre tenants.
+  # ---------------------------------------------------------------------------
+  opportunity-pipeline-security-isolation-gate:
+    name: opportunity-pipeline / KPI-06 cross-tenant isolation (SecurityGate — ADR-0001, PBT-10)
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/staging' ||
+      github.ref == 'refs/heads/develop' ||
+      startsWith(github.ref, 'refs/heads/feat/opportunity-pipeline') ||
+      startsWith(github.ref, 'refs/heads/test/opportunity-pipeline') ||
+      github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Build opportunity-pipeline
+        working-directory: services/opportunity-pipeline
+        run: dotnet build OpportunityPipeline.slnx --configuration Release
+
+      - name: KPI-06 — Isolamento cross-tenant (gate sev-1 — ADR-0001, RNF 3, PBT-10)
+        working-directory: services/opportunity-pipeline
+        run: |
+          dotnet test tests/OpportunityPipeline.Infrastructure.Tests/ \
+            --no-build --configuration Release \
+            --filter "Category=SecurityGate" \
+            --logger "console;verbosity=normal"
+        # Gate de segurança obrigatório (TASK-22, PBT-10, RNF 3):
+        # - CT-01: tenant A não enxerga oportunidades de tenant B (EF Global Query Filter)
+        # - CT-02: escrita de A não afeta dados de B (RLS WITH CHECK)
+        # - CT-03: sem app.current_tenant → zero linhas (RLS falha-fechada)
+        # - CT-04: SQL raw com tenant A não lê tenant B via WHERE tenant_id = B
+        # - CT-05: todas as 7 tabelas têm RLS e FORCE ROW LEVEL SECURITY habilitados
+        # - CT-06: comportamento auditável de acesso sem tenant (base para RNF 3.3)
+        # - PBT-10: FsCheck ≥ 100 amostras de pares (tenantA, tenantB) distintos
+        # Testcontainers cria container PostgreSQL 16 real com RLS ativa.
+        # Violação = incidente sev-1 de vazamento de dados entre tenants.
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+
+      - name: Architecture.Tests (gate de dependências — Clean Architecture)
+        working-directory: services/opportunity-pipeline
+        run: |
+          dotnet test tests/OpportunityPipeline.Architecture.Tests/ \
+            --no-build --configuration Release \
+            --logger "console;verbosity=normal"
+
+  # ---------------------------------------------------------------------------
   # Gate anti-PII em logs do módulo partner-management (TASK-27, RNF 4.1, DD-008)
   # Falha o build se PII de parceiro aparecer em texto claro em logs ou delta_json.
   # Gate obrigatório: JAMAIS marcar como skip (design §11, RISK-PM-02).

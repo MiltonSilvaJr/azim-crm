@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    OpportunityPipeline.Application.Tests
+    Foco: handlers de command/query, pipeline behaviors (Logging, Tenant, Rbac,
+          Idempotency, Validation, Transaction), validators FluentValidation,
+          StagnationDetectionService, PBT-09 (idempotência de estagnação).
+    Coverage gate: ≥ 85% nas classes de Application (Onda 3 — TASK-08..12).
+    Mapeia: design §13, TASK-08..12.
+  -->
+  <PropertyGroup>
+    <AssemblyName>OpportunityPipeline.Application.Tests</AssemblyName>
+    <RootNamespace>OpportunityPipeline.Application.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OpportunityPipeline.Application\OpportunityPipeline.Application.csproj" />
+    <ProjectReference Include="..\..\src\OpportunityPipeline.Domain\OpportunityPipeline.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- NSubstitute: mocks de portas e repositórios (TASK-08..12) -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+  </ItemGroup>
+</Project>

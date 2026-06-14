@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    OpportunityPipeline.Application
+    Papel: commands (CreateOpportunity, UpdateOpportunity, MoveStage, WinOpportunity,
+           LoseOpportunity, ReopenOpportunity, SetPartnerCommission, LinkContact,
+           UnlinkContact, SaveFilter), queries (ListOpportunities, GetOpportunity,
+           GetKanban, GetTimeline, GetCommission, GetForecast, GetStale,
+           ListSavedFilters), handlers, pipeline behaviors (Logging, Tenant, Rbac,
+           Idempotency, Validation, Transaction), portas de aplicação (IOrganizationReadPort,
+           IAccountReadPort, IPartnerReadPort, IActivityReadPort, IAuditPublisher,
+           IDomainEventDispatcher, IClock), validators FluentValidation,
+           StagnationDetectionService.
+    Regra de dependência: Application -> Domain, Contracts. NUNCA referencia Infrastructure.
+    Mapeia: design §3, §5, TASK-08..12.
+  -->
+  <PropertyGroup>
+    <AssemblyName>OpportunityPipeline.Application</AssemblyName>
+    <RootNamespace>OpportunityPipeline.Application</RootNamespace>
+    <Description>Casos de uso (CQRS), pipeline behaviors, portas de aplicação e validators do módulo opportunity-pipeline. Sem referência a Infrastructure (Clean Architecture).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpportunityPipeline.Domain\OpportunityPipeline.Domain.csproj" />
+    <ProjectReference Include="..\OpportunityPipeline.Contracts\OpportunityPipeline.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- MediatR: desacopla controllers de handlers (CQRS, design §5) -->
+    <PackageReference Include="MediatR" Version="12.5.0" />
+    <!-- FluentValidation: validação sintática na borda (ValidationBehavior, design §5.4) -->
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <!-- Abstrações de logging estruturado (observabilidade — RNF 10) -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <!-- Options pattern para configurações (TTL do cache, commission_required_on_win — DD-007) -->
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+  </ItemGroup>
+</Project>

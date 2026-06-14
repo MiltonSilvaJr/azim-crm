@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    OpportunityPipeline.Domain.Tests
+    Foco: invariantes INV-1..13, máquina de estados (OpportunityLifecycle),
+          cálculos (TCV, forecast, comissão, forecast líquido) e PBTs de domínio.
+    Coverage gate: ≥ 95% nas classes de Domain (Onda 2 — TASK-02..07).
+    PBTs cobertos: PBT-02..08 com FsCheck.Xunit.
+    Mapeia: design §13, TASK-02..07.
+  -->
+  <PropertyGroup>
+    <AssemblyName>OpportunityPipeline.Domain.Tests</AssemblyName>
+    <RootNamespace>OpportunityPipeline.Domain.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OpportunityPipeline.Domain\OpportunityPipeline.Domain.csproj" />
+  </ItemGroup>
+</Project>
