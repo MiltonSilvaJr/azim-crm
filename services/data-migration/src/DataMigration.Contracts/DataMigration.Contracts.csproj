@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    DataMigration.Contracts
+    Papel: contratos públicos do módulo (DTOs de request/response, enums públicos,
+           constantes de erro MIG-ERR-001..010). Sem dependências de outros projetos
+           do módulo.
+    Regra de dependência: Contracts -> (nenhum projeto interno).
+    Não referencia Domain, Application, Infrastructure ou Api.
+  -->
+  <PropertyGroup>
+    <AssemblyName>DataMigration.Contracts</AssemblyName>
+    <RootNamespace>DataMigration.Contracts</RootNamespace>
+    <Description>Contratos públicos do módulo data-migration (DTOs, constantes de erro, enums públicos). Sem dependência de outros projetos internos (design §3).</Description>
+  </PropertyGroup>
+</Project>

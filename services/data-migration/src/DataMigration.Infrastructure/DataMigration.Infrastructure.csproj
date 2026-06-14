@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    DataMigration.Infrastructure
+    Papel: adaptadores de persistência (MigrationDbContext, EF Core, migrations RLS),
+           adaptador de parsing (SpreadsheetParser com ClosedXML — DD-002),
+           adaptadores de portas in-process (AccountImportAdapter, PartnerImportAdapter,
+           OpportunityImportAdapter, ActivityImportAdapter, OpportunityNumberAdapter,
+           OrganizationReadAdapter), UnitOfWork, Outbox.
+    Regra de dependência: Infrastructure -> Application, Domain, Contracts.
+    NÃO é referenciado por Domain ou Application (sentido proibido — design §3).
+    EF Core 9.0.6 e Npgsql 9.0.4 ficam aqui; ClosedXML (DD-002) também.
+  -->
+  <PropertyGroup>
+    <AssemblyName>DataMigration.Infrastructure</AssemblyName>
+    <RootNamespace>DataMigration.Infrastructure</RootNamespace>
+    <Description>Adaptadores de persistência (EF Core, Postgres, RLS), SpreadsheetParser (ClosedXML), portas in-process e UnitOfWork do módulo data-migration (design §3, §6).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataMigration.Application\DataMigration.Application.csproj" />
+    <ProjectReference Include="..\DataMigration.Domain\DataMigration.Domain.csproj" />
+    <ProjectReference Include="..\DataMigration.Contracts\DataMigration.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- EF Core 9.0.6 — versão fixada conforme instrução da Onda 1 -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.6" />
+    <!-- Npgsql 9.0.4 — driver Postgres compatível com EF Core 9 -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+  </ItemGroup>
+</Project>

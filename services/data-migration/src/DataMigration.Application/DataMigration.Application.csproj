@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    DataMigration.Application
+    Papel: casos de uso (commands e queries), handlers, pipeline behaviors
+           (TenantContextBehavior, AuthorizationBehavior, FeatureFlagBehavior,
+           ValidationBehavior, PiiSafeLoggingBehavior, IdempotencyBehavior),
+           portas de import (ISpreadsheetParser, IMigrationJobRepository, IUnitOfWork,
+           IAccountImportPort, IPartnerImportPort, IOpportunityImportPort,
+           IActivityImportPort, IOpportunityNumberPort, IOrganizationReadPort).
+    Regra de dependência: Application -> Domain, Contracts (NUNCA Infrastructure).
+    NUNCA referencia DataMigration.Infrastructure ou DataMigration.Api.
+  -->
+  <PropertyGroup>
+    <AssemblyName>DataMigration.Application</AssemblyName>
+    <RootNamespace>DataMigration.Application</RootNamespace>
+    <Description>Casos de uso, handlers, pipeline behaviors e portas de import do módulo data-migration. Referencia apenas Domain e Contracts (design §3, §5).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataMigration.Domain\DataMigration.Domain.csproj" />
+    <ProjectReference Include="..\DataMigration.Contracts\DataMigration.Contracts.csproj" />
+  </ItemGroup>
+</Project>

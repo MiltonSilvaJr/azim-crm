@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    DataMigration.Domain.Tests
+    Foco: máquina de estados do MigrationJob; OwnerRequiredSpecification;
+          objetos de valor (ExcelSerialDate, ForecastDivergence, OpportunityNumber,
+          NormalizedName, Money, TriageFlag); policies (AccountDedupePolicy,
+          StageFallbackPolicy, OwnerTypoMappingPolicy).
+    PBTs obrigatórios: PBT-03, PBT-05, PBT-06, PBT-07 (FsCheck).
+    Rastreabilidade: Req 4, 8, 9; design §4; tasks TASK-03..TASK-07.
+    Gate de coverage: Domain >= 95%.
+  -->
+  <PropertyGroup>
+    <AssemblyName>DataMigration.Domain.Tests</AssemblyName>
+    <RootNamespace>DataMigration.Domain.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DataMigration.Domain\DataMigration.Domain.csproj" />
+  </ItemGroup>
+</Project>

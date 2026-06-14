@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    DataMigration.Infrastructure.Tests
+    Foco: SpreadsheetParser (ClosedXML); portas in-process e UnitOfWork;
+          isolamento RLS (Testcontainers/Postgres); idempotência por import_key.
+    Gate de CI: teste de isolamento de tenant (RLS) como gate de merge (KPI-06).
+    Rastreabilidade: Req 6, 7, 10, 12; RNF 2; design §6; tasks TASK-14..TASK-20.
+    Gate de coverage: Infrastructure >= 70%.
+  -->
+  <PropertyGroup>
+    <AssemblyName>DataMigration.Infrastructure.Tests</AssemblyName>
+    <RootNamespace>DataMigration.Infrastructure.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DataMigration.Infrastructure\DataMigration.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\DataMigration.Application\DataMigration.Application.csproj" />
+    <ProjectReference Include="..\..\src\DataMigration.Domain\DataMigration.Domain.csproj" />
+  </ItemGroup>
+</Project>
