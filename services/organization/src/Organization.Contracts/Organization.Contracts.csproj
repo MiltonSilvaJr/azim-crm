@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Organization.Contracts
+    Papel: DTOs públicos, contratos de evento (*.v1), schema do contexto RBAC exportado.
+    Regra de dependência: Contracts -> (nenhum projeto interno).
+    Nenhum tipo de infraestrutura, EF Core, Redis ou mensageria pode aparecer aqui.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Organization.Contracts</AssemblyName>
+    <RootNamespace>Organization.Contracts</RootNamespace>
+    <Description>DTOs públicos, contratos de evento e schema do contexto RBAC do módulo organization. Sem dependências internas (Clean Architecture).</Description>
+  </PropertyGroup>
+</Project>

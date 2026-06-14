@@ -1,0 +1,63 @@
+# Alertas operacionais do módulo Organization
+# Referência: design §11 (RNF 6.3), RISK-ORG-01
+# Implementação: LastTenantAdminAlertService (log Warning estruturado)
+#
+# Formato: Cloud Monitoring / Prometheus-compatible alert definitions
+# Sem PII em nenhuma regra de alerta.
+
+alerts:
+  - name: organization_last_tenant_admin
+    severity: critical
+    description: >
+      Alerta quando o tenant está prestes a ficar sem Tenant Admin ativo.
+      Emitido antes de operações que tentam desativar/rebaixar/remover o último TAdmin.
+      Referência: RISK-ORG-01, MSG-017, design §11.
+    trigger:
+      log_field: "ALERTA: Tenant"
+      log_level: Warning
+      source: LastTenantAdminAlertService
+    action:
+      - notify_oncall: true
+      - message: "Tenant {TenantId} com {RemainingAdminCount} TAdmin ativo. Promova outro usuário."
+
+  - name: organization_rls_violation
+    severity: critical
+    description: >
+      Alerta imediato quando tenant_rls_violation_count > 0.
+      Indica possível vazamento de dados entre tenants — severidade máxima (Tier 1).
+      Referência: RNF 1, design §11, DEC-006.
+    trigger:
+      metric: tenant_rls_violation_count
+      condition: "> 0"
+      window: "1m"
+    action:
+      - notify_oncall: true
+      - escalate: true
+      - message: "CRÍTICO: Violação de isolamento de tenant detectada no módulo organization."
+
+  - name: organization_redis_unavailable
+    severity: warning
+    description: >
+      Alerta quando o Redis está indisponível por período superior ao TTL do cache (~5min).
+      Operação degrada para banco com deny-by-default — sem impacto de segurança,
+      mas com aumento de latência. Referência: RNF 5.3, design §6.2.
+    trigger:
+      health_check: redis
+      status: Unhealthy
+      duration: "5m"
+    action:
+      - notify_oncall: false
+      - message: "Redis indisponível por mais de 5min. Cache degradado para leitura do banco."
+
+  - name: organization_postgres_unavailable
+    severity: critical
+    description: >
+      Alerta quando o PostgreSQL está indisponível.
+      Impacto total: sem persistência nem leitura de dados. Referência: RNF 1.
+    trigger:
+      health_check: postgres
+      status: Unhealthy
+      duration: "1m"
+    action:
+      - notify_oncall: true
+      - message: "PostgreSQL indisponível para o módulo organization."

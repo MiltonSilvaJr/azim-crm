@@ -1,7 +1,12 @@
 # Module — Organization
 
-**Status:** Rascunho para revisão
+**Status:** Implementado
 **Fase:** Fase 1 MVP
+**Versão do design:** v0.1.0 (design.md §1..§19 atendido)
+**Ondas concluídas:** 6 de 6
+**TASKs concluídas:** 28 de 28
+**PBTs verdes:** PBT-01..07 (7 de 7)
+**Testes totais:** 398 (green — 0 falhas)
 
 ---
 
@@ -20,7 +25,29 @@ Módulo responsável pela gestão de Business Units (BUs), usuários, papéis, R
 | Bounded Context Relacionado | Organization Management (BC-08) |
 | Subdomínio DDD | Supporting Subdomain |
 | Tier / Criticidade | Tier 1 — todos os módulos dependem de BU, user_id e RBAC definidos aqui |
-| Status | Rascunho para revisão |
+| Status | Implementado |
+| Ondas | 6 (Bootstrap → Domain → Application → Infrastructure → API+Contracts → Hardening) |
+| TASKs | 28 concluídas |
+| PBTs | PBT-01..07 verdes |
+| Branch de implementação | `feat/organization/all-waves` |
+
+---
+
+## 2.1 Definition of Done — Verificação (design §19)
+
+| Item | Status | Evidência |
+|------|--------|-----------|
+| §3 — Cinco projetos de produção + cinco de teste; Architecture.Tests valida dependências | Cumprido | 10 projetos em `services/organization/`; 10 testes de arquitetura verdes (NetArchTest) |
+| §4 — Agregados `BusinessUnit`, `User`, `UserInvitation` com invariantes e VOs | Cumprido | Domain.Tests: 139 testes; PBT-04, PBT-06, PBT-07 verdes |
+| §5 — Commands/Queries/Handlers e pipeline behaviors | Cumprido | Application.Tests: 99 testes; 6 behaviors (Tenant, RBAC, Validation, Transaction, Idempotency, Logging) |
+| §7 — Schema e migrations `snake_case`; RLS habilitada e testada | Cumprido | 1 migration em `snake_case`; RLS via `SET app.current_tenant`; Infrastructure.Tests: 60 testes |
+| §8 — Endpoints com RBAC deny-by-default e catálogo de erros §12 | Cumprido | Api.Tests: 90 testes; 17 erros ORG-ERR-001..017; anti-enumeração verificada |
+| §9 — Eventos `*.v1` via Outbox; `tenant.provisioned.v1` via Inbox idempotente | Cumprido | Outbox/Inbox EF Core; ContractTests; testes de integração |
+| §6.2 — Cache de memberships com invalidação e degradação segura | Cumprido | `RedisMembershipCache` com TTL, degradação miss, testes Testcontainers |
+| §11 — PBT-01..07 implementados e verdes; gate de CI | Cumprido | 7 PBTs verdes; PBT-01 tagueado como gate de CI (`[Trait("Category","PBT-01")]`) |
+| §11 — Logs sem PII, métricas e alertas ativos | Cumprido | Serilog + 6 métricas snake_case; `/health/live` + `/health/ready`; `LastTenantAdminAlertService` |
+| Matriz de rastreabilidade §13.1 sem requisito órfão | Cumprido | 31 linhas na matriz de `tasks.md` §5; todos os Req/RNF/PBT/DD com TASK |
+| README do módulo sincronizado | Cumprido | Este documento atualizado com status Implementado, 28 TASKs, 7 PBTs |
 
 ---
 

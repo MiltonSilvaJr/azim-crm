@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Organization.Domain
+    Papel: agregados (BusinessUnit, User, UserInvitation), objetos de valor
+           (BusinessUnitName, Role, StageCategory, Probability, InvitationToken),
+           domain events, policies (TerminalStagesPolicy, StagePositionPolicy,
+           BusinessUnitEnablementSpec, MembershipUniquenessSpec),
+           specifications e state machine do convite.
+    Regra de dependência: Domain -> (nenhum projeto interno).
+    Domain não referencia EF Core, GCP SDK, web framework ou mensageria.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Organization.Domain</AssemblyName>
+    <RootNamespace>Organization.Domain</RootNamespace>
+    <Description>Agregados, objetos de valor, eventos de domínio, policies e specifications do módulo organization. Sem dependência de infraestrutura (Clean Architecture, DDD).</Description>
+  </PropertyGroup>
+</Project>

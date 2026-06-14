@@ -248,3 +248,43 @@ jobs:
           dotnet test tests/TenantAdministration.Architecture.Tests/ \
             --no-build --configuration Release \
             --logger "console;verbosity=normal"
+
+  # ---------------------------------------------------------------------------
+  # Gate de Architecture Tests do módulo organization (design §3, TASK-02)
+  # Valida regra de dependência entre camadas (Clean Architecture).
+  # Roda em pushes de branches feat/organization/** e em develop/staging.
+  # Falha o build imediatamente se qualquer dependência proibida for detectada.
+  # Gate de nível obrigatório: JAMAIS marcar como skip (design §2, §3).
+  # ---------------------------------------------------------------------------
+  organization-architecture-gate:
+    name: organization / Architecture.Tests (design §3 gate)
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/staging' ||
+      github.ref == 'refs/heads/develop' ||
+      startsWith(github.ref, 'refs/heads/feat/organization') ||
+      startsWith(github.ref, 'refs/heads/test/organization') ||
+      github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Build organization
+        working-directory: services/organization
+        run: dotnet build Organization.slnx --configuration Release
+
+      - name: Architecture.Tests (gate obrigatório — design §3, TASK-02)
+        working-directory: services/organization
+        run: |
+          dotnet test tests/Organization.Architecture.Tests/ \
+            --no-build --configuration Release \
+            --logger "console;verbosity=normal"
+        # Valida:
+        #   - Domain não referencia Application, Infrastructure nem Api
+        #   - Application não referencia Infrastructure nem Api
+        #   - Contracts não referencia nenhum projeto interno
+        #   - Domain não contém namespaces de EF Core, Redis, GCP SDK, ASP.NET Core ou MediatR

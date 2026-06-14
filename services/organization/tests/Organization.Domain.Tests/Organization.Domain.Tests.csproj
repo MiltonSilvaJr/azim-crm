@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Organization.Domain.Tests
+    Foco: invariantes de agregados, objetos de valor (BusinessUnitName, Role,
+          StageCategory, Probability, InvitationToken), state machine de convite,
+          TerminalStagesPolicy, StagePositionPolicy. PBTs: PBT-04, PBT-06, PBT-07.
+    Cobertura meta: ≥95% em Organization.Domain.
+    Coverlet configurado via Directory.Build.props.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Organization.Domain.Tests</AssemblyName>
+    <RootNamespace>Organization.Domain.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Organization.Domain\Organization.Domain.csproj" />
+  </ItemGroup>
+</Project>
