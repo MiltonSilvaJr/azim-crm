@@ -2,6 +2,7 @@ using System.Text.Json;
 using Digest.Api.Endpoints;
 using Digest.Api.Infrastructure;
 using Digest.Api.Jobs;
+using Digest.Infrastructure.Observability;
 using FluentValidation;
 using Digest.Application.Abstractions;
 using Digest.Application.Behaviors;
@@ -184,6 +185,12 @@ builder.Services.AddScoped<IPubSubFanout, InProcessFanout>();
 // Jobs — Purge de retenção diário às 02:00 UTC (TASK-24, RNF 9)
 // ---------------------------------------------------------------------------
 builder.Services.AddHostedService<DigestRetentionHostedService>();
+
+// ---------------------------------------------------------------------------
+// Observabilidade — métricas digest_* e ActivitySource (TASK-26, RNF 6.2, RNF 6.4)
+// Singleton para acumular métricas durante o ciclo de vida do processo.
+// ---------------------------------------------------------------------------
+builder.Services.AddSingleton<DigestMetrics>();
 
 // ---------------------------------------------------------------------------
 // Health Checks: live/ready (design §8.2)

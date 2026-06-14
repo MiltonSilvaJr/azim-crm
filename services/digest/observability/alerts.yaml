@@ -1,0 +1,97 @@
+# alerts.yaml — Definições de alertas operacionais do módulo digest
+# Referência: design §11 (RNF 6.3), TASK-26.
+# Exportável como IaC para Google Cloud Monitoring (Cloud Alerting).
+# Os três alertas obrigatórios cobrem os cenários de RNF 6.3.
+
+alerts:
+  # -----------------------------------------------------------------------
+  # Alerta 1: nenhum job processado após horário esperado (RNF 6.3 — ausência de job)
+  # Criticidade: P1 — o digest não entregou no horário configurado
+  # -----------------------------------------------------------------------
+  - name: digest_no_job_processed
+    display_name: "Digest: nenhum job processado após horário esperado"
+    description: >
+      Nenhum job de digest foi processado no horário esperado (digest_time ± 10 min).
+      Indica falha no Cloud Scheduler, na publicação Pub/Sub ou no consumer.
+    severity: CRITICAL
+    documentation:
+      content: |
+        ## Diagnóstico
+        1. Verificar logs do DigestTriggerEndpoint: GET /health/ready
+        2. Verificar fila azim-digest-fanout no GCP Pub/Sub
+        3. Verificar logs do PerTenantConsumer
+        4. Verificar digest_jobs_processed_total no Cloud Monitoring
+        ## Referência
+        - RISK-DIGEST-01, RNF 4, RNF 6.3, TASK-26
+    condition:
+      metric: digest_jobs_processed_total
+      type: absent
+      duration: 600s  # 10 minutos sem métrica → alerta
+      trigger:
+        count: 1
+    notification_channels:
+      - ops-team-pagerduty
+      - ops-team-slack
+
+  # -----------------------------------------------------------------------
+  # Alerta 2: taxa de falha de envio > 2% (RNF 6.3 — falha de e-mails)
+  # Criticidade: P1 — entregabilidade abaixo do SLO (≥ 98%)
+  # -----------------------------------------------------------------------
+  - name: digest_high_failure_rate
+    display_name: "Digest: taxa de falha de e-mails > 2%"
+    description: >
+      A proporção de e-mails com falha definitiva (digest_emails_failed_total /
+      (digest_emails_sent_total + digest_emails_failed_total)) excede 2% nos últimos 15 minutos.
+      Indica falha no provedor de e-mail ou problema de configuração.
+    severity: CRITICAL
+    documentation:
+      content: |
+        ## Diagnóstico
+        1. Verificar status do provedor Postmark/SendGrid
+        2. Verificar logs com status=failed em email_digest_logs
+        3. Verificar circuit breaker das portas de leitura (DIG-ERR-040)
+        4. Consultar métricas digest_emails_failed_total e digest_emails_sent_total
+        ## Referência
+        - RISK-DIGEST-03, RNF 5.2, RNF 6.3, DIG-ERR-040, TASK-26
+    condition:
+      metric_expression: >
+        digest_emails_failed_total /
+        (digest_emails_sent_total + digest_emails_failed_total)
+      threshold: 0.02  # > 2%
+      comparison: COMPARISON_GT
+      duration: 300s   # 5 minutos acima do threshold
+      trigger:
+        count: 1
+    notification_channels:
+      - ops-team-pagerduty
+      - ops-team-slack
+
+  # -----------------------------------------------------------------------
+  # Alerta 3: digest_delivery_rate < 95% por > 1 hora (RNF 6.3 — KPI-03)
+  # Criticidade: P2 — degradação de entregabilidade abaixo do KPI
+  # -----------------------------------------------------------------------
+  - name: digest_low_delivery_rate
+    display_name: "Digest: taxa de entrega (delivery_rate) abaixo de 95% por > 1h"
+    description: >
+      digest_delivery_rate ficou abaixo de 0.95 por mais de 1 hora.
+      Indica problema persistente de entregabilidade do digest (KPI-03: ≥ 98% alvo).
+    severity: WARNING
+    documentation:
+      content: |
+        ## Diagnóstico
+        1. Verificar digest_delivery_rate no Cloud Monitoring (tendência horária)
+        2. Correlacionar com digest_emails_failed_total e status=bounced em email_digest_logs
+        3. Verificar reputação do domínio de envio e lista de supressão do provedor
+        4. Avaliar aumento de bounces ou bloqueio de provedor
+        ## Referência
+        - KPI-03, RNF 6.3, design §11, TASK-26
+    condition:
+      metric: digest_delivery_rate
+      threshold: 0.95
+      comparison: COMPARISON_LT
+      duration: 3600s  # 1 hora abaixo do threshold
+      trigger:
+        count: 1
+    notification_channels:
+      - ops-team-slack
+      - product-team-digest
