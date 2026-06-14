@@ -9,6 +9,7 @@ namespace Organization.Application.Commands.Membership;
 /// Handler para <see cref="ChangeMembershipRoleCommand"/>.
 /// Aplica <c>LastTenantAdminPolicy</c> antes de rebaixar um TAdmin.
 /// Invalida cache de RBAC após alteração.
+/// Publica <c>user.role_changed.v1</c> via Outbox na mesma transação (DD-004, DD-005).
 /// </summary>
 public sealed class ChangeMembershipRoleCommandHandler : IRequestHandler<ChangeMembershipRoleCommand>
 {
@@ -16,24 +17,29 @@ public sealed class ChangeMembershipRoleCommandHandler : IRequestHandler<ChangeM
     private readonly ITenantAdminCounter _adminCounter;
     private readonly IMembershipCache _cache;
     private readonly ITenantContext _tenantContext;
+    private readonly IEventOutbox _outbox;
 
     /// <summary>Inicializa o handler.</summary>
     public ChangeMembershipRoleCommandHandler(
         IUserRepository userRepository,
         ITenantAdminCounter adminCounter,
         IMembershipCache cache,
-        ITenantContext tenantContext)
+        ITenantContext tenantContext,
+        IEventOutbox outbox)
     {
         _userRepository = userRepository;
         _adminCounter = adminCounter;
         _cache = cache;
         _tenantContext = tenantContext;
+        _outbox = outbox;
     }
 
     /// <inheritdoc/>
     public async Task Handle(ChangeMembershipRoleCommand request, CancellationToken cancellationToken)
     {
         var tenantId = _tenantContext.TenantId;
+        var correlationId = _tenantContext.CorrelationId;
+
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken)
             ?? throw new KeyNotFoundException($"Usuário '{request.UserId}' não encontrado.");
 
@@ -57,6 +63,13 @@ public sealed class ChangeMembershipRoleCommandHandler : IRequestHandler<ChangeM
         user.ChangeMembershipRole(request.BuId, newRole);
 
         await _userRepository.SaveAsync(user, cancellationToken);
+
+        // Publica MembershipRoleChanged → user.role_changed.v1 via Outbox (DD-004, DD-005)
+        foreach (var domainEvent in user.DomainEvents)
+            await _outbox.EnqueueAsync(domainEvent, tenantId, correlationId, cancellationToken);
+
+        user.ClearDomainEvents();
+
         await _cache.InvalidateAsync(tenantId, request.UserId, cancellationToken);
     }
 }
