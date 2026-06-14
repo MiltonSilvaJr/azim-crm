@@ -1,6 +1,7 @@
 using AccountManagement.Application.Ports;
 using AccountManagement.Domain.Accounts.Repositories;
 using AccountManagement.Infrastructure.Audit;
+using AccountManagement.Infrastructure.Observability;
 using AccountManagement.Infrastructure.Outbox;
 using AccountManagement.Infrastructure.Persistence;
 using AccountManagement.Infrastructure.ReadPorts;
@@ -86,6 +87,11 @@ public static class InfrastructureServiceExtensions
         // =====================================================================
         services.AddSingleton<IOutboxBrokerPublisher, NoOpOutboxBrokerPublisher>();
         services.AddHostedService<OutboxRelayWorker>();
+
+        // =====================================================================
+        // Observabilidade — métricas, traces OpenTelemetry, health checks (TASK-16)
+        // =====================================================================
+        services.AddAccountManagementObservability(connectionString);
 
         return services;
     }

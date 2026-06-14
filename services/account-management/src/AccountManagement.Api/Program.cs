@@ -2,7 +2,10 @@ using AccountManagement.Application.DependencyInjection;
 using AccountManagement.Api.Middleware;
 using AccountManagement.Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
+using Prometheus;
 
 // =============================================================================
 // Azim CRM — account-management API
@@ -96,9 +99,15 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // =====================================================================
-// Health checks
+// Health checks (basic — observabilidade completa em InfrastructureServiceExtensions)
+// Quando connectionString estiver disponível, AddAccountManagementInfrastructure
+// também registra o health check de PostgreSQL via ObservabilityServiceExtensions.
 // =====================================================================
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddCheck(
+        "self",
+        () => HealthCheckResult.Healthy("Serviço account-management em execução"),
+        tags: ["live"]);
 
 var app = builder.Build();
 
@@ -129,9 +138,34 @@ app.UseAuthorization();
 // 5. Controllers
 app.MapControllers();
 
-// 6. Health checks
-app.MapHealthChecks("/health/live");
-app.MapHealthChecks("/health/ready");
+// 6. Métricas Prometheus — expõe /metrics (design §11, RNF 9.2)
+// prometheus-net coleta automaticamente métricas de processo e ASP.NET Core
+app.MapMetrics();
+
+// 7. Health checks com filtro por tag (design §11)
+// /health/live — apenas checks de liveness (process responsivo)
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live"),
+    ResultStatusCodes =
+    {
+        [HealthStatus.Healthy] = StatusCodes.Status200OK,
+        [HealthStatus.Degraded] = StatusCodes.Status200OK,
+        [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable,
+    }
+});
+
+// /health/ready — checks de readiness (inclui banco de dados e dependências)
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready") || check.Tags.Contains("live"),
+    ResultStatusCodes =
+    {
+        [HealthStatus.Healthy] = StatusCodes.Status200OK,
+        [HealthStatus.Degraded] = StatusCodes.Status200OK,
+        [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable,
+    }
+});
 
 app.Run();
 
