@@ -208,7 +208,7 @@ public sealed class ActivityAggregateTests
     {
         var activity = CreateValid();
         activity.Complete(Now);
-        var act = () => activity.Reschedule(DueDate.Create(Now.AddDays(2)));
+        var act = () => activity.Reschedule(DueDate.Create(Now.AddDays(2)), Now);
         act.Should().Throw<ActivityTerminalException>();
     }
 
@@ -266,7 +266,7 @@ public sealed class ActivityAggregateTests
     {
         var activity   = CreateValid();
         var newDueDate = DueDate.Create(Now.AddDays(7));
-        activity.Reschedule(newDueDate);
+        activity.Reschedule(newDueDate, Now);
         activity.DueAt.Value.Should().Be(newDueDate.Value);
     }
 
@@ -275,7 +275,7 @@ public sealed class ActivityAggregateTests
     {
         var activity = CreateValid();
         activity.ChangeStatus(ActivityStatus.InProgress, Now);
-        activity.Reschedule(DueDate.Create(Now.AddDays(3)));
+        activity.Reschedule(DueDate.Create(Now.AddDays(3)), Now);
         activity.Status.Value.Should().Be("in_progress");
     }
 

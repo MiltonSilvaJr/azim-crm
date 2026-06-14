@@ -297,12 +297,13 @@ public sealed class Activity
     /// Reagenda a atividade atualizando <see cref="DueAt"/> sem alterar o status (Req 8).
     /// </summary>
     /// <param name="newDueAt">Nova data de vencimento.</param>
+    /// <param name="now">Instante corrente (injetado via clock — sem DateTimeOffset.UtcNow no Domain).</param>
     /// <exception cref="ActivityTerminalException">Quando a atividade está em estado terminal (I6).</exception>
-    public void Reschedule(DueDate newDueAt)
+    public void Reschedule(DueDate newDueAt, DateTimeOffset now)
     {
         GuardNotTerminal();
         DueAt     = newDueAt;
-        UpdatedAt = DateTimeOffset.UtcNow; // UpdatedAt via clock — aceitável aqui pois é apenas timestamp de infra
+        UpdatedAt = now;
     }
 
     /// <summary>
