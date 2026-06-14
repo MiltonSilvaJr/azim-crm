@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Reporting.Architecture.Tests
+    Foco: regras de dependência Clean Architecture (design §3); validação de que
+          Reporting.Domain não contém aggregates transacionais (DD-003, read side puro).
+    Executa em 100% dos PRs; falha o CI em caso de violação.
+
+    Regra de dependência (design §3):
+      Api            -> Application, Infrastructure, Contracts
+      Application    -> Domain, Contracts  (NUNCA Infrastructure)
+      Infrastructure -> Application, Domain, Contracts  (NUNCA Api)
+      Domain         -> ∅  (NUNCA Application, Infrastructure, Contracts)
+      Contracts      -> ∅  (NUNCA nenhum projeto interno)
+
+    Read side adicional (DD-003):
+      Domain não contém aggregates transacionais.
+
+    Mapeia: TASK-02, design §3, DD-003, ADR-0001.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Reporting.Architecture.Tests</AssemblyName>
+    <RootNamespace>Reporting.Architecture.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- NetArchTest para regras de arquitetura -->
+    <PackageReference Include="NetArchTest.Rules" Version="1.3.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Referencia todos os projetos de produção para inspeção de assemblies -->
+    <ProjectReference Include="..\..\src\Reporting.Contracts\Reporting.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Reporting.Domain\Reporting.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Reporting.Application\Reporting.Application.csproj" />
+    <ProjectReference Include="..\..\src\Reporting.Infrastructure\Reporting.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Reporting.Api\Reporting.Api.csproj" />
+  </ItemGroup>
+</Project>

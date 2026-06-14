@@ -1,0 +1,156 @@
+# Alertas de observabilidade do módulo reporting
+#
+# Configuração de referência para Google Cloud Monitoring / Prometheus AlertManager.
+# Mapeia: TASK-24, design §11, RNF 6.3, PTV-01 (alerta de latência).
+#
+# Métricas emitidas: reports_generated_total, report_generation_duration_seconds,
+#                    report_export_duration_seconds, report_rls_denied_total,
+#                    report_scope_denied_total
+#
+# Instrução de integração:
+# - Cloud Monitoring: importar como política de alerta via gcloud / Terraform
+# - Prometheus: adicionar este arquivo ao AlertManager como rules file
+
+alerts:
+  # ──────────────────────────────────────────────────────────────────────────
+  # Latência p95 acima do SLO (RNF 1.1, PTV-01)
+  # ──────────────────────────────────────────────────────────────────────────
+  - name: reporting_high_latency_p95
+    severity: warning
+    summary: "Latência p95 de relatório acima do SLO de 3 s (RNF 1.1, PTV-01)"
+    description: |
+      O percentil 95 de report_generation_duration_seconds superou 3 segundos.
+      Verificar: índices de banco, statement_timeout, volume de dados e pool de conexão.
+      Mitigação: aumentar QueryTimeoutOptions.TimeoutSeconds ou promover ao worker (DD-001).
+    metric: report_generation_duration_seconds
+    aggregation: p95
+    threshold_seconds: 3.0
+    window: 5m
+    condition: "> threshold"
+    labels:
+      service: reporting
+      team: azim-backend
+      playbook: "docs/runbooks/reporting/latency-slo.md"
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Latência de export p95 acima do SLO (RNF 3.1)
+  # ──────────────────────────────────────────────────────────────────────────
+  - name: reporting_export_high_latency_p95
+    severity: warning
+    summary: "Latência p95 de export CSV acima do SLO de 10 s (RNF 3.1)"
+    description: |
+      O percentil 95 de report_export_duration_seconds superou 10 segundos.
+      Verificar: serialização CSV, upload GCS, tamanho do payload e network.
+    metric: report_export_duration_seconds
+    aggregation: p95
+    threshold_seconds: 10.0
+    window: 5m
+    condition: "> threshold"
+    labels:
+      service: reporting
+      team: azim-backend
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Taxa de erro 5xx elevada
+  # ──────────────────────────────────────────────────────────────────────────
+  - name: reporting_high_error_rate
+    severity: critical
+    summary: "Taxa de erro (outcome=error) acima de 5% (RNF 7)"
+    description: |
+      Mais de 5% das gerações de relatório retornaram outcome=error.
+      Verificar: logs com correlation_id, banco de dados (Cloud SQL health), GCS.
+      Nunca expor PII nas mensagens de alerta ou runbook.
+    metric: reports_generated_total
+    aggregation: "rate(outcome='error') / rate()"
+    threshold_percent: 5.0
+    window: 5m
+    condition: "> threshold"
+    labels:
+      service: reporting
+      team: azim-backend
+      severity_level: critical
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Bloqueios RLS detectados (segurança — ADR-0001, RISK-REPORT-03)
+  # ──────────────────────────────────────────────────────────────────────────
+  - name: reporting_rls_denied_spike
+    severity: critical
+    summary: "Spike de tentativas bloqueadas por RLS — possível cross-tenant (ADR-0001)"
+    description: |
+      report_rls_denied_total aumentou acima de 10 eventos em 5 minutos.
+      Pode indicar tentativa de acesso cross-tenant ou bug no TenantConnectionInterceptor.
+      Investigar imediatamente: verificar logs com correlation_id e tenant_id.
+      NÃO expor dados de tenant nas mensagens de alerta.
+    metric: report_rls_denied_total
+    aggregation: rate
+    threshold_per_5min: 10
+    window: 5m
+    condition: "> threshold"
+    labels:
+      service: reporting
+      team: azim-backend
+      severity_level: critical
+      category: security
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Tentativas de acesso de Platform Operator (segurança — RNF 5)
+  # ──────────────────────────────────────────────────────────────────────────
+  - name: reporting_platform_operator_access_attempt
+    severity: warning
+    summary: "Tentativa de acesso de Platform Operator detectada (RNF 5)"
+    description: |
+      report_scope_denied_total com role=PlatformOperator registrou evento.
+      O bloqueio está funcionando corretamente (esperado), mas o volume deve ser monitorado.
+      Volume acima de 5/min pode indicar misconfiguration ou teste de segurança não autorizado.
+    metric: report_scope_denied_total
+    filter: "role='PlatformOperator'"
+    aggregation: rate
+    threshold_per_5min: 5
+    window: 5m
+    condition: "> threshold"
+    labels:
+      service: reporting
+      team: azim-backend
+      category: security
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Health check — Cloud SQL indisponível
+  # ──────────────────────────────────────────────────────────────────────────
+  - name: reporting_cloud_sql_unhealthy
+    severity: critical
+    summary: "Cloud SQL inacessível — health check /health/ready falhando (RNF 7)"
+    description: |
+      O health check cloud-sql retornou Unhealthy.
+      Relatórios indisponíveis. Verificar conectividade com Cloud SQL, pool de conexão
+      e configuração de Secret Manager (TRD §13). NÃO expor connection string em logs.
+    metric: health_check_status
+    filter: "check='cloud-sql',status='Unhealthy'"
+    aggregation: gauge
+    threshold: 1
+    window: 1m
+    condition: "= threshold"
+    labels:
+      service: reporting
+      team: azim-backend
+      severity_level: critical
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Health check — GCS degradado (export indisponível)
+  # ──────────────────────────────────────────────────────────────────────────
+  - name: reporting_gcs_degraded
+    severity: warning
+    summary: "Cloud Storage (GCS) degradado — export CSV indisponível (RNF 7)"
+    description: |
+      O health check cloud-storage-gcs retornou Degraded.
+      Relatórios continuam disponíveis; export CSV está indisponível (Tier 2).
+      Verificar conectividade com GCS, credenciais ADC e permissões do bucket.
+      Usuários receberão REPORT-ERR-007 ao tentar exportar.
+    metric: health_check_status
+    filter: "check='cloud-storage-gcs',status='Degraded'"
+    aggregation: gauge
+    threshold: 1
+    window: 1m
+    condition: "= threshold"
+    labels:
+      service: reporting
+      team: azim-backend

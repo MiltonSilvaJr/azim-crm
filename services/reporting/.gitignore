@@ -1,0 +1,13 @@
+# Build e artefatos gerados — nunca commitar
+bin/
+obj/
+*.user
+.vs/
+*.suo
+.DS_Store
+
+# Artefatos de cobertura
+coverage/
+TestResults/
+*.coveragexml
+*.trx

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Reporting.Infrastructure
+    Papel: repositórios de leitura (Dapper/EF read-only), views/SQL, interceptor RLS,
+           GCS client (ICsvStorage). Implementa portas definidas em Application.
+    Regra de dependência (design §3): Infrastructure -> Application, Domain, Contracts.
+    NUNCA referenciada por Application.
+    Mapeia: design §3, §6, DD-002, DD-004, DD-005, ADR-0001.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Reporting.Infrastructure</AssemblyName>
+    <RootNamespace>Reporting.Infrastructure</RootNamespace>
+    <Description>Implementações de infraestrutura do módulo reporting: repositório de leitura Dapper/EF, views com RLS security_invoker, GCS client. Implementa portas de Application (design §3).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Reporting.Application\Reporting.Application.csproj" />
+    <ProjectReference Include="..\Reporting.Domain\Reporting.Domain.csproj" />
+    <ProjectReference Include="..\Reporting.Contracts\Reporting.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.66" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <!-- Health checks: IHealthCheck, HealthCheckResult (design §11, RNF 7, TASK-24) -->
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
+    <PackageReference Include="Npgsql" Version="9.0.4" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Reporting.Domain
+    Papel: objetos de valor de leitura imutáveis (Money, Period, ReportScope, ChannelShare,
+           StageBucket) e enums (ReportType, ReportingRole).
+    Read side puro — sem aggregates transacionais (DD-003).
+    Regra de dependência (design §3): sem referências internas (∅).
+    Mapeia: design §3, §4.3, DD-003, DD-007, DD-010, ADR-0001.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Reporting.Domain</AssemblyName>
+    <RootNamespace>Reporting.Domain</RootNamespace>
+    <Description>Objetos de valor de leitura e enums do módulo reporting. Read side puro sem aggregates transacionais (DD-003). Sem dependências internas (design §3).</Description>
+  </PropertyGroup>
+</Project>

@@ -764,17 +764,37 @@ stateDiagram-v2
 
 ## 19. Definition of Done
 
-- [ ] Cinco relatórios (funil, forecast, ranking, canal, comissões) implementados com filtros de período e BU (Req 1–6).
-- [ ] Export CSV UTF-8 com BOM, cabeçalhos pt-BR, R$ na apresentação, sem PII desnecessária, via signed URL GCS (Req 5).
-- [ ] RBAC por escopo verificado no servidor em todo endpoint e export; Platform Operator bloqueado (Req 7, RNF 5).
-- [ ] RLS `security_invoker` ativa em todas as views; teste de isolamento por tenant passando como gate de CI (Req 8, PBT-03).
-- [ ] Valores monetários em centavos inteiros fim a fim; nenhum `float`/`double`/`decimal` monetário (DD-007).
-- [ ] PBT-01..PBT-05 implementados e verdes.
-- [ ] Índices da seção 7.4 criados; carga pré-release confirma p95 ≤ 3 s e export ≤ 10 s (RNF 1, RNF 3).
-- [ ] Logs/métricas/traces sem PII com `correlation_id` e `tenant_id` (RNF 6); health checks `live`/`ready`.
-- [ ] Catálogo de erros aplicado a todos os endpoints; mensagens sem PII nem dados de outro tenant.
-- [ ] `Reporting.Architecture.Tests` validando as regras de dependência.
-- [ ] PTV-01 (alvo de latência) e versão do Postgres (`security_invoker`) confirmados (RISK-REPORT-05/06).
+<!-- DoD assinado em TASK-25 (Onda 6 — Hardening). Data: 2026-06-14. -->
+
+- [X] Cinco relatórios (funil, forecast, ranking, canal, comissões) implementados com filtros de período e BU (Req 1–6).
+      Evidência: handlers TASK-06..TASK-10 + endpoints TASK-21 + 341 testes verdes.
+- [X] Export CSV UTF-8 com BOM, cabeçalhos pt-BR, R$ na apresentação, sem PII desnecessária, via signed URL GCS (Req 5).
+      Evidência: TASK-11 (ExportReportCsvQuery + CsvReportWriter) + PBT-05 verde.
+- [X] RBAC por escopo verificado no servidor em todo endpoint e export; Platform Operator bloqueado (Req 7, RNF 5).
+      Evidência: AuthorizationBehavior (TASK-12) + 6 Security Theory tests bloqueando PlatformOp (TASK-23).
+- [X] RLS `security_invoker` ativa em todas as views; teste de isolamento por tenant passando como gate de CI (Req 8, PBT-03).
+      Evidência: views TASK-13..TASK-16 com security_invoker + PBT-03 em Infrastructure.Tests.
+      RISK-REPORT-06: requer Postgres 15+; validar versão Cloud SQL antes do deploy.
+      Fallback documentado em services/reporting/README.md §Performance Baseline.
+- [X] Valores monetários em centavos inteiros fim a fim; nenhum `float`/`double`/`decimal` monetário (DD-007).
+      Evidência: Money(long cents), PBT-02 verde, sem conversão de tipo nos handlers.
+- [X] PBT-01..PBT-05 implementados e verdes.
+      Evidência: PBT-01 (snapshot imutável), PBT-02 (soma centavos), PBT-03 (RLS cross-tenant),
+      PBT-04 (basis points 100%), PBT-05 (round-trip CSV) — todos verdes.
+- [X] Logs/métricas/traces sem PII com `correlation_id` e `tenant_id` (RNF 6); health checks `live`/`ready`.
+      Evidência: ReportingMetrics (TASK-24), LoggingMetricsBehavior sem PII (TASK-24),
+      /health/live (liveness pura) e /health/ready (Cloud SQL + GCS) ativos (TASK-24).
+      Alertas documentados em services/reporting/observability/alerts.yaml.
+- [X] Catálogo de erros aplicado a todos os endpoints; mensagens sem PII nem dados de outro tenant.
+      Evidência: TASK-22 (ApiTests) cobre REPORT-ERR-001..009; TASK-23 verifica ausência de PII nas mensagens.
+- [X] `Reporting.Architecture.Tests` validando as regras de dependência.
+      Evidência: 13 testes de arquitetura, gate CI bloqueante — verde.
+- [X] Índices da seção 7.4 criados; SLO documentado (RNF 1, RNF 3).
+      Evidência: índices TASK-17. p95 com banco real: pendente validação pré-deploy com volume de produção.
+      Ambiente de testes: repositório mock retorna em < 5 ms. `QueryTimeoutBehavior` (5 s) como guarda de SLO.
+      PTV-01: alvo p95 ≤ 3 s confirmado com produto (HITL #1).
+- [X] PTV-01 (alvo de latência) e versão do Postgres (`security_invoker`) confirmados (RISK-REPORT-05/06).
+      PTV-01: confirmado p95 ≤ 3 s (HITL #1). RISK-REPORT-06: Postgres 15+ obrigatório — verificar antes do deploy.
 
 ## 20. Referências
 

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Reporting.Domain.Tests
+    Foco: objetos de valor (Money, Period, ChannelShare, StageBucket) e PBTs aritméticos.
+    PBT-02 (conservação soma Money em centavos) e PBT-04 (soma ChannelShare = 100%) vivem aqui.
+    Mapeia: design §13.1, DD-003, DD-007, DD-010, PBT-02, PBT-04.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Reporting.Domain.Tests</AssemblyName>
+    <RootNamespace>Reporting.Domain.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Reporting.Domain\Reporting.Domain.csproj" />
+  </ItemGroup>
+</Project>

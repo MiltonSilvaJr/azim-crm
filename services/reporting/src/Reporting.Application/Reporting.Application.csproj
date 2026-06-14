@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Reporting.Application
+    Papel: queries, handlers, validators, portas de leitura (IReportingReadRepository,
+           IScopeResolver, ICsvReportWriter, ICsvStorage), scope resolver, pipeline behaviors.
+    Regra de dependência (design §3): Application -> Domain, Contracts.
+    NUNCA referencia Infrastructure.
+    Mapeia: design §3, §5, DD-003, DD-006.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Reporting.Application</AssemblyName>
+    <RootNamespace>Reporting.Application</RootNamespace>
+    <Description>Queries, handlers e portas de leitura do módulo reporting. Orquestra o read side puro sem acesso direto a Infrastructure (design §3, DD-003).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Reporting.Domain\Reporting.Domain.csproj" />
+    <ProjectReference Include="..\Reporting.Contracts\Reporting.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- MediatR: mecanismo de despacho de queries e pipeline behaviors (design §5) -->
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <!-- FluentValidation: validação sintática de requests (design §5.5) -->
+    <PackageReference Include="FluentValidation" Version="11.12.0" />
+    <!-- Logging e Options: abstrações para behaviors (TASK-12, design §5.4) -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+  </ItemGroup>
+</Project>
