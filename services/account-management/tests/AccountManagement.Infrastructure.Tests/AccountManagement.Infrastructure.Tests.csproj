@@ -29,5 +29,8 @@
     <PackageReference Include="Testcontainers.PostgreSql" Version="4.4.0" />
     <!-- NSubstitute: mock de serviços externos (Pub/Sub, etc.) -->
     <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <!-- Npgsql: conexão direta para verificações de schema RLS/REVOKE -->
+    <PackageReference Include="Npgsql" Version="9.0.4" />
+    <!-- FsCheck e FluentAssertions já vêm do Directory.Build.props -->
   </ItemGroup>
 </Project>

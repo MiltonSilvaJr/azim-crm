@@ -1,3 +1,7 @@
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("AccountManagement.Infrastructure.Tests")]
+
 namespace AccountManagement.Infrastructure;
 
 /// <summary>
