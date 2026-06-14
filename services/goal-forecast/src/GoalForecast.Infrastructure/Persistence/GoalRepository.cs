@@ -16,10 +16,29 @@ namespace GoalForecast.Infrastructure.Persistence;
 ///   para que o handler prossiga com Update.</item>
 /// </list>
 ///
-/// Mapeia: Req 1, Req 2, Req 3, RNF 1, DD-002, design §6.1, TASK-17.
+/// Despacho de eventos (RNF 5):
+/// <list type="bullet">
+///   <item>Se <see cref="IOutboxDispatcher"/> for injetado, os domain events acumulados
+///   no aggregate são gravados em <c>outbox_events</c> antes do commit (mesma transação).</item>
+///   <item>Quando não injetado (testes de mapeamento), domain events são apenas descartados.</item>
+/// </list>
+///
+/// Mapeia: Req 1, Req 2, Req 3, RNF 1, RNF 5, DD-002, design §6.1, §6.6, TASK-17, TASK-20.
 /// </summary>
-public sealed class GoalRepository(GoalForecastDbContext dbContext) : IGoalRepository
+public sealed class GoalRepository : IGoalRepository
 {
+    private readonly GoalForecastDbContext _dbContext;
+    private readonly IOutboxDispatcher? _outbox;
+
+    /// <summary>
+    /// Cria o repositório. O <paramref name="outbox"/> é opcional — quando ausente,
+    /// domain events são descartados após <c>SaveChangesAsync</c> (modo de teste simples).
+    /// </summary>
+    public GoalRepository(GoalForecastDbContext dbContext, IOutboxDispatcher? outbox = null)
+    {
+        _dbContext = dbContext;
+        _outbox = outbox;
+    }
     /// <inheritdoc/>
     public async Task<Goal?> FindByKey(
         Guid tenantId,
@@ -31,7 +50,7 @@ public sealed class GoalRepository(GoalForecastDbContext dbContext) : IGoalRepos
     {
         // Global Query Filter já aplica tenant_id — a condição abaixo
         // é redundante para segurança extra, mas necessária para a assinatura da porta.
-        return await dbContext.Goals
+        return await _dbContext.Goals
             .FirstOrDefaultAsync(g =>
                     g.Scope.BuId == buId
                     && g.Scope.OwnerId == ownerId
@@ -47,15 +66,21 @@ public sealed class GoalRepository(GoalForecastDbContext dbContext) : IGoalRepos
         CancellationToken cancellationToken = default)
     {
         // Global Query Filter filtra automaticamente por tenant_id.
-        return await dbContext.Goals
+        return await _dbContext.Goals
             .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
     }
 
     /// <inheritdoc/>
     public async Task Add(Goal goal, CancellationToken cancellationToken = default)
     {
-        dbContext.Goals.Add(goal);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        _dbContext.Goals.Add(goal);
+
+        // Despacha domain events via outbox antes do commit (mesma transação — RNF 5).
+        if (_outbox is not null)
+            foreach (var ev in goal.DomainEvents)
+                await _outbox.DispatchAsync(ev, cancellationToken);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
         goal.ClearDomainEvents();
     }
 
@@ -65,13 +90,18 @@ public sealed class GoalRepository(GoalForecastDbContext dbContext) : IGoalRepos
         // Verifica se a entidade já está tracked no contexto corrente.
         // Se estiver, SaveChangesAsync detecta as mudanças automaticamente.
         // Caso contrário (entidade desconectada), usa Attach + Modified.
-        if (dbContext.Entry(goal).State == Microsoft.EntityFrameworkCore.EntityState.Detached)
+        if (_dbContext.Entry(goal).State == Microsoft.EntityFrameworkCore.EntityState.Detached)
         {
-            dbContext.Goals.Attach(goal);
-            dbContext.Entry(goal).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+            _dbContext.Goals.Attach(goal);
+            _dbContext.Entry(goal).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        // Despacha domain events via outbox antes do commit (mesma transação — RNF 5).
+        if (_outbox is not null)
+            foreach (var ev in goal.DomainEvents)
+                await _outbox.DispatchAsync(ev, cancellationToken);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
         goal.ClearDomainEvents();
     }
 
@@ -81,7 +111,7 @@ public sealed class GoalRepository(GoalForecastDbContext dbContext) : IGoalRepos
         CancellationToken cancellationToken = default)
     {
         // Global Query Filter garante que apenas metas do tenant_id do contexto são retornadas.
-        var query = dbContext.Goals.AsQueryable();
+        var query = _dbContext.Goals.AsQueryable();
 
         if (filter.BuId.HasValue)
             query = query.Where(g => g.Scope.BuId == filter.BuId.Value);
@@ -117,7 +147,7 @@ public sealed class GoalRepository(GoalForecastDbContext dbContext) : IGoalRepos
         CancellationToken cancellationToken = default)
     {
         // Global Query Filter aplica tenant_id; filtramos por bu_id, owner_id e year.
-        return await dbContext.Goals
+        return await _dbContext.Goals
             .Where(g =>
                 g.Scope.BuId == buId
                 && g.Scope.OwnerId == ownerId

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Npgsql;
 using Testcontainers.PostgreSql;
 
@@ -125,6 +126,18 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
                 END IF;
             END $$;
 
+            -- Tabela bu_members: contexto organization in-process (TASK-20)
+            -- Usada pelo BuMembershipReader nos testes de membership.
+            CREATE TABLE IF NOT EXISTS bu_members (
+                id          UUID        NOT NULL DEFAULT gen_random_uuid(),
+                tenant_id   UUID        NOT NULL,
+                bu_id       UUID        NOT NULL,
+                owner_id    UUID        NOT NULL,
+                active      BOOLEAN     NOT NULL DEFAULT true,
+                CONSTRAINT pk_bu_members PRIMARY KEY (id),
+                CONSTRAINT uq_bu_members UNIQUE (tenant_id, bu_id, owner_id)
+            );
+
             GRANT CONNECT ON DATABASE goal_forecast_test TO {AppUser};
             GRANT USAGE ON SCHEMA public TO {AppUser};
             GRANT SELECT, INSERT, UPDATE, DELETE ON goals TO {AppUser};
@@ -213,5 +226,27 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         var conn = new NpgsqlConnection(AppConnectionString);
         conn.Open();
         return conn;
+    }
+
+    // ── Helpers para TASK-20 ──────────────────────────────────────────────────
+
+    /// <summary>
+    /// Insere um membro ativo na tabela <c>bu_members</c>.
+    /// Usado para preparar dados nos testes de <c>BuMembershipReader</c>.
+    /// </summary>
+    public async Task InsertBuMember(Guid tenantId, Guid buId, Guid ownerId, bool active = true)
+    {
+        await using var conn = OpenOwnerConnection();
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO bu_members (tenant_id, bu_id, owner_id, active)
+            VALUES (@tenantId, @buId, @ownerId, @active)
+            ON CONFLICT (tenant_id, bu_id, owner_id) DO UPDATE SET active = excluded.active;
+            """;
+        cmd.Parameters.AddWithValue("tenantId", tenantId);
+        cmd.Parameters.AddWithValue("buId", buId);
+        cmd.Parameters.AddWithValue("ownerId", ownerId);
+        cmd.Parameters.AddWithValue("active", active);
+        await cmd.ExecuteNonQueryAsync();
     }
 }
