@@ -1,13 +1,16 @@
 # Module — Partner Management
 
-**Status:** Rascunho para revisão
+**Status:** Implementado
 **Fase:** Fase 1 MVP
+**Versão dos artefatos:** requirements.md v1.0.0 / design.md v0.1.0 / tasks.md v0.1.0
 
 ---
 
 ## 1. Visão Geral
 
 Módulo responsável pela gestão de parceiros comissionados. Mantém o cadastro de parceiros com percentuais de comissão default por componente (setup e recorrente). Serve como upstream do Opportunity Pipeline para vinculação de parceiro e cálculo de comissão. No MVP, parceiros não possuem login na plataforma (RN-021).
+
+Implementado em 6 ondas (29 TASKs), com Clean Architecture, DDD, Property-Based Testing (PBT-01..05), mascaramento de PII, resiliência Polly e observabilidade OpenTelemetry + Prometheus.
 
 ---
 
@@ -20,7 +23,7 @@ Módulo responsável pela gestão de parceiros comissionados. Mantém o cadastro
 | Bounded Context Relacionado | Partner Management (BC-03) |
 | Subdomínio DDD | Supporting Subdomain |
 | Tier / Criticidade | Tier 2 — suporte ao pipeline; parceiro é pré-requisito para comissão nativa |
-| Status | Rascunho para revisão |
+| Status | **Implementado** |
 
 ---
 
@@ -36,7 +39,8 @@ Prover o cadastro de parceiros com seus percentuais de comissão default por com
 - Expor dados de parceiro (partner_id, pct_setup, pct_recorrente) para o pipeline na vinculação.
 - Expor relatório de comissão consolidada por parceiro (parceiro × oportunidades ganhas × comissão calculada).
 - Garantir que parceiro desativado não seja vinculado a novas oportunidades.
-- Publicar AuditEvent em toda escrita via audit-log.
+- Publicar AuditEvent em toda escrita via Outbox transacional.
+- Mascarar PII (name, contact_email, contact_phone) em logs, traces e delta_json de auditoria.
 
 ---
 
@@ -57,7 +61,32 @@ Prover o cadastro de parceiros com seus percentuais de comissão default por com
 
 ---
 
-## 7. Bounded Context e Linguagem Ubíqua
+## 7. Implementação — Ondas e TASKs
+
+### Resumo das Ondas
+
+| Onda | Objetivo | TASKs |
+|------|----------|-------|
+| Onda 1 | Setup e domínio (Clean Architecture, DDD) | TASK-01..05 |
+| Onda 2 | Application layer (commands, queries, behaviors) | TASK-06..14 |
+| Onda 3 | Testes unitários e PBT | TASK-14 |
+| Onda 4 | Infrastructure (EF Core, RLS, Outbox, ReadAdapter) | TASK-15..21 |
+| Onda 5 | API REST (Controllers, RBAC, integração) | TASK-22..25 |
+| Onda 6 | Hardening (observabilidade, PII, resiliência, DoD) | TASK-26..29 |
+
+### Property-Based Tests implementados
+
+| Código | Propriedade verificada | Camada |
+|--------|----------------------|--------|
+| PBT-01 | Conservação da soma de comissão (projetada + consolidada) | Application |
+| PBT-02 | Idempotência de inativação/reativação | Domain |
+| PBT-03 | Imutabilidade de Percentage | Domain |
+| PBT-04 | Isolamento multi-tenant (gate CI obrigatório, KPI-06) | Infrastructure |
+| PBT-05 | Imutabilidade da comissão consolidada (snapshot) | Application |
+
+---
+
+## 8. Bounded Context e Linguagem Ubíqua
 
 | Termo | Definição |
 |---|---|
@@ -71,34 +100,35 @@ Prover o cadastro de parceiros com seus percentuais de comissão default por com
 
 ---
 
-## 8. Componentes Internos Candidatos
+## 9. APIs Expostas
 
-| Componente | Tipo | Responsabilidade |
-|---|---|---|
-| PartnerService | Domain Service | CRUD de parceiros; validação de status ativo |
-| PartnerCommissionQueryService | Application Service | Compõe relatório de comissão projetada e consolidada |
-| PartnerRepository | Repository | Escrita e leitura em partners |
-| PartnerController | API Controller | Endpoints de parceiros e relatório de comissão |
+| Método | Endpoint | Finalidade | RBAC |
+|--------|----------|------------|------|
+| GET | /api/v1/partners | Lista parceiros paginada | Viewer+ |
+| POST | /api/v1/partners | Criar parceiro | TAdmin, GestorBU |
+| GET | /api/v1/partners/{id} | Detalhes do parceiro | Viewer+ |
+| PATCH | /api/v1/partners/{id} | Atualizar parceiro | TAdmin, GestorBU |
+| POST | /api/v1/partners/{id}/deactivate | Desativar parceiro | TAdmin, GestorBU |
+| POST | /api/v1/partners/{id}/reactivate | Reativar parceiro | TAdmin, GestorBU |
+| GET | /api/v1/partners/{id}/eligibility | Elegibilidade do parceiro | Viewer+ |
+| GET | /api/v1/partners/{id}/commissions | Visão de comissão | TAdmin, GestorBU |
 
----
+> **Nota RISK-PM-05 resolvido:** o endpoint de atualização usa `PATCH` (não `PUT`), conforme design.md §8 e TRD §8.4. README anterior mencionava `PUT` por erro — corrigido nesta versão.
 
-## 9. APIs Principais
-
-| Método | Endpoint | Finalidade | Consumidores |
-|---|---|---|---|
-| GET | /v1/partners | Lista parceiros ativos do tenant | azim-web, opportunity-pipeline |
-| POST | /v1/partners | Criar parceiro | TAdmin, GestorBU |
-| PUT | /v1/partners/{id} | Atualizar parceiro | TAdmin, GestorBU |
-| GET | /v1/partners/{id} | Detalhes do parceiro com comissão projetada/consolidada | azim-web |
-| GET | /v1/partners/{id}/commissions | Relatório de comissões do parceiro | TAdmin, GestorBU |
+OpenAPI disponível em `/swagger` (Development) e nos artefatos de contrato em `contracts/openapi/`.
 
 ---
 
 ## 10. Eventos Publicados
 
 | Evento | Quando é publicado | Consumidores |
-|---|---|---|
-| PartnerCreated | Após criação de parceiro | audit-log |
+|--------|-------------------|--------------|
+| partner.created.v1 | Após criação de parceiro | audit-log |
+| partner.commission_percentages_updated.v1 | Após atualização de percentuais | audit-log |
+| partner.deactivated.v1 | Após desativação | audit-log |
+| partner.reactivated.v1 | Após reativação | audit-log |
+
+Todos os eventos são publicados via Outbox transacional — zero PII em payload de evento (DD-008).
 
 ---
 
@@ -112,18 +142,18 @@ Este módulo não consome eventos diretamente.
 
 | Entidade/Tabela | Tipo | Banco/Persistência | Observações |
 |---|---|---|---|
-| partners | Transacional | Cloud SQL / Postgres | pct_setup, pct_recorrente em NUMERIC(5,2); soft-delete via active=false |
+| partners | Transacional | Cloud SQL / Postgres | pct_setup, pct_recorrente em NUMERIC(5,2); soft-delete via active=false; RLS habilitada |
+| outbox_messages | Transacional | Cloud SQL / Postgres | Outbox de eventos de domínio |
+| idempotency_keys | Transacional | Cloud SQL / Postgres | Chaves de idempotência de commands |
 
 ---
 
 ## 13. Integrações
 
-| Sistema/Módulo | Tipo de Integração | Direção | Observações |
+| Sistema/Módulo | Tipo | Direção | Observações |
 |---|---|---|---|
-| opportunity-pipeline | API HTTP | Entrada | Pipeline consome partner_id, pct_setup e pct_recorrente ao vincular parceiro |
-| reporting | Read Model (query) | Entrada | Relatório de comissões lê partners + opportunity_partner_commissions |
-| data-migration | API HTTP | Entrada | Import transacional cria parceiros via API interna |
-| audit-log | Package (AuditService) | Saída | Toda escrita gera AuditEvent |
+| opportunity-pipeline | API HTTP (read model) | Saída | PartnerCommissionReadAdapter com Polly (timeout/retry/circuit breaker) |
+| audit-log | Outbox + Pub/Sub | Saída | Toda escrita gera evento de auditoria sem PII |
 
 ---
 
@@ -135,105 +165,139 @@ Este módulo não consome eventos diretamente.
 
 ### 14.2 Dependências Técnicas
 
-- Cloud SQL / Postgres (tabela partners)
+- Cloud SQL / Postgres (tables: partners, outbox_messages, idempotency_keys)
+- opportunity-pipeline API interna (read port de comissão)
 
-### 14.3 Dependências Operacionais
+### 14.3 Stack
 
-- Nenhuma dependência operacional específica além do banco.
+- .NET 10 / C#, ASP.NET Core Minimal Hosting
+- EF Core 9 + Npgsql 9 (migrations, global query filter, RLS interceptor ADR-0001)
+- MediatR (pipeline behaviors: CorrelationLogging → TenantScope → Validation → Authorization → Transaction)
+- FluentValidation, Polly 8, prometheus-net, OpenTelemetry, Swashbuckle
+- xUnit, FluentAssertions, NSubstitute, FsCheck, Testcontainers
 
 ---
 
-## 15. Requisitos Não Funcionais Relevantes
+## 15. Observabilidade
 
-| Categoria | Requisito / Observação |
+| Item | Implementação |
 |---|---|
-| Segurança | Somente TAdmin e GestorBU podem criar e alterar parceiros |
-| Auditabilidade | Toda escrita em partners deve gerar AuditEvent |
+| Logs estruturados | Serilog; campos: correlation_id, tenant_id, partner_id, action — sem PII |
+| Métricas | Prometheus: partners_created_total, partners_deactivated_total, partners_reactivated_total, partner_commission_view_duration_seconds |
+| Traces | OpenTelemetry ActivitySource: PartnerManagement.GetPartnerCommissionView |
+| Health checks | /healthz/live (liveness), /healthz/ready (readiness: partner_sql + partner_commission_read_port) |
+| Métricas endpoint | /metrics (prometheus-net) |
+| Alertas | services/partner-management/observability/alerts.yaml (5 regras: PM-01..PM-05) |
+| Gate anti-PII | CI: partner-management-anti-pii-gate (dotnet test --filter Category=PiiScan) |
 
 ---
 
-## 16. Compliance Aplicável
+## 16. Segurança e PII
 
-| Compliance / Norma / Lei | Aplicável? | Motivo | Impacto no Módulo |
-|---|---|---|---|
-| LGPD | Marginal | partner.name pode ser nome de pessoa física (parceiro individual) | Avaliar: se partner.name for PII, aplicar mascaramento e política de retenção |
-| PCI DSS | Não aplicável | Não processa dados de cartão | — |
-
----
-
-## 17. Observabilidade
-
-| Item | Recomendação Inicial |
+| Controle | Implementação |
 |---|---|
-| Logs | Log estruturado: correlation_id, tenant_id, partner_id, ação |
-| Métricas | partners_created_total, partners_deactivated_total |
-| Auditoria | Toda escrita gera entrada em audit-log |
+| Autenticação | JWT Bearer (produção) / TestAuthHandler (testes) |
+| Autorização | RBAC via claims JWT; AuthorizationBehavior no pipeline MediatR |
+| Isolamento multi-tenant | EF Core HasQueryFilter (tenant_id) + PostgreSQL RLS + RlsSessionInterceptor (ADR-0001) |
+| Mascaramento de PII | PartnerPiiMasker: name → [name-masked], contact_email → [email-masked], contact_phone → [phone-masked] |
+| Gate CI PiiScan | Category=PiiScan: 6 testes — PartnerPiiMasker (Infrastructure.Tests) + CreatePartnerHandler log scan (Application.Tests) |
+| Secrets | Nunca em código; injetados via configuração de ambiente |
 
 ---
 
-## 18. Diagramas do Módulo
+## 17. Resiliência
 
-### 18.1 Diagrama de Componentes Internos
+| Cenário | Comportamento |
+|---|---|
+| opportunity-pipeline timeout | Polly timeout por tentativa (padrão 10s); retorna commissionUnavailable=true |
+| opportunity-pipeline 5xx | Retry com backoff exponencial + jitter (máx 2 tentativas); circuit breaker após 5 falhas |
+| Circuit breaker aberto | Degradação parcial imediata: cadastro retornado com commissionUnavailable=true |
+| Cloud SQL indisponível | Retorna 503; health check partner_sql Unhealthy → alerta ALERT-PM-04 (critical) |
 
-```mermaid
-flowchart LR
-    Actor[TAdmin / GestorBU] --> PartnerCtrl[PartnerController]
-    PartnerCtrl --> PartnerSvc[PartnerService]
-    PartnerCtrl --> CommQuery[PartnerCommissionQueryService]
-    PartnerSvc --> PartnerRepo[PartnerRepository]
-    CommQuery --> PartnerRepo
-    CommQuery --> PipelineAPI[opportunity-pipeline\nAPI interna\nopp_partner_commissions]
-    PartnerRepo --> DB[(partners)]
-    PartnerCtrl --> AuditSvc[AuditService]
+---
+
+## 18. Como Executar Localmente
+
+```bash
+# Subir dependências (PostgreSQL)
+docker compose up -d postgres
+
+# Aplicar migrations
+cd services/partner-management
+dotnet ef database update --project src/PartnerManagement.Infrastructure --startup-project src/PartnerManagement.Api
+
+# Executar a API
+dotnet run --project src/PartnerManagement.Api
+
+# Swagger UI disponível em:
+# https://localhost:7xxx/swagger
 ```
 
-### 18.2 Diagrama de Dependências
+---
 
-```mermaid
-flowchart LR
-    PartnerMgmt[partner-management] --> DB[(Cloud SQL\npartners)]
-    PartnerMgmt --> AuditLog[audit-log]
-    OpportunityPipeline[opportunity-pipeline] -->|consome partner_id, pcts| PartnerMgmt
-    Reporting[reporting] -->|read model| PartnerMgmt
-    DataMigration[data-migration] -->|cria parceiros| PartnerMgmt
+## 19. Como Testar
+
+```bash
+cd services/partner-management
+
+# Suite completa (348 testes)
+dotnet test PartnerManagement.slnx
+
+# Gate de arquitetura (Clean Architecture — 10 testes)
+dotnet test tests/PartnerManagement.Architecture.Tests/
+
+# Gate anti-PII (6 testes — bloqueante no CI)
+dotnet test PartnerManagement.slnx --filter Category=PiiScan
+
+# Gate de isolamento multi-tenant PBT-04 (bloqueante no CI)
+dotnet test tests/PartnerManagement.Infrastructure.Tests/ --filter Category=TenantIsolation
+
+# Testes de resiliência (6 testes)
+dotnet test tests/PartnerManagement.Infrastructure.Tests/ --filter "FullyQualifiedName~CommissionReadAdapterResilience"
 ```
 
 ---
 
-## 19. Riscos
+## 20. Compliance
 
-| Código | Risco | Impacto | Mitigação |
-|---|---|---|---|
-| RISK-PARTNER-01 | Parceiro desativado vinculado a nova oportunidade | Comissão calculada para parceiro sem contrato ativo | Validação no PartnerService: bloquear vinculação de parceiro inactive |
-| RISK-PARTNER-02 | partner.name como PII sem tratamento LGPD | Risco regulatório se parceiro for pessoa física | Confirmar se PJ ou PF e aplicar tratamento adequado |
-
----
-
-## 20. Pontos a Validar
-
-| Código | Ponto | Impacto | Recomendação |
-|---|---|---|---|
-| VAL-PARTNER-01 | partner.name pode ser PII se parceiro for pessoa física | Define obrigações LGPD sobre este módulo | Confirmar com produto e jurídico |
-| VAL-PARTNER-02 | Portal do parceiro ou acesso externo (fora do MVP — RN-021) | Define fronteira de escopo futuro | Registrar como requisito de Fase 2 |
-
----
-
-## 21. Backlog Inicial Sugerido
-
-| Tipo | Item | Descrição |
+| Compliance / Norma | Aplicável? | Impacto no Módulo |
 |---|---|---|
-| Epic | Gestão de Parceiros e Comissão Projetada | CRUD de parceiros com percentuais e relatório de comissão |
-| Story Técnica | CRUD de parceiros com validação de status | POST/PUT/GET /v1/partners; validar active antes de vincular |
-| Story Técnica | Relatório de comissão projetada e consolidada | GET /v1/partners/{id}/commissions compondo pipeline data |
-| Task | Endpoint GET /v1/partners (lista para pipeline) | Retornar id, name, pct_setup, pct_recorrente dos ativos |
+| LGPD | Marginal | partner.name pode ser nome de pessoa física — VAL-PARTNER-01 pendente (fail-safe: mascarado) |
+| PCI DSS | Não aplicável | Não processa dados de cartão |
 
 ---
 
-## 22. Referências
+## 21. Pendências e Riscos
+
+| Código | Tipo | Descrição | Status |
+|--------|------|-----------|--------|
+| VAL-PARTNER-01 | Aprovação humana | Classificação de partner.name como PII (pessoa física vs. PJ) | Pendente (approvals.yaml) |
+| RISK-PM-02 | Risco | PII de parceiro exposta em logs sem mascaramento | Mitigado — PartnerPiiMasker + gate PiiScan CI |
+| RISK-PM-05 | Divergência | README usava PUT; TRD usa PATCH | **Resolvido** — implementação usa PATCH; README corrigido |
+| RISK-PM-06 | Risco | Indisponibilidade do pipeline degrada visão de comissão | Mitigado — circuit breaker + degradação parcial (TASK-28) |
+
+---
+
+## 22. Artefatos de Status
+
+| Artefato | Versão | Status |
+|----------|--------|--------|
+| requirements.md | v1.0.0 | Aprovado para desenvolvimento |
+| design.md | v0.1.0 | Aprovado para desenvolvimento |
+| tasks.md | v0.1.0 | Implementado (6 ondas, 29 TASKs) |
+
+---
+
+## 23. Referências
 
 | Documento | Seção |
 |---|---|
-| DDD Segmentation | §4.1 BC-03 Partner Management |
-| DDD Segmentation | §6 Data Ownership — Partner Management |
-| Data Model | §3 Partner Management (BC-03) |
-| Context Map | relations.md — Opportunity Pipeline → Partner Management |
+| Design | docs/product/modules/partner-management/design.md |
+| Requirements | docs/product/modules/partner-management/requirements.md |
+| Tasks | docs/product/modules/partner-management/tasks.md |
+| ADR-0001 Multi-tenant RLS | docs/product/adr/0001-isolamento-multi-tenant-defesa-em-profundidade.md |
+| DDD Segmentation BC-03 | docs/product/ddd/subdomains/supporting/partner-management/README.md |
+| Data Model BC-03 | docs/product/data-model/data-model.md §BC-03 |
+| TRD Endpoints §8.4 | docs/product/trd/trd.md §8.4 |
+| Alertas | services/partner-management/observability/alerts.yaml |
+| Approvals | services/partner-management/approvals.yaml |

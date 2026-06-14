@@ -91,35 +91,35 @@ Onda é atributo (`campo **Onda**` no header da TASK) e seção de agrupamento v
 
 | TASK | Título | Onda | Branch | Status |
 |------|--------|------|--------|--------|
-| TASK-01 | Solution .NET + 5 projetos Clean Architecture | Onda 1 | `feat/partner-management/01-bootstrap-solution` | [ ] |
-| TASK-02 | Architecture.Tests e CI mínimo | Onda 1 | `feat/partner-management/02-architecture-tests` | [ ] |
-| TASK-03 | Objetos de valor PartnerName, PartnerRole, Percentage, CommissionDefaults | Onda 2 | `feat/partner-management/03-value-objects-core` | [ ] |
-| TASK-04 | Objetos de valor PartnerContact, Email, Phone | Onda 2 | `feat/partner-management/04-value-objects-contact` | [ ] |
-| TASK-05 | Agregado Partner: invariantes e métodos de comportamento | Onda 2 | `feat/partner-management/05-partner-aggregate` | [ ] |
-| TASK-06 | Domain Events e interface IPartnerRepository | Onda 2 | `feat/partner-management/06-domain-events-repo-interface` | [ ] |
-| TASK-07 | State machine PartnerStatus e Specifications | Onda 2 | `feat/partner-management/07-status-specifications` | [ ] |
-| TASK-08 | PBT-02 e PBT-03 — Domain Tests | Onda 2 | `test/partner-management/08-pbt-domain` | [ ] |
-| TASK-09 | Commands CreatePartner e UpdatePartner com handlers e validators | Onda 3 | `feat/partner-management/09-create-update-commands` | [ ] |
-| TASK-10 | Commands DeactivatePartner e ReactivatePartner com handlers | Onda 3 | `feat/partner-management/10-deactivate-reactivate` | [ ] |
-| TASK-11 | Queries ListPartners, GetPartnerById, GetPartnerEligibility | Onda 3 | `feat/partner-management/11-partner-queries` | [ ] |
-| TASK-12 | Porta IPartnerCommissionReadPort e queries de comissão | Onda 3 | `feat/partner-management/12-commission-queries` | [ ] |
-| TASK-13 | Pipeline behaviors MediatR | Onda 3 | `feat/partner-management/13-pipeline-behaviors` | [ ] |
-| TASK-14 | PBT-01 e PBT-05 — Application Tests | Onda 3 | `test/partner-management/14-pbt-application` | [ ] |
-| TASK-15 | EF Core DbContext, mapeamento e filtro global de tenant | Onda 4 | `feat/partner-management/15-ef-dbcontext` | [ ] |
-| TASK-16 | Migrations: partners + outbox + idempotency + índices + RLS | Onda 4 | `feat/partner-management/16-migrations-rls` | [ ] |
-| TASK-17 | PartnerRepository, TenantContext e RLS interceptor | Onda 4 | `feat/partner-management/17-repository-tenant-rls` | [ ] |
-| TASK-18 | Outbox transacional e AuditPublisher | Onda 4 | `feat/partner-management/18-outbox-audit` | [ ] |
-| TASK-19 | PartnerCommissionReadAdapter (adaptador do pipeline) | Onda 4 | `feat/partner-management/19-commission-read-adapter` | [ ] |
-| TASK-20 | CanonicalRoleProvider, PartnerPiiMasker e idempotência de escrita | Onda 4 | `feat/partner-management/20-roles-pii-idempotency` | [ ] |
-| TASK-21 | PBT-04 — Isolamento por tenant (gate CI) | Onda 4 | `test/partner-management/21-pbt-tenant-isolation` | [ ] |
-| TASK-22 | DTOs de contratos (request/response/eventos) | Onda 5 | `feat/partner-management/22-contracts-dtos` | [ ] |
-| TASK-23 | PartnersController CRUD e middleware | Onda 5 | `feat/partner-management/23-controller-crud` | [ ] |
-| TASK-24 | Endpoints deactivate/reactivate/eligibility/commissions | Onda 5 | `feat/partner-management/24-controller-actions` | [ ] |
-| TASK-25 | Testes de contrato Pact, RBAC e catálogo de erros | Onda 5 | `test/partner-management/25-api-contract-rbac` | [ ] |
-| TASK-26 | Observabilidade: logs estruturados, métricas e traces | Onda 6 | `feat/partner-management/26-observability` | [ ] |
-| TASK-27 | PartnerPiiMasker aplicado e teste anti-PII (gate CI) | Onda 6 | `feat/partner-management/27-pii-masking` | [ ] |
-| TASK-28 | Resiliência do IPartnerCommissionReadPort | Onda 6 | `feat/partner-management/28-commission-resilience` | [ ] |
-| TASK-29 | Documentação OpenAPI, DoD e fechamento do módulo | Onda 6 | `docs/partner-management/29-openapi-dod` | [ ] |
+| TASK-01 | Solution .NET + 5 projetos Clean Architecture | Onda 1 | `feat/partner-management/01-bootstrap-solution` | [X] |
+| TASK-02 | Architecture.Tests e CI mínimo | Onda 1 | `feat/partner-management/02-architecture-tests` | [X] |
+| TASK-03 | Objetos de valor PartnerName, PartnerRole, Percentage, CommissionDefaults | Onda 2 | `feat/partner-management/03-value-objects-core` | [X] |
+| TASK-04 | Objetos de valor PartnerContact, Email, Phone | Onda 2 | `feat/partner-management/04-value-objects-contact` | [X] |
+| TASK-05 | Agregado Partner: invariantes e métodos de comportamento | Onda 2 | `feat/partner-management/05-partner-aggregate` | [X] |
+| TASK-06 | Domain Events e interface IPartnerRepository | Onda 2 | `feat/partner-management/06-domain-events-repo-interface` | [X] |
+| TASK-07 | State machine PartnerStatus e Specifications | Onda 2 | `feat/partner-management/07-status-specifications` | [X] |
+| TASK-08 | PBT-02 e PBT-03 — Domain Tests | Onda 2 | `test/partner-management/08-pbt-domain` | [X] |
+| TASK-09 | Commands CreatePartner e UpdatePartner com handlers e validators | Onda 3 | `feat/partner-management/09-create-update-commands` | [X] |
+| TASK-10 | Commands DeactivatePartner e ReactivatePartner com handlers | Onda 3 | `feat/partner-management/10-deactivate-reactivate` | [X] |
+| TASK-11 | Queries ListPartners, GetPartnerById, GetPartnerEligibility | Onda 3 | `feat/partner-management/11-partner-queries` | [X] |
+| TASK-12 | Porta IPartnerCommissionReadPort e queries de comissão | Onda 3 | `feat/partner-management/12-commission-queries` | [X] |
+| TASK-13 | Pipeline behaviors MediatR | Onda 3 | `feat/partner-management/13-pipeline-behaviors` | [X] |
+| TASK-14 | PBT-01 e PBT-05 — Application Tests | Onda 3 | `test/partner-management/14-pbt-application` | [X] |
+| TASK-15 | EF Core DbContext, mapeamento e filtro global de tenant | Onda 4 | `feat/partner-management/15-ef-dbcontext` | [X] |
+| TASK-16 | Migrations: partners + outbox + idempotency + índices + RLS | Onda 4 | `feat/partner-management/16-migrations-rls` | [X] |
+| TASK-17 | PartnerRepository, TenantContext e RLS interceptor | Onda 4 | `feat/partner-management/17-repository-tenant-rls` | [X] |
+| TASK-18 | Outbox transacional e AuditPublisher | Onda 4 | `feat/partner-management/18-outbox-audit` | [X] |
+| TASK-19 | PartnerCommissionReadAdapter (adaptador do pipeline) | Onda 4 | `feat/partner-management/19-commission-read-adapter` | [X] |
+| TASK-20 | CanonicalRoleProvider, PartnerPiiMasker e idempotência de escrita | Onda 4 | `feat/partner-management/20-roles-pii-idempotency` | [X] |
+| TASK-21 | PBT-04 — Isolamento por tenant (gate CI) | Onda 4 | `test/partner-management/21-pbt-tenant-isolation` | [X] |
+| TASK-22 | DTOs de contratos (request/response/eventos) | Onda 5 | `feat/partner-management/22-contracts-dtos` | [X] |
+| TASK-23 | PartnersController CRUD e middleware | Onda 5 | `feat/partner-management/23-controller-crud` | [X] |
+| TASK-24 | Endpoints deactivate/reactivate/eligibility/commissions | Onda 5 | `feat/partner-management/24-controller-actions` | [X] |
+| TASK-25 | Testes de contrato Pact, RBAC e catálogo de erros | Onda 5 | `test/partner-management/25-api-contract-rbac` | [X] |
+| TASK-26 | Observabilidade: logs estruturados, métricas e traces | Onda 6 | `feat/partner-management/26-observability` | [X] |
+| TASK-27 | PartnerPiiMasker aplicado e teste anti-PII (gate CI) | Onda 6 | `feat/partner-management/27-pii-masking` | [X] |
+| TASK-28 | Resiliência do IPartnerCommissionReadPort | Onda 6 | `feat/partner-management/28-commission-resilience` | [X] |
+| TASK-29 | Documentação OpenAPI, DoD e fechamento do módulo | Onda 6 | `docs/partner-management/29-openapi-dod` | [X] |
 
 ---
 
@@ -991,7 +991,7 @@ Cobrir por testes automatizados o catálogo completo de erros (PM-ERR-001..011),
 | **Onda** | Onda 6 — Hardening |
 | **Branch** | `feat/partner-management/26-observability` |
 | **Worktree** | `git worktree add ../worktrees/partner-management/26-observability -b feat/partner-management/26-observability` |
-| **Status** | [ ] |
+| **Status** | [X] |
 | **Depende de** | TASK-25 |
 | **Entregável** | Logs estruturados JSON com `correlation_id`/`tenant_id`/`partner_id`/`action` (sem PII); métricas Prometheus `partners_created_total`, `partners_deactivated_total`, `partners_reactivated_total`, `partner_commission_view_duration_seconds`; spans OpenTelemetry em handlers e no read port; health/readiness/liveness |
 | **Mapeia** | RNF 5, design §11, ADR-0001 |
@@ -1025,7 +1025,7 @@ Implementar os três pilares de observabilidade conforme design §11. Logs estru
 | **Onda** | Onda 6 — Hardening |
 | **Branch** | `feat/partner-management/27-pii-masking` |
 | **Worktree** | `git worktree add ../worktrees/partner-management/27-pii-masking -b feat/partner-management/27-pii-masking` |
-| **Status** | [ ] |
+| **Status** | [X] |
 | **Depende de** | TASK-26 |
 | **Entregável** | `PartnerPiiMasker` aplicado em todos os pontos de saída (logs, traces, `delta_json` de auditoria, payloads de evento); teste automatizado de scan anti-PII verde como gate CI; pendência VAL-PARTNER-01 registrada em `approvals.yaml` |
 | **Mapeia** | RNF 4, DD-008, design §11, RISK-PM-02, RISK-PM-03 |
@@ -1058,7 +1058,7 @@ Garantir por teste automatizado que `partner.name`, `contact_email` e `contact_p
 | **Onda** | Onda 6 — Hardening |
 | **Branch** | `feat/partner-management/28-commission-resilience` |
 | **Worktree** | `git worktree add ../worktrees/partner-management/28-commission-resilience -b feat/partner-management/28-commission-resilience` |
-| **Status** | [ ] |
+| **Status** | [X] |
 | **Depende de** | TASK-27 |
 | **Entregável** | Timeout, retry com backoff exponencial e circuit breaker configurados no `PartnerCommissionReadAdapter`; degradação parcial da seção de comissão sem derrubar o cadastro |
 | **Mapeia** | RISK-PM-06, design §15, design §6.4, DD-003 |
@@ -1092,7 +1092,7 @@ Implementar políticas de resiliência no adaptador do read port usando Polly: t
 | **Onda** | Onda 6 — Hardening |
 | **Branch** | `docs/partner-management/29-openapi-dod` |
 | **Worktree** | `git worktree add ../worktrees/partner-management/29-openapi-dod -b docs/partner-management/29-openapi-dod` |
-| **Status** | [ ] |
+| **Status** | [X] |
 | **Depende de** | TASK-28 |
 | **Entregável** | OpenAPI atualizado com todos os endpoints, erros e esquemas; DoD de design §19 verificado item a item; README do módulo sincronizado; RISK-PM-05 (divergência PUT vs PATCH) resolvido no README |
 | **Mapeia** | Req 1..12, RNF 1..7, design §19 |
@@ -1123,39 +1123,39 @@ Encerrar o módulo verificando cada item do DoD de design §19. Atualizar OpenAP
 
 | Origem | Descrição | TASKs | Status |
 |--------|-----------|-------|--------|
-| Req 1 | Cadastrar parceiro (nome, papel, percentuais, ativo) | TASK-03, TASK-05, TASK-09, TASK-22, TASK-23 | [ ] |
-| Req 2 | Editar parceiro (sem alterar comissão consolidada) | TASK-05, TASK-09, TASK-22, TASK-23 | [ ] |
-| Req 3 | Inativar e reativar parceiro (soft-delete idempotente) | TASK-07, TASK-10, TASK-24 | [ ] |
-| Req 4 | Listar parceiros para seleção (ativos, paginado) | TASK-11, TASK-23 | [ ] |
-| Req 5 | Papel tipado canônico (`partner_type`) | TASK-03, TASK-07, TASK-20 | [ ] |
-| Req 6 | Percentuais padrão de comissão por componente | TASK-03, TASK-05, TASK-08, TASK-16 | [ ] |
-| Req 7 | Gerir contato do parceiro (e-mail, telefone) | TASK-04, TASK-05, TASK-09 | [ ] |
-| Req 8 | Bloquear vinculação de parceiro inativo | TASK-07, TASK-11, TASK-24 | [ ] |
-| Req 9 | Visão de comissão projetada × consolidada | TASK-12, TASK-14, TASK-19, TASK-24 | [ ] |
-| Req 10 | Relatório de comissões por parceiro por período | TASK-12, TASK-19, TASK-24, TASK-25 | [ ] |
-| Req 11 | Marcar percentuais pendentes pós-importação | TASK-07, TASK-09, TASK-11 | [ ] |
-| Req 12 | Parceiro sem credencial de acesso no MVP | TASK-05 (sem identity), TASK-29 (DoD) | [ ] |
-| RNF 1 | RBAC e isolamento por tenant | TASK-13, TASK-15, TASK-16, TASK-17, TASK-21, TASK-25 | [ ] |
-| RNF 2 | Auditoria append-only de toda escrita | TASK-06, TASK-18 | [ ] |
-| RNF 3 | Retenção indefinida de auditoria | TASK-18, TASK-29 | [ ] |
-| RNF 4 | Tratamento de PII no cadastro (LGPD) | TASK-04, TASK-06, TASK-20, TASK-27 | [ ] |
-| RNF 5 | Observabilidade da gestão de parceiros | TASK-13, TASK-26 | [ ] |
-| RNF 6 | Integridade dos percentuais e valores monetários | TASK-03, TASK-08, TASK-16 | [ ] |
-| RNF 7 | Desempenho da listagem e da visão de comissão | TASK-16 (índices), TASK-19, TASK-28 | [ ] |
-| PBT-01 | Conservação da soma de comissão por parceiro | TASK-14 | [ ] |
-| PBT-02 | Idempotência da inativação/reativação | TASK-07, TASK-08, TASK-10 | [ ] |
-| PBT-03 | Round-trip e domínio dos percentuais | TASK-03, TASK-08 | [ ] |
-| PBT-04 | Isolamento por tenant (anti-enumeração) | TASK-21 | [ ] |
-| PBT-05 | Imutabilidade da comissão consolidada | TASK-14 | [ ] |
-| DD-001 | Isolamento multi-tenant em profundidade (RLS) | TASK-15, TASK-16, TASK-17, TASK-21 | [ ] |
-| DD-002 | Parceiro sem credencial no MVP | TASK-05, TASK-29 | [ ] |
-| DD-003 | Visão de comissão via read model; sem recálculo | TASK-12, TASK-19, TASK-24 | [ ] |
-| DD-004 | Percentuais como `decimal` NUMERIC(5,2); comissão em centavos no pipeline | TASK-03, TASK-08, TASK-16 | [ ] |
-| DD-005 | Papel tipado validado contra lista canônica configurável | TASK-07, TASK-20 | [ ] |
-| DD-006 | Inativação/reativação soft-delete idempotente | TASK-07, TASK-10 | [ ] |
-| DD-007 | Bloqueio de vínculo de inativo enforced no pipeline | TASK-11, TASK-24 | [ ] |
-| DD-008 | `partner.name`/contato como possível PII | TASK-04, TASK-06, TASK-20, TASK-27 | [ ] |
-| ADR-0001 | Isolamento multi-tenant defesa em profundidade | TASK-15, TASK-16, TASK-17, TASK-21 | [ ] |
+| Req 1 | Cadastrar parceiro (nome, papel, percentuais, ativo) | TASK-03, TASK-05, TASK-09, TASK-22, TASK-23 | [X] |
+| Req 2 | Editar parceiro (sem alterar comissão consolidada) | TASK-05, TASK-09, TASK-22, TASK-23 | [X] |
+| Req 3 | Inativar e reativar parceiro (soft-delete idempotente) | TASK-07, TASK-10, TASK-24 | [X] |
+| Req 4 | Listar parceiros para seleção (ativos, paginado) | TASK-11, TASK-23 | [X] |
+| Req 5 | Papel tipado canônico (`partner_type`) | TASK-03, TASK-07, TASK-20 | [X] |
+| Req 6 | Percentuais padrão de comissão por componente | TASK-03, TASK-05, TASK-08, TASK-16 | [X] |
+| Req 7 | Gerir contato do parceiro (e-mail, telefone) | TASK-04, TASK-05, TASK-09 | [X] |
+| Req 8 | Bloquear vinculação de parceiro inativo | TASK-07, TASK-11, TASK-24 | [X] |
+| Req 9 | Visão de comissão projetada × consolidada | TASK-12, TASK-14, TASK-19, TASK-24 | [X] |
+| Req 10 | Relatório de comissões por parceiro por período | TASK-12, TASK-19, TASK-24, TASK-25 | [X] |
+| Req 11 | Marcar percentuais pendentes pós-importação | TASK-07, TASK-09, TASK-11 | [X] |
+| Req 12 | Parceiro sem credencial de acesso no MVP | TASK-05 (sem identity), TASK-29 (DoD) | [X] |
+| RNF 1 | RBAC e isolamento por tenant | TASK-13, TASK-15, TASK-16, TASK-17, TASK-21, TASK-25 | [X] |
+| RNF 2 | Auditoria append-only de toda escrita | TASK-06, TASK-18 | [X] |
+| RNF 3 | Retenção indefinida de auditoria | TASK-18, TASK-29 | [X] |
+| RNF 4 | Tratamento de PII no cadastro (LGPD) | TASK-04, TASK-06, TASK-20, TASK-27 | [X] |
+| RNF 5 | Observabilidade da gestão de parceiros | TASK-13, TASK-26 | [X] |
+| RNF 6 | Integridade dos percentuais e valores monetários | TASK-03, TASK-08, TASK-16 | [X] |
+| RNF 7 | Desempenho da listagem e da visão de comissão | TASK-16 (índices), TASK-19, TASK-28 | [X] |
+| PBT-01 | Conservação da soma de comissão por parceiro | TASK-14 | [X] |
+| PBT-02 | Idempotência da inativação/reativação | TASK-07, TASK-08, TASK-10 | [X] |
+| PBT-03 | Round-trip e domínio dos percentuais | TASK-03, TASK-08 | [X] |
+| PBT-04 | Isolamento por tenant (anti-enumeração) | TASK-21 | [X] |
+| PBT-05 | Imutabilidade da comissão consolidada | TASK-14 | [X] |
+| DD-001 | Isolamento multi-tenant em profundidade (RLS) | TASK-15, TASK-16, TASK-17, TASK-21 | [X] |
+| DD-002 | Parceiro sem credencial no MVP | TASK-05, TASK-29 | [X] |
+| DD-003 | Visão de comissão via read model; sem recálculo | TASK-12, TASK-19, TASK-24 | [X] |
+| DD-004 | Percentuais como `decimal` NUMERIC(5,2); comissão em centavos no pipeline | TASK-03, TASK-08, TASK-16 | [X] |
+| DD-005 | Papel tipado validado contra lista canônica configurável | TASK-07, TASK-20 | [X] |
+| DD-006 | Inativação/reativação soft-delete idempotente | TASK-07, TASK-10 | [X] |
+| DD-007 | Bloqueio de vínculo de inativo enforced no pipeline | TASK-11, TASK-24 | [X] |
+| DD-008 | `partner.name`/contato como possível PII | TASK-04, TASK-06, TASK-20, TASK-27 | [X] |
+| ADR-0001 | Isolamento multi-tenant defesa em profundidade | TASK-15, TASK-16, TASK-17, TASK-21 | [X] |
 
 ---
 
