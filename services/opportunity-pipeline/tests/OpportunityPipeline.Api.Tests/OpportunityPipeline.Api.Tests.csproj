@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\OpportunityPipeline.Api\OpportunityPipeline.Api.csproj" />
+    <ProjectReference Include="..\..\src\OpportunityPipeline.Contracts\OpportunityPipeline.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
