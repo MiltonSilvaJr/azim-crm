@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    PartnerManagement.Domain
+    Papel: agregado Partner (Aggregate Root), objetos de valor (PartnerName, PartnerRole,
+           Percentage, CommissionDefaults, PartnerContact, Email, Phone, PartnerStatus),
+           domain events (PartnerCreated, PartnerCommissionPercentagesUpdated,
+           PartnerDeactivated, PartnerReactivated), interface IPartnerRepository,
+           specifications (CanonicalRoleSpecification, ActivePartnerSpecification,
+           TriagePendingSpecification, TenantScopeSpecification) e exceções de domínio.
+    Regra de dependência: Domain -> (nenhum projeto interno).
+    Domain não referencia EF Core, Npgsql, GCP SDK, web framework, MediatR ou mensageria.
+    Módulo: BC-03 Partner Management (Supporting Subdomain, design §3).
+  -->
+  <PropertyGroup>
+    <AssemblyName>PartnerManagement.Domain</AssemblyName>
+    <RootNamespace>PartnerManagement.Domain</RootNamespace>
+    <Description>Agregados, objetos de valor, eventos de domínio, specifications e interface IPartnerRepository do módulo partner-management. Sem dependência de infraestrutura (Clean Architecture, DDD).</Description>
+  </PropertyGroup>
+</Project>

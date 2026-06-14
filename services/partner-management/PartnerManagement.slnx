@@ -1,0 +1,33 @@
+<Solution>
+  <!--
+    PartnerManagement.slnx — formato XML nativo .NET 10
+    Módulo: BC-03 Partner Management (Gestão de Parceiros Comissionados — Supporting Subdomain)
+    Estrutura: 5 projetos de produção + 5 de teste (Clean Architecture + DDD).
+
+    Regra de dependência (validada por Architecture.Tests, design §3):
+      Api            -> Application, Infrastructure, Contracts
+      Application    -> Domain, Contracts (NUNCA Infrastructure)
+      Infrastructure -> Application, Domain, Contracts
+      Domain         -> (nenhum projeto interno)
+      Contracts      -> (nenhum projeto interno)
+
+    ADRs aplicáveis: ADR-0001 (isolamento multi-tenant em defesa em profundidade),
+                     ADR-0002 (snapshot imutável de comissão — pertence ao opportunity-pipeline),
+                     ADR-0003 (retenção de logs/auditoria).
+    Decisões inline: DD-001..DD-008 (design.md).
+  -->
+  <Folder Name="/src/">
+    <Project Path="src/PartnerManagement.Contracts/PartnerManagement.Contracts.csproj" />
+    <Project Path="src/PartnerManagement.Domain/PartnerManagement.Domain.csproj" />
+    <Project Path="src/PartnerManagement.Application/PartnerManagement.Application.csproj" />
+    <Project Path="src/PartnerManagement.Infrastructure/PartnerManagement.Infrastructure.csproj" />
+    <Project Path="src/PartnerManagement.Api/PartnerManagement.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PartnerManagement.Domain.Tests/PartnerManagement.Domain.Tests.csproj" />
+    <Project Path="tests/PartnerManagement.Application.Tests/PartnerManagement.Application.Tests.csproj" />
+    <Project Path="tests/PartnerManagement.Infrastructure.Tests/PartnerManagement.Infrastructure.Tests.csproj" />
+    <Project Path="tests/PartnerManagement.Api.Tests/PartnerManagement.Api.Tests.csproj" />
+    <Project Path="tests/PartnerManagement.Architecture.Tests/PartnerManagement.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>

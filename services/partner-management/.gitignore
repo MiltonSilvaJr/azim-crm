@@ -1,0 +1,19 @@
+# Artefatos de build .NET
+bin/
+obj/
+
+# Pacotes NuGet locais (restaurados pelo dotnet restore)
+*.user
+*.suo
+.vs/
+
+# Arquivos de cobertura e relatórios de teste
+coverage/
+TestResults/
+*.coverage
+*.coveragexml
+
+# Arquivos temporários de IDE
+.idea/
+.vscode/settings.json
+*.DotSettings.user

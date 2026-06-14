@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    PartnerManagement.Application
+    Papel: commands (CreatePartner, UpdatePartner, DeactivatePartner, ReactivatePartner),
+           queries (ListPartners, GetPartnerById, GetPartnerEligibility,
+           GetPartnerCommissionView, GetPartnerCommissionReport), handlers MediatR,
+           pipeline behaviors (CorrelationLogging, TenantScope, Validation,
+           Authorization, Transaction), ports (IPartnerCommissionReadPort,
+           IAuditPublisher, IClock, ICanonicalRoleProvider) e validators FluentValidation.
+    Regra de dependência: Application -> Domain, Contracts. NUNCA referencia Infrastructure.
+    Módulo: BC-03 Partner Management (design §3, design §5).
+  -->
+  <PropertyGroup>
+    <AssemblyName>PartnerManagement.Application</AssemblyName>
+    <RootNamespace>PartnerManagement.Application</RootNamespace>
+    <Description>Casos de uso, ports (interfaces) e pipeline behaviors do módulo partner-management. Nenhuma referência a Infrastructure (Clean Architecture).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PartnerManagement.Domain\PartnerManagement.Domain.csproj" />
+    <ProjectReference Include="..\PartnerManagement.Contracts\PartnerManagement.Contracts.csproj" />
+  </ItemGroup>
+
+  <!-- InternalsVisibleTo: expõe internal sealed handlers ao projeto de testes -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>PartnerManagement.Application.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- MediatR: desacopla controllers de handlers (clean-architecture rule §10) -->
+    <PackageReference Include="MediatR" Version="12.5.0" />
+    <!-- FluentValidation: validação sintática na borda (ValidationBehavior) -->
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <!-- FluentValidation DI: AddValidatorsFromAssembly para registro em ApplicationServiceExtensions -->
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <!-- Abstrações de DI: IServiceCollection para ApplicationServiceExtensions -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <!-- Abstrações de logging estruturado (observabilidade — RNF 5) -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <!-- Options pattern para configurações -->
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+  </ItemGroup>
+</Project>

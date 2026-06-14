@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!--
+    PartnerManagement.Api
+    Papel: controllers REST (PartnersController), middleware (CorrelationIdMiddleware,
+           TenantResolutionMiddleware, ExceptionHandlingMiddleware), mapeamento DTO -> command/query,
+           health checks e configuração do pipeline ASP.NET Core.
+    Regra de dependência: Api -> Application, Infrastructure, Contracts.
+    Nenhuma lógica de negócio nos controllers — tudo delegado para Application.
+    Módulo: BC-03 Partner Management (design §3, design §8).
+  -->
+  <PropertyGroup>
+    <AssemblyName>PartnerManagement.Api</AssemblyName>
+    <RootNamespace>PartnerManagement.Api</RootNamespace>
+    <Description>Pipeline HTTP, controllers REST e middleware do módulo partner-management. Nenhuma lógica de negócio nos controllers (Clean Architecture).</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PartnerManagement.Application\PartnerManagement.Application.csproj" />
+    <ProjectReference Include="..\PartnerManagement.Infrastructure\PartnerManagement.Infrastructure.csproj" />
+    <ProjectReference Include="..\PartnerManagement.Contracts\PartnerManagement.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Autenticação JWT (RNF 1, rule jwt-permissions.md) -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
+    <!-- OpenAPI/Swagger (TASK-29) -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
+    <!-- FluentValidation DI extensions -->
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+  </ItemGroup>
+</Project>
