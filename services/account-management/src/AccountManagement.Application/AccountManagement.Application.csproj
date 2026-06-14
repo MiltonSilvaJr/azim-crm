@@ -19,6 +19,13 @@
     <ProjectReference Include="..\AccountManagement.Contracts\AccountManagement.Contracts.csproj" />
   </ItemGroup>
 
+  <!-- InternalsVisibleTo: expõe internal sealed handlers ao projeto de testes -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>AccountManagement.Application.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
   <ItemGroup>
     <!-- MediatR: desacopla controllers de handlers (clean-architecture rule §10) -->
     <PackageReference Include="MediatR" Version="12.5.0" />
