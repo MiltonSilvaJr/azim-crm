@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Digest.Infrastructure.Tests
+    Foco: repositórios + filtro global + RLS (Testcontainers + Postgres real),
+          Outbox, token_hash, purge (TASK-14..TASK-18).
+    Usa Testcontainers para testes de integração com PostgreSQL real (design §13).
+    Coverlet configurado via Directory.Build.props.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Digest.Infrastructure.Tests</AssemblyName>
+    <RootNamespace>Digest.Infrastructure.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Infrastructure sob teste -->
+    <ProjectReference Include="..\..\src\Digest.Infrastructure\Digest.Infrastructure.csproj" />
+    <!-- Application: contratos das portas -->
+    <ProjectReference Include="..\..\src\Digest.Application\Digest.Application.csproj" />
+    <!-- Domínio: entidades e objetos de valor -->
+    <ProjectReference Include="..\..\src\Digest.Domain\Digest.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Testcontainers: Postgres real para testes de integração de RLS e repositórios -->
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.4.0" />
+    <!-- NSubstitute: stubs auxiliares -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+  </ItemGroup>
+</Project>

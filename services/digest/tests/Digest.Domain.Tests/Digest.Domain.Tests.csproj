@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Digest.Domain.Tests
+    Foco: TenantEligibility (DST, PBT-01), RecipientSelectionPolicy (totalidade, PBT-03),
+          state machine EmailDigestLog/DigestActionToken, MoneyCents, ActionToken,
+          DigestSection, DigestContent.
+    Cobertura alvo: >= 95% em Digest.Domain (TASK-03 criterios de aceite).
+    Coverlet configurado via Directory.Build.props.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Digest.Domain.Tests</AssemblyName>
+    <RootNamespace>Digest.Domain.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Domínio sob teste -->
+    <ProjectReference Include="..\..\src\Digest.Domain\Digest.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- FsCheck.Xunit: property-based testing (PBT-01, PBT-03) -->
+    <PackageReference Include="FsCheck.Xunit" Version="2.16.6" />
+    <!-- NSubstitute: mocks leves para injeção de IDateTimeZoneProvider -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!--
+    Digest.Api
+    Papel: borda HTTP do worker — trigger OIDC/WIF e consumer Pub/Sub.
+    Contém: DigestTriggerEndpoint (/internal/digest/trigger), PerTenantConsumer (Pub/Sub push),
+            health checks (live/ready), startup e DI.
+
+    Regra de dependência (design §3.1): Api -> Application, Infrastructure, Contracts.
+    RNF 8: trigger responde 202 antes de concluir processamento (assíncrono).
+    Segurança: OIDC/WIF no trigger; Pub/Sub push autenticado no consumer (design §10).
+  -->
+  <PropertyGroup>
+    <AssemblyName>Digest.Api</AssemblyName>
+    <RootNamespace>Digest.Api</RootNamespace>
+    <Description>Borda HTTP do azim-digest-worker: DigestTriggerEndpoint (OIDC/WIF), PerTenantConsumer (Pub/Sub push) e health checks (design §3.1, §8, §10).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Api -> Application (regra de dependência design §3.1) -->
+    <ProjectReference Include="..\Digest.Application\Digest.Application.csproj" />
+    <!-- Api -> Infrastructure (regra de dependência design §3.1) -->
+    <ProjectReference Include="..\Digest.Infrastructure\Digest.Infrastructure.csproj" />
+    <!-- Api -> Contracts (regra de dependência design §3.1) -->
+    <ProjectReference Include="..\Digest.Contracts\Digest.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- MediatR 12.x: DI nativo embutido (AddMediatR disponível em MediatR 12+) -->
+    <PackageReference Include="MediatR" Version="12.4.1" />
+  </ItemGroup>
+</Project>
