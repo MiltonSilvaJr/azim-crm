@@ -17,6 +17,7 @@ public sealed class MembershipHandlerTests
     private readonly ITenantAdminCounter _adminCounter = Substitute.For<ITenantAdminCounter>();
     private readonly IMembershipCache _cache = Substitute.For<IMembershipCache>();
     private readonly ITenantContext _tenantContext = Substitute.For<ITenantContext>();
+    private readonly IEventOutbox _outbox = Substitute.For<IEventOutbox>();
 
     private readonly Guid _tenantId = Guid.NewGuid();
     private readonly DateTimeOffset _now = DateTimeOffset.UtcNow;
@@ -97,7 +98,7 @@ public sealed class MembershipHandlerTests
         _userRepo.GetByIdAsync(user.Id, Arg.Any<CancellationToken>()).Returns(user);
         _adminCounter.CountActiveTenantAdminsAsync(_tenantId, Arg.Any<CancellationToken>()).Returns(1);
 
-        var handler = new ChangeMembershipRoleCommandHandler(_userRepo, _adminCounter, _cache, _tenantContext);
+        var handler = new ChangeMembershipRoleCommandHandler(_userRepo, _adminCounter, _cache, _tenantContext, _outbox);
 
         // Act
         var act = () => handler.Handle(
@@ -119,7 +120,7 @@ public sealed class MembershipHandlerTests
         _userRepo.GetByIdAsync(user.Id, Arg.Any<CancellationToken>()).Returns(user);
         _adminCounter.CountActiveTenantAdminsAsync(_tenantId, Arg.Any<CancellationToken>()).Returns(2);
 
-        var handler = new ChangeMembershipRoleCommandHandler(_userRepo, _adminCounter, _cache, _tenantContext);
+        var handler = new ChangeMembershipRoleCommandHandler(_userRepo, _adminCounter, _cache, _tenantContext, _outbox);
 
         // Act
         await handler.Handle(
@@ -140,7 +141,7 @@ public sealed class MembershipHandlerTests
         user.AssignMembership(buId, Role.Vendedor, Guid.NewGuid());
         _userRepo.GetByIdAsync(user.Id, Arg.Any<CancellationToken>()).Returns(user);
 
-        var handler = new ChangeMembershipRoleCommandHandler(_userRepo, _adminCounter, _cache, _tenantContext);
+        var handler = new ChangeMembershipRoleCommandHandler(_userRepo, _adminCounter, _cache, _tenantContext, _outbox);
 
         // Act
         await handler.Handle(
