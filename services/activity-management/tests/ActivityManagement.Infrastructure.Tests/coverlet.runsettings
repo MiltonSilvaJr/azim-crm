@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Configuração de cobertura para ActivityManagement.Infrastructure.Tests.
+  Exclui classes que não contêm lógica verificável por testes de integração:
+  - Migrations (DDL SQL puro — executadas em produção por dotnet ef database update)
+  - ModelSnapshot (gerado pelo EF Core — não contém lógica de negócio)
+  - DesignTimeDbContextFactory (usada apenas pelo tooling dotnet ef)
+  Mapeia: TASK-16, critério de fechamento Onda 4 (Infrastructure.Tests ≥ 70%).
+-->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <ExcludeByAttribute>
+            System.CodeDom.Compiler.GeneratedCodeAttribute,
+            System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute
+          </ExcludeByAttribute>
+          <ExcludeByFile>
+            **/Migrations/*.cs,
+            **/Migrations/**/*.cs
+          </ExcludeByFile>
+          <Exclude>
+            [ActivityManagement.Infrastructure]ActivityManagement.Infrastructure.Persistence.Migrations.*,
+            [ActivityManagement.Infrastructure]ActivityManagement.Infrastructure.Persistence.ActivityManagementDbContextModelSnapshot,
+            [ActivityManagement.Infrastructure]ActivityManagement.Infrastructure.Persistence.DesignTimeDbContextFactory
+          </Exclude>
+          <Include>
+            [ActivityManagement.Infrastructure]*
+          </Include>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

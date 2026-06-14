@@ -253,6 +253,63 @@ public sealed class ActivityRepositoryTests : IAsyncLifetime
         items[0].OwnerId.Should().Be(ownerId);
     }
 
+    [Fact]
+    public async Task GetOverdueByOwnerAsync_Returns_Only_Overdue_For_Owner()
+    {
+        // Arrange
+        var ownerId   = Guid.NewGuid();
+        var overdue   = CreateActivity(ownerId: ownerId, dueAt: Now.AddDays(-2));
+        var notOverdue = CreateActivity(ownerId: ownerId, dueAt: Now.AddDays(2));
+        var otherOwner = CreateActivity(dueAt: Now.AddDays(-2)); // owner diferente
+        await _repository.SaveAsync(overdue);
+        await _repository.SaveAsync(notOverdue);
+        await _repository.SaveAsync(otherOwner);
+
+        // Act
+        var result = await _repository.GetOverdueByOwnerAsync(ownerId, Now);
+
+        // Assert
+        result.Should().HaveCount(1);
+        result[0].Id.Should().Be(overdue.Id);
+    }
+
+    [Fact]
+    public async Task GetOpportunityIdsWithoutFollowupAsync_Returns_Ids_Without_Active_Activities()
+    {
+        // Arrange: oportunidade sem atividade ativa
+        var buId         = Guid.NewGuid();
+        var oppWithout   = Guid.NewGuid();
+        var oppWithActive = Guid.NewGuid();
+
+        // Atividade completada (terminal) → opp sem follow-up futuro
+        var completed = Activity.Create(TenantA, buId, Guid.NewGuid(),
+            ActivityType.Create("call"), "Concluída",
+            DueDate.Create(Now.AddDays(-1)), Now.AddDays(-1),
+            opportunityLink: OpportunityLink.Create(oppWithout));
+        completed.Complete(Now.AddDays(-1));
+
+        // Atividade pendente com due_at futura → opp com follow-up ativo
+        var active = Activity.Create(TenantA, buId, Guid.NewGuid(),
+            ActivityType.Create("meeting"), "Ativa",
+            DueDate.Create(Now.AddDays(2)), Now,
+            opportunityLink: OpportunityLink.Create(oppWithActive));
+
+        await _repository.SaveAsync(completed);
+        await _repository.SaveAsync(active);
+
+        var allOppIds = new Guid[] { oppWithout, oppWithActive };
+
+        // Act
+        var result = await _repository.GetOpportunityIdsWithoutFollowupAsync(
+            buId, allOppIds, referenceInstant: Now);
+
+        // Assert: apenas a oportunidade sem atividade ativa futura
+        result.Should().Contain(oppWithout,
+            because: "oportunidade com apenas atividade concluída não tem follow-up ativo futuro");
+        result.Should().NotContain(oppWithActive,
+            because: "oportunidade com atividade pendente futura tem follow-up ativo");
+    }
+
     // ── SQL do schema inicial (sem migrations EF, para simplicidade nos testes) ──
 
     private const string InitialSchemaSql = @"

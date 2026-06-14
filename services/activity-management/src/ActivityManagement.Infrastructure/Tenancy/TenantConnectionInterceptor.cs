@@ -20,8 +20,10 @@ public sealed class TenantConnectionInterceptor : DbConnectionInterceptor
     /// <summary>
     /// Inicializa o interceptor com o contexto que mantém o tenant corrente.
     /// </summary>
+    /// <exception cref="ArgumentNullException">Quando <paramref name="dbContext"/> é nulo.</exception>
     public TenantConnectionInterceptor(ActivityManagementDbContext dbContext)
     {
+        ArgumentNullException.ThrowIfNull(dbContext);
         _dbContext = dbContext;
     }
 
