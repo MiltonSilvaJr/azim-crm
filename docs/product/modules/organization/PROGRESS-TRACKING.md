@@ -17,7 +17,10 @@
 | 3 | Application (PBT-02/03) | TASK-07..14 | [X] (8 commits) — 95 App + PBT-02/03; GetRbacContextQuery + MembershipCacheProjector |
 | 4 | Infrastructure (RLS, Outbox/Inbox) | TASK-15..19 | [X] (5 commits) — 35 Infra (RLS Testcontainers); EF 9.0.6 |
 | 5 | API + Contracts | TASK-20..24 | [X] (5 commits) — 90 Api; RBAC/anti-enum; DI compose |
-| 6 | Hardening (PBT-01/05) | TASK-25..28 | [-] |
+| 6 | Hardening (PBT-01/05) | TASK-25..28 | [X] (4 commits) — observ/segurança/PBT-01/05/DoD |
+
+> **🎯 Módulo completo — 6/6 ondas, 28 TASKs, 398 testes verdes** (Domain 139 + Application 99 + Api 90 + Infrastructure 60 c/ Testcontainers RLS + Architecture 10). 7 PBTs. EF 9.0.6. PR #8.
+> **Provê:** `GetRbacContextQuery` (consumido pelo audit-log IBuScopeResolver / RISK-AUDIT-05) e `MembershipCacheProjector` (consumido pelo authentication MembershipCache). Inbox consome `TenantProvisioned` do tenant-administration.
 
 ## Detalhe por onda
 
