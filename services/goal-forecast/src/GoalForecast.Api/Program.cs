@@ -7,6 +7,7 @@ using GoalForecast.Api.Filters;
 using GoalForecast.Application.Behaviors;
 using GoalForecast.Application.Ports;
 using GoalForecast.Infrastructure.Membership;
+using GoalForecast.Infrastructure.Metrics;
 using GoalForecast.Infrastructure.Outbox;
 using GoalForecast.Infrastructure.Persistence;
 using GoalForecast.Infrastructure.Pipeline;
@@ -78,6 +79,11 @@ builder.Services.AddScoped(sp =>
 
     return new GoalForecastDbContext(optionsBuilder.Options, tenantId);
 });
+
+// ── Métricas de observabilidade (RNF 7.2, design §11) ────────────────────────
+// GoalForecastMetrics é singleton — instrumentos de métrica são thread-safe.
+builder.Services.AddSingleton<GoalForecastMetrics>();
+builder.Services.AddSingleton<IGoalForecastMetrics>(sp => sp.GetRequiredService<GoalForecastMetrics>());
 
 // ── Portas de infraestrutura ──────────────────────────────────────────────────
 builder.Services.AddScoped<IGoalRepository, GoalRepository>();

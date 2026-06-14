@@ -31,16 +31,19 @@ public sealed class CreateOrUpdateGoalCommandHandler
 {
     private readonly IGoalRepository _repository;
     private readonly IBuMembershipReader _membershipReader;
+    private readonly IGoalForecastMetrics _metrics;
 
     /// <summary>
     /// Inicializa o handler com as portas de saída necessárias.
     /// </summary>
     public CreateOrUpdateGoalCommandHandler(
         IGoalRepository repository,
-        IBuMembershipReader membershipReader)
+        IBuMembershipReader membershipReader,
+        IGoalForecastMetrics? metrics = null)
     {
         _repository = repository;
         _membershipReader = membershipReader;
+        _metrics = metrics ?? NullGoalForecastMetrics.Instance;
     }
 
     /// <inheritdoc/>
@@ -77,6 +80,8 @@ public sealed class CreateOrUpdateGoalCommandHandler
             goal = Goal.Create(tenantId, scope, period, valorMeta);
             await _repository.Add(goal, cancellationToken);
             created = true;
+            // Métrica de criação — sem valorMeta (RNF-7.3)
+            _metrics.RecordGoalCreated(tenantId.ToString(), scope.BuId.ToString());
         }
         else
         {
@@ -85,6 +90,8 @@ public sealed class CreateOrUpdateGoalCommandHandler
             await _repository.Update(existing, cancellationToken);
             goal = existing;
             created = false;
+            // Métrica de atualização — sem delta de valorMeta (RNF-7.3)
+            _metrics.RecordGoalUpdated(tenantId.ToString(), scope.BuId.ToString());
         }
 
         // Passo 6: events despachados pelo repositório (via outbox).

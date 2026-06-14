@@ -4,6 +4,7 @@ using GoalForecast.Domain.Policies;
 using GoalForecast.Domain.ValueObjects;
 using MediatR;
 using AppException = GoalForecast.Application.Common.ApplicationException;
+using NullMetrics = GoalForecast.Application.Ports.NullGoalForecastMetrics;
 
 namespace GoalForecast.Application.Commands;
 
@@ -22,10 +23,14 @@ namespace GoalForecast.Application.Commands;
 public sealed class UpdateGoalByIdCommandHandler : IRequestHandler<UpdateGoalByIdCommand, GoalDto>
 {
     private readonly IGoalRepository _repository;
+    private readonly IGoalForecastMetrics _metrics;
 
-    public UpdateGoalByIdCommandHandler(IGoalRepository repository)
+    public UpdateGoalByIdCommandHandler(
+        IGoalRepository repository,
+        IGoalForecastMetrics? metrics = null)
     {
         _repository = repository;
+        _metrics = metrics ?? NullMetrics.Instance;
     }
 
     /// <inheritdoc/>
@@ -51,6 +56,9 @@ public sealed class UpdateGoalByIdCommandHandler : IRequestHandler<UpdateGoalByI
 
         // Passo 5: persiste (outbox via repositório)
         await _repository.Update(goal, cancellationToken);
+
+        // Métrica de atualização — sem delta (RNF-7.3)
+        _metrics.RecordGoalUpdated(tenantId.ToString(), goal.Scope.BuId.ToString());
 
         return new GoalDto(
             Id: goal.Id,

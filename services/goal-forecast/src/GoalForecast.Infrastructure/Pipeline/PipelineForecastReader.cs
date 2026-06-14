@@ -1,4 +1,5 @@
 using GoalForecast.Application.Ports;
+using GoalForecast.Infrastructure.Metrics;
 using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.CircuitBreaker;
@@ -25,6 +26,7 @@ public sealed class PipelineForecastReader : IPipelineForecastReader
 {
     private readonly IForecastViewSource _source;
     private readonly ILogger<PipelineForecastReader> _logger;
+    private readonly IGoalForecastMetrics _metrics;
     private readonly ResiliencePipeline<ForecastViewResult> _pipeline;
 
     /// <summary>
@@ -35,12 +37,14 @@ public sealed class PipelineForecastReader : IPipelineForecastReader
     public PipelineForecastReader(
         IForecastViewSource source,
         ILogger<PipelineForecastReader> logger,
+        IGoalForecastMetrics? metrics = null,
         int timeoutMs = 3_000,
         int failuresBeforeOpen = 5,
         int breakDurationMs = 30_000)
     {
         _source = source;
         _logger = logger;
+        _metrics = metrics ?? NullGoalForecastMetrics.Instance;
         _pipeline = BuildResiliencePipeline(timeoutMs, failuresBeforeOpen, breakDurationMs);
     }
 
@@ -79,6 +83,7 @@ public sealed class PipelineForecastReader : IPipelineForecastReader
                         "PipelineForecastReader: circuit breaker aberto. Degradação ativa. " +
                         "Próxima tentativa em {BreakDuration}.",
                         args.BreakDuration);
+                    _metrics.RecordCircuitOpen();
                     return ValueTask.CompletedTask;
                 }
             })
@@ -106,6 +111,8 @@ public sealed class PipelineForecastReader : IPipelineForecastReader
                         "PipelineForecastReader: falha na leitura do pipeline. " +
                         "Retornando pipelineUnavailable=true. Tipo: {ExceptionType}.",
                         args.Outcome.Exception?.GetType().Name ?? "unknown");
+
+                    _metrics.RecordPipelineReaderFailure(tenantId: null, buId: null);
 
                     return ValueTask.FromResult(Outcome.FromResult(ForecastViewResult.Unavailable));
                 }

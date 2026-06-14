@@ -16,11 +16,12 @@ public sealed class LoggingBehavior<TRequest, TResponse>
     where TRequest : notnull
 {
     // Campos de log estruturado canônicos (design §5.4, RNF 7.1).
-    internal const string FieldCorrelationId = "correlation_id";
-    internal const string FieldTenantId = "tenant_id";
-    internal const string FieldBuId = "bu_id";
-    internal const string FieldRequestType = "request_type";
-    internal const string FieldDurationMs = "duration_ms";
+    // public para inspeção por testes de observabilidade (TASK-28).
+    public const string FieldCorrelationId = "correlation_id";
+    public const string FieldTenantId = "tenant_id";
+    public const string FieldBuId = "bu_id";
+    public const string FieldRequestType = "request_type";
+    public const string FieldDurationMs = "duration_ms";
 
     private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger;
 
