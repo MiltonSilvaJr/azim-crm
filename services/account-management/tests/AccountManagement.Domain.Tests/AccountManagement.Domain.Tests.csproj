@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    AccountManagement.Domain.Tests
+    Foco: invariantes de Account/Contact, objetos de valor, NameNormalizer,
+          state machine de privacidade do contato, specifications e policies.
+    PBTs obrigatórios: PBT-01 (idempotência da normalização), PBT-02 (equivalência
+    por forma normalizada), PBT-03 (irreversibilidade da anonimização).
+    Meta de cobertura: Domain >= 95% (critério de fechamento da Onda 2).
+    Mapeia: design §13 (testes), TASK-02, TASK-03.
+  -->
+  <PropertyGroup>
+    <AssemblyName>AccountManagement.Domain.Tests</AssemblyName>
+    <RootNamespace>AccountManagement.Domain.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AccountManagement.Domain\AccountManagement.Domain.csproj" />
+  </ItemGroup>
+</Project>

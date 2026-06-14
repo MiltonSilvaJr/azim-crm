@@ -1,0 +1,31 @@
+<Solution>
+  <!--
+    AccountManagement.slnx — formato XML nativo .NET 10
+    Módulo: BC-02 Account Management (Gestão de Contas e Contatos — Supporting Subdomain)
+    Estrutura: 5 projetos de produção + 5 de teste (Clean Architecture + DDD).
+
+    Regra de dependência (validada por Architecture.Tests, design §3):
+      Api            -> Application, Infrastructure, Contracts
+      Application    -> Domain, Contracts (NUNCA Infrastructure)
+      Infrastructure -> Application, Domain, Contracts
+      Domain         -> (nenhum projeto interno)
+      Contracts      -> (nenhum projeto interno)
+
+    Decisões inline aplicáveis: DD-001..DD-007 (design.md §17).
+    ADRs aplicáveis: ADR-0001 (Multi-tenancy), nenhum ADR formal adicional no catálogo.
+  -->
+  <Folder Name="/src/">
+    <Project Path="src/AccountManagement.Contracts/AccountManagement.Contracts.csproj" />
+    <Project Path="src/AccountManagement.Domain/AccountManagement.Domain.csproj" />
+    <Project Path="src/AccountManagement.Application/AccountManagement.Application.csproj" />
+    <Project Path="src/AccountManagement.Infrastructure/AccountManagement.Infrastructure.csproj" />
+    <Project Path="src/AccountManagement.Api/AccountManagement.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AccountManagement.Domain.Tests/AccountManagement.Domain.Tests.csproj" />
+    <Project Path="tests/AccountManagement.Application.Tests/AccountManagement.Application.Tests.csproj" />
+    <Project Path="tests/AccountManagement.Infrastructure.Tests/AccountManagement.Infrastructure.Tests.csproj" />
+    <Project Path="tests/AccountManagement.Api.Tests/AccountManagement.Api.Tests.csproj" />
+    <Project Path="tests/AccountManagement.Architecture.Tests/AccountManagement.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>

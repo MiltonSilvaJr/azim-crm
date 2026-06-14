@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    AccountManagement.Api.Tests
+    Foco: contratos de endpoint (AccountsController, ContactsController), códigos HTTP,
+          RBAC enforcement, formato de erro padronizado (ACC-ERR-001..009),
+          middleware CorrelationId e ExceptionHandlingMiddleware.
+    Infra de teste: WebApplicationFactory para testes de integração de API.
+    PBTs obrigatórios: PBT-03 (nenhum endpoint retorna PII após anonimização — Onda 5).
+    Meta de cobertura: Api >= 80% (critério de fechamento da Onda 5).
+    Mapeia: design §8 (API Contracts), design §12 (catálogo de erros), TASK-13..TASK-15.
+  -->
+  <PropertyGroup>
+    <AssemblyName>AccountManagement.Api.Tests</AssemblyName>
+    <RootNamespace>AccountManagement.Api.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AccountManagement.Api\AccountManagement.Api.csproj" />
+    <ProjectReference Include="..\..\src\AccountManagement.Application\AccountManagement.Application.csproj" />
+    <ProjectReference Include="..\..\src\AccountManagement.Contracts\AccountManagement.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WebApplicationFactory para testes de integração de API -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
+    <!-- NSubstitute: mock de handlers e serviços de aplicação -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+  </ItemGroup>
+</Project>

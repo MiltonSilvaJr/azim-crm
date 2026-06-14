@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    AccountManagement.Application
+    Papel: commands (CreateAccount, UpdateAccount, CreateContact, UpdateContact, ForgetContact),
+           queries (SearchAccounts, SearchSimilarAccounts, GetAccountById, GetAccount360,
+           ListContacts), handlers MediatR, pipeline behaviors (CorrelationLogging,
+           TenantScope, Validation, PiiAccess, Transaction), ports (IOpportunityReadPort,
+           IActivityReadPort, IAuditPublisher, IClock) e validators FluentValidation.
+    Regra de dependência: Application -> Domain, Contracts. NUNCA referencia Infrastructure.
+  -->
+  <PropertyGroup>
+    <AssemblyName>AccountManagement.Application</AssemblyName>
+    <RootNamespace>AccountManagement.Application</RootNamespace>
+    <Description>Casos de uso, ports (interfaces) e pipeline behaviors do módulo account-management. Nenhuma referência a Infrastructure (Clean Architecture).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AccountManagement.Domain\AccountManagement.Domain.csproj" />
+    <ProjectReference Include="..\AccountManagement.Contracts\AccountManagement.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- MediatR: desacopla controllers de handlers (clean-architecture rule §10) -->
+    <PackageReference Include="MediatR" Version="12.5.0" />
+    <!-- FluentValidation: validação sintática na borda (ValidationBehavior) -->
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <!-- Abstrações de logging estruturado (observabilidade — RNF 9) -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <!-- Options pattern para configurações -->
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+  </ItemGroup>
+</Project>

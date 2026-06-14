@@ -91,7 +91,7 @@ Onda é atributo (`campo **Onda**` no header da TASK) e seção de agrupamento v
 
 | TASK | Título | Onda | Branch | Status |
 |------|--------|------|--------|--------|
-| TASK-01 | Solution .NET + 5 projetos Clean Architecture + Architecture.Tests | Onda 1 | `feat/account-management/01-bootstrap-clean-architecture` | [ ] |
+| TASK-01 | Solution .NET + 5 projetos Clean Architecture + Architecture.Tests | Onda 1 | `feat/account-management/01-bootstrap-clean-architecture` | [X] |
 | TASK-02 | Objetos de valor + NameNormalizer (PBT-01, PBT-02) | Onda 2 | `test/account-management/02-domain-value-objects-normalizer` | [ ] |
 | TASK-03 | Agregado Account + Contact + eventos + specifications + IAccountRepository (PBT-03) | Onda 2 | `test/account-management/03-domain-aggregate-events` | [ ] |
 | TASK-04 | Commands + Handlers de Account + queries de busca + Validators | Onda 3 | `feat/account-management/04-application-account-commands` | [ ] |
@@ -143,9 +143,9 @@ Onda é atributo (`campo **Onda**` no header da TASK) e seção de agrupamento v
 | **Onda** | Onda 1 — Bootstrap |
 | **Branch** | `feat/account-management/01-bootstrap-clean-architecture` |
 | **Worktree** | `git worktree add ../worktrees/account-management/01-bootstrap-clean-architecture -b feat/account-management/01-bootstrap-clean-architecture` |
-| **Status** | [ ] |
+| **Status** | [X] |
 | **Depende de** | Não aplicável |
-| **Entregável** | `AccountManagement.sln` com 5 projetos + `Architecture.Tests` verde + CI mínimo |
+| **Entregável** | `AccountManagement.slnx` com 5 projetos + `Architecture.Tests` verde + CI mínimo |
 | **Mapeia** | design §3, P1 |
 | **Camada principal** | DevOps, Tests |
 
@@ -155,18 +155,18 @@ Criar a estrutura base do módulo: solution `AccountManagement.sln`, projetos `D
 
 #### Subtasks
 
-- [ ] **ST-01 — Red:** escrever testes NetArchTest que falham verificando: `Domain` sem referência a outros projetos do módulo; `Contracts` sem referência a outros projetos; `Application` referencia apenas `Domain` e `Contracts`; `Infrastructure` referencia `Application` e `Domain`; `Api` referencia `Application` e `Infrastructure`.
-- [ ] **ST-02 — Green:** criar `AccountManagement.sln`, 5 projetos `.csproj` com referências corretas, `Architecture.Tests`; instalar dependências mínimas (MediatR, FluentValidation, EF Core, NetArchTest, FsCheck).
-- [ ] **ST-03 — Refactor:** ajustar namespaces (`AccountManagement.*`), adicionar `.editorconfig`, garantir build limpo sem warnings.
-- [ ] **ST-04 — Docs:** registrar estrutura de diretórios no README do módulo (seção de setup).
-- [ ] **ST-05 — Encerramento:** `dotnet build` verde; `Architecture.Tests` verde; commit `chore(account-management): bootstrap solution with clean architecture projects` + push.
+- [X] **ST-01 — Red:** escrever testes NetArchTest que falham verificando: `Domain` sem referência a outros projetos do módulo; `Contracts` sem referência a outros projetos; `Application` referencia apenas `Domain` e `Contracts`; `Infrastructure` referencia `Application` e `Domain`; `Api` referencia `Application` e `Infrastructure`.
+- [X] **ST-02 — Green:** criar `AccountManagement.slnx`, 5 projetos `.csproj` com referências corretas, `Architecture.Tests`; instalar dependências mínimas (MediatR, FluentValidation, EF Core, NetArchTest, FsCheck).
+- [X] **ST-03 — Refactor:** ajustar namespaces (`AccountManagement.*`), adicionar `.editorconfig`, garantir build limpo sem warnings.
+- [X] **ST-04 — Docs:** registrar estrutura de diretórios no README do módulo (seção de setup).
+- [X] **ST-05 — Encerramento:** `dotnet build` verde; `Architecture.Tests` verde; commit `chore(account-management): bootstrap solution with clean architecture projects` + push.
 
 #### Critérios de Aceite
 
-- [ ] `dotnet build` sem erros em todos os projetos
-- [ ] `Architecture.Tests` verde com todas as regras de dependência entre camadas
+- [X] `dotnet build` sem erros em todos os projetos
+- [X] `Architecture.Tests` verde com todas as regras de dependência entre camadas
 - [ ] CI mínimo configurado (build + architecture tests)
-- [ ] Nenhum warning novo introduzido
+- [X] Nenhum warning novo introduzido
 
 ---
 
