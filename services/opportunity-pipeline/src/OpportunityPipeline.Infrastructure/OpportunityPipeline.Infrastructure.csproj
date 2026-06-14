@@ -34,6 +34,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.0" />
     <!-- Npgsql 9.0.4 — driver PostgreSQL alinhado com os demais módulos -->
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <!-- Redis para cache de configuração (StageRef, OriginChannelRef — design §6.2) -->
