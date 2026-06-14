@@ -16,8 +16,8 @@
 | 2 | Domain | TASK-03..04 | [X] (2 commits) — 79 Domain + PBT-02/04; money 100% coverage |
 | 3 | Application | TASK-05..12 | [X] (8 commits) — 79 App + PBT-01/02/04/05; 5 relatórios + export CSV |
 | 4 | Infrastructure (views security_invoker, RLS, GCS) | TASK-13..19 | [X] (7 commits) — 28 Infra (views security_invoker, RLS PBT-03 Testcontainers, Dapper); EF 9.0.6 |
-| 5 | API + Contracts | TASK-20..22 | [-] |
-| 6 | Hardening | TASK-23..25 | [ ] |
+| 5 | API + Contracts | TASK-20..22 | [X] (3 commits) — 101 Api; RBAC/REPORT-ERR/anti-enum; dispatcher isola Api↔Domain |
+| 6 | Hardening | TASK-23..25 | [-] |
 
 ## Detalhe por onda
 
