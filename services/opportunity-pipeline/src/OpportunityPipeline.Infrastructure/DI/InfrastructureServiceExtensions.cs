@@ -106,6 +106,10 @@ public static class InfrastructureServiceExtensions
         services.AddMemoryCache();
         services.AddScoped<IIdempotencyStore, DI.InMemoryIdempotencyStore>();
 
+        // ---- Observabilidade: métricas (RNF 10.2, design §11, TASK-24) ----
+        // OpportunityMetrics é singleton — Meter deve ter vida longa.
+        services.AddSingleton<Observability.OpportunityMetrics>();
+
         return services;
     }
 }

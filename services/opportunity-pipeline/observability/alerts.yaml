@@ -1,0 +1,160 @@
+# Alertas do módulo opportunity-pipeline
+# Mapeia: TASK-24, RNF 1, RNF 10.2, RNF 10.3, design §11.
+# Plataforma alvo: Prometheus + Alertmanager (ou equivalente cloud-native).
+# Todas as métricas são prefixadas com o MeterName "OpportunityPipeline"
+# e seguem convenção snake_case (design §11, RNF 10.2).
+#
+# Labels mínimas por métrica: tenant_id, bu_id (quando aplicável).
+# PII jamais deve aparecer em labels de métricas (RNF 10.4, LGPD).
+
+groups:
+  - name: opportunity-pipeline.slo
+    interval: 30s
+    rules:
+
+      # -----------------------------------------------------------------------
+      # ALT-01 — Kanban p95 > 2.000 ms (RNF 1 — latência Kanban)
+      # Aciona quando a latência p95 de GetKanban ultrapassa 2s por 5 minutos.
+      # -----------------------------------------------------------------------
+      - alert: KanbanLatencyP95High
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum(rate(opportunity_pipeline_kanban_request_duration_ms_bucket[5m])) by (le, tenant_id, bu_id)
+          ) > 2000
+        for: 5m
+        labels:
+          severity: warning
+          module: opportunity-pipeline
+          slo: RNF-1
+        annotations:
+          summary: "Latência p95 do Kanban acima de 2.000 ms"
+          description: |
+            O percentil 95 da latência do endpoint GetKanban está acima de 2.000 ms
+            para tenant={{ $labels.tenant_id }} bu={{ $labels.bu_id }}.
+            Valor atual: {{ $value | humanizeDuration }}.
+            SLO: RNF 1 — p95 ≤ 2.000 ms com 500-2.000 oportunidades (design §15, TASK-23).
+          runbook_url: "https://wiki.azim.io/runbooks/opportunity-pipeline/kanban-latency"
+
+  - name: opportunity-pipeline.outbox
+    interval: 30s
+    rules:
+
+      # -----------------------------------------------------------------------
+      # ALT-02 — Outbox com mais de 100 eventos pendentes por 10 minutos
+      # Pode indicar falha no OutboxPublisherBackgroundService (design §9).
+      # -----------------------------------------------------------------------
+      - alert: OutboxPendingEventsHigh
+        expr: |
+          opportunity_pipeline_outbox_pending_events > 100
+        for: 10m
+        labels:
+          severity: warning
+          module: opportunity-pipeline
+          component: outbox
+        annotations:
+          summary: "Outbox com mais de 100 eventos pendentes"
+          description: |
+            O outbox do módulo opportunity-pipeline está com {{ $value }} eventos pendentes
+            por mais de 10 minutos. O OutboxPublisherBackgroundService pode estar com falha
+            ou o broker de mensageria pode estar indisponível.
+            Verificar: logs do OutboxPublisherBackgroundService, conectividade com broker.
+          runbook_url: "https://wiki.azim.io/runbooks/opportunity-pipeline/outbox-backlog"
+
+      # -----------------------------------------------------------------------
+      # ALT-03 — Outbox crítico: mais de 500 eventos pendentes
+      # Indica backlog severo — possível perda de dados ou falha sistêmica.
+      # -----------------------------------------------------------------------
+      - alert: OutboxPendingEventsCritical
+        expr: |
+          opportunity_pipeline_outbox_pending_events > 500
+        for: 5m
+        labels:
+          severity: critical
+          module: opportunity-pipeline
+          component: outbox
+        annotations:
+          summary: "Outbox com backlog crítico (> 500 eventos pendentes)"
+          description: |
+            O outbox está com {{ $value }} eventos pendentes por mais de 5 minutos.
+            Risco de perda de consistência entre o banco de dados e o broker.
+            Ação imediata: verificar broker, OutboxPublisherBackgroundService e deadletter queue.
+          runbook_url: "https://wiki.azim.io/runbooks/opportunity-pipeline/outbox-critical"
+
+  - name: opportunity-pipeline.stale-scan
+    interval: 60s
+    rules:
+
+      # -----------------------------------------------------------------------
+      # ALT-04 — Scan de stale não executado há mais de 25 horas
+      # O StaleScanJob deve executar diariamente (design §9, RNF 7).
+      # -----------------------------------------------------------------------
+      - alert: StaleScanNotRun
+        expr: |
+          (time() - opportunity_pipeline_stale_scan_last_run_timestamp_seconds) > 90000
+        for: 0m
+        labels:
+          severity: warning
+          module: opportunity-pipeline
+          component: stale-detection
+        annotations:
+          summary: "Scan de oportunidades estagnadas não executado nas últimas 25 horas"
+          description: |
+            O job de detecção de oportunidades estagnadas (StagnationDetectionService)
+            não executou nos últimos {{ $value | humanizeDuration }}.
+            Verificar: agendamento do cloud-scheduler, endpoint /internal/stale-scan,
+            logs do StaleScanEndpointHandler.
+          runbook_url: "https://wiki.azim.io/runbooks/opportunity-pipeline/stale-scan"
+
+  - name: opportunity-pipeline.security
+    interval: 10s
+    rules:
+
+      # -----------------------------------------------------------------------
+      # ALT-05 — Violação de isolamento RLS detectada (sev-1 — KPI-06)
+      # Qualquer tentativa de acesso cross-tenant é CRÍTICO — bloqueia deploy.
+      # -----------------------------------------------------------------------
+      - alert: RlsViolationDetected
+        expr: |
+          increase(opportunity_pipeline_rls_violations_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          module: opportunity-pipeline
+          component: rls
+          kpi: KPI-06
+        annotations:
+          summary: "CRÍTICO: Violação de isolamento RLS detectada (KPI-06)"
+          description: |
+            Uma ou mais tentativas de acesso cross-tenant foram detectadas nos últimos 5 minutos.
+            Isso indica possível falha no isolamento multi-tenant (ADR-0001, design §14).
+            Ação imediata: investigar logs do RlsConnectionInterceptor, revisar queries recentes,
+            notificar equipe de segurança. KPI-06 exige 0 violações para aprovação de deploy.
+          runbook_url: "https://wiki.azim.io/runbooks/opportunity-pipeline/rls-violation"
+
+      # -----------------------------------------------------------------------
+      # ALT-06 — Taxa de erro 5xx nos endpoints de oportunidade > 1% por 5 min
+      # -----------------------------------------------------------------------
+      - alert: OpportunityApiErrorRateHigh
+        expr: |
+          sum(rate(http_server_request_duration_seconds_count{
+            job="opportunity-pipeline",
+            http_response_status_code=~"5..",
+            http_route=~"/v1/opportunities.*"
+          }[5m])) /
+          sum(rate(http_server_request_duration_seconds_count{
+            job="opportunity-pipeline",
+            http_route=~"/v1/opportunities.*"
+          }[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+          module: opportunity-pipeline
+          component: api
+        annotations:
+          summary: "Taxa de erros 5xx nos endpoints de oportunidade acima de 1%"
+          description: |
+            A taxa de erros HTTP 5xx nos endpoints /v1/opportunities está em
+            {{ $value | humanizePercentage }} (threshold: 1%) por 5 minutos.
+            Verificar: logs de ProblemDetails, handlers MediatR, conectividade com DB.
+          runbook_url: "https://wiki.azim.io/runbooks/opportunity-pipeline/api-errors"

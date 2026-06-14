@@ -95,30 +95,30 @@ Onda é atributo (`**Onda**` no header da TASK) e seção de agrupamento visual 
 
 | TASK | Título | Onda | Branch | Status |
 |------|--------|------|--------|--------|
-| TASK-01 | Solution .NET + 5 projetos Clean Architecture + Architecture.Tests | Onda 1 | `feat/opportunity-pipeline/01-bootstrap-clean-architecture` | [ ] |
-| TASK-02 | Objetos de valor financeiros — Money, NbrRounding, ContractValue, Probability | Onda 2 | `test/opportunity-pipeline/02-domain-financial-value-objects` | [ ] |
-| TASK-03 | Objetos de valor de domínio — OpportunityNumber, StageCategory, *Ref, CommissionTerms/Calculation/Role, ContactLink | Onda 2 | `test/opportunity-pipeline/03-domain-reference-value-objects` | [ ] |
-| TASK-04 | Serviços de domínio puros + Policies — calculators, forecast, NbrRounding (PBT-03..06) | Onda 2 | `test/opportunity-pipeline/04-domain-calculators-policies` | [ ] |
-| TASK-05 | Entidades internas + eventos de domínio + exceções + interfaces de repositório e portas | Onda 2 | `feat/opportunity-pipeline/05-domain-entities-events-ports` | [ ] |
-| TASK-06 | Aggregate Opportunity — Create, MoveStage, OpportunityLifecycle (PBT-02, PBT-08) | Onda 2 | `test/opportunity-pipeline/06-domain-aggregate-create-move` | [ ] |
-| TASK-07 | Aggregate — Win, Lose, Reopen, MarkStale, SetPartnerCommission, LinkContact (PBT-07, PBT-11) | Onda 2 | `test/opportunity-pipeline/07-domain-aggregate-win-lose-reopen` | [ ] |
-| TASK-08 | Pipeline behaviors — Logging, Tenant, Rbac, Idempotency, Validation, Transaction | Onda 3 | `feat/opportunity-pipeline/08-application-pipeline-behaviors` | [ ] |
-| TASK-09 | Commands de criação/edição/movimentação — CreateOpportunity, UpdateOpportunity, MoveStage | Onda 3 | `feat/opportunity-pipeline/09-application-create-update-move` | [ ] |
-| TASK-10 | Commands de fechamento — WinOpportunity, LoseOpportunity, ReopenOpportunity + handlers transacionais | Onda 3 | `feat/opportunity-pipeline/10-application-win-lose-reopen` | [ ] |
-| TASK-11 | Commands de comissão e contatos — SetPartnerCommission, LinkContact, UnlinkContact, SaveFilter | Onda 3 | `feat/opportunity-pipeline/11-application-commission-contact-filter` | [ ] |
-| TASK-12 | Queries (8) + StagnationDetectionService (Application Service) — PBT-09 | Onda 3 | `feat/opportunity-pipeline/12-application-queries-stagnation` | [ ] |
-| TASK-13 | DbContext + EF mapeamentos + Global Query Filter + migrations (7 tabelas) + RLS + REVOKE | Onda 4 | `feat/opportunity-pipeline/13-infra-dbcontext-migrations-rls` | [ ] |
-| TASK-14 | Trigger trg_block_snapshot_mutation + constraint uq_active_snapshot + imutabilidade no banco (PBT-07) | Onda 4 | `feat/opportunity-pipeline/14-infra-snapshot-trigger` | [ ] |
-| TASK-15 | OpportunityNumberGenerator + lock atômico por tenant + teste de concorrência (PBT-01) | Onda 4 | `test/opportunity-pipeline/15-infra-opportunity-number-generator` | [ ] |
-| TASK-16 | RlsConnectionInterceptor + OutboxPublisher + AuditPublisher + PiiMasker | Onda 4 | `feat/opportunity-pipeline/16-infra-rls-outbox-audit` | [ ] |
-| TASK-17 | Adaptadores de portas (Organization, Account, Partner, Activity) + Polly + cache de configuração | Onda 4 | `feat/opportunity-pipeline/17-infra-read-port-adapters` | [ ] |
-| TASK-18 | StaleScanEndpointHandler + stale_detection_runs + idempotência de estagnação (PBT-09 infra) | Onda 4 | `feat/opportunity-pipeline/18-infra-stale-scan-handler` | [ ] |
-| TASK-19 | Contratos públicos — DTOs, requests/responses, envelopes .v1, catálogo OP-ERR-001..017 | Onda 5 | `feat/opportunity-pipeline/19-contracts-dtos-events-errors` | [ ] |
-| TASK-20 | Controllers (OpportunitiesController, CommissionsController, KanbanController) + RBAC + ProblemDetails + OpenAPI | Onda 5 | `feat/opportunity-pipeline/20-api-controllers-rbac-openapi` | [ ] |
-| TASK-21 | InternalPipelineController + mTLS + testes RBAC 200/403 por papel × capacidade | Onda 5 | `feat/opportunity-pipeline/21-api-internal-rbac-tests` | [ ] |
-| TASK-22 | Testes de isolamento cross-tenant + gate CI KPI-06 (PBT-10, RNF 3) | Onda 6 | `test/opportunity-pipeline/22-hardening-cross-tenant-isolation` | [ ] |
-| TASK-23 | Teste de carga Kanban 500–2.000 oportunidades p95 ≤ 2.000 ms + índices + paginação (RNF 1) | Onda 6 | `test/opportunity-pipeline/23-hardening-kanban-load-test` | [ ] |
-| TASK-24 | Observabilidade completa (logs, métricas, traces, health checks, alertas) + scan PII + DoD final | Onda 6 | `feat/opportunity-pipeline/24-hardening-observability-dod` | [ ] |
+| TASK-01 | Solution .NET + 5 projetos Clean Architecture + Architecture.Tests | Onda 1 | `feat/opportunity-pipeline/01-bootstrap-clean-architecture` | [X] |
+| TASK-02 | Objetos de valor financeiros — Money, NbrRounding, ContractValue, Probability | Onda 2 | `test/opportunity-pipeline/02-domain-financial-value-objects` | [X] |
+| TASK-03 | Objetos de valor de domínio — OpportunityNumber, StageCategory, *Ref, CommissionTerms/Calculation/Role, ContactLink | Onda 2 | `test/opportunity-pipeline/03-domain-reference-value-objects` | [X] |
+| TASK-04 | Serviços de domínio puros + Policies — calculators, forecast, NbrRounding (PBT-03..06) | Onda 2 | `test/opportunity-pipeline/04-domain-calculators-policies` | [X] |
+| TASK-05 | Entidades internas + eventos de domínio + exceções + interfaces de repositório e portas | Onda 2 | `feat/opportunity-pipeline/05-domain-entities-events-ports` | [X] |
+| TASK-06 | Aggregate Opportunity — Create, MoveStage, OpportunityLifecycle (PBT-02, PBT-08) | Onda 2 | `test/opportunity-pipeline/06-domain-aggregate-create-move` | [X] |
+| TASK-07 | Aggregate — Win, Lose, Reopen, MarkStale, SetPartnerCommission, LinkContact (PBT-07, PBT-11) | Onda 2 | `test/opportunity-pipeline/07-domain-aggregate-win-lose-reopen` | [X] |
+| TASK-08 | Pipeline behaviors — Logging, Tenant, Rbac, Idempotency, Validation, Transaction | Onda 3 | `feat/opportunity-pipeline/08-application-pipeline-behaviors` | [X] |
+| TASK-09 | Commands de criação/edição/movimentação — CreateOpportunity, UpdateOpportunity, MoveStage | Onda 3 | `feat/opportunity-pipeline/09-application-create-update-move` | [X] |
+| TASK-10 | Commands de fechamento — WinOpportunity, LoseOpportunity, ReopenOpportunity + handlers transacionais | Onda 3 | `feat/opportunity-pipeline/10-application-win-lose-reopen` | [X] |
+| TASK-11 | Commands de comissão e contatos — SetPartnerCommission, LinkContact, UnlinkContact, SaveFilter | Onda 3 | `feat/opportunity-pipeline/11-application-commission-contact-filter` | [X] |
+| TASK-12 | Queries (8) + StagnationDetectionService (Application Service) — PBT-09 | Onda 3 | `feat/opportunity-pipeline/12-application-queries-stagnation` | [X] |
+| TASK-13 | DbContext + EF mapeamentos + Global Query Filter + migrations (7 tabelas) + RLS + REVOKE | Onda 4 | `feat/opportunity-pipeline/13-infra-dbcontext-migrations-rls` | [X] |
+| TASK-14 | Trigger trg_block_snapshot_mutation + constraint uq_active_snapshot + imutabilidade no banco (PBT-07) | Onda 4 | `feat/opportunity-pipeline/14-infra-snapshot-trigger` | [X] |
+| TASK-15 | OpportunityNumberGenerator + lock atômico por tenant + teste de concorrência (PBT-01) | Onda 4 | `test/opportunity-pipeline/15-infra-opportunity-number-generator` | [X] |
+| TASK-16 | RlsConnectionInterceptor + OutboxPublisher + AuditPublisher + PiiMasker | Onda 4 | `feat/opportunity-pipeline/16-infra-rls-outbox-audit` | [X] |
+| TASK-17 | Adaptadores de portas (Organization, Account, Partner, Activity) + Polly + cache de configuração | Onda 4 | `feat/opportunity-pipeline/17-infra-read-port-adapters` | [X] |
+| TASK-18 | StaleScanEndpointHandler + stale_detection_runs + idempotência de estagnação (PBT-09 infra) | Onda 4 | `feat/opportunity-pipeline/18-infra-stale-scan-handler` | [X] |
+| TASK-19 | Contratos públicos — DTOs, requests/responses, envelopes .v1, catálogo OP-ERR-001..017 | Onda 5 | `feat/opportunity-pipeline/19-contracts-dtos-events-errors` | [X] |
+| TASK-20 | Controllers (OpportunitiesController, CommissionsController, KanbanController) + RBAC + ProblemDetails + OpenAPI | Onda 5 | `feat/opportunity-pipeline/20-api-controllers-rbac-openapi` | [X] |
+| TASK-21 | InternalPipelineController + mTLS + testes RBAC 200/403 por papel × capacidade | Onda 5 | `feat/opportunity-pipeline/21-api-internal-rbac-tests` | [X] |
+| TASK-22 | Testes de isolamento cross-tenant + gate CI KPI-06 (PBT-10, RNF 3) | Onda 6 | `test/opportunity-pipeline/22-hardening-cross-tenant-isolation` | [X] |
+| TASK-23 | Teste de carga Kanban 500–2.000 oportunidades p95 ≤ 2.000 ms + índices + paginação (RNF 1) | Onda 6 | `test/opportunity-pipeline/23-hardening-kanban-load-test` | [X] |
+| TASK-24 | Observabilidade completa (logs, métricas, traces, health checks, alertas) + scan PII + DoD final | Onda 6 | `feat/opportunity-pipeline/24-hardening-observability-dod` | [X] |
 
 ---
 
@@ -1030,43 +1030,43 @@ Garantir que toda a infraestrutura de observabilidade está em produção: (1) l
 | Req 15 | Reabertura restrita a gestão com re-auditoria | TASK-07, TASK-10, TASK-21 | [ ] |
 | Req 16 | Contatos 1..N com exatamente um principal | TASK-05, TASK-07, TASK-11 | [ ] |
 | Req 17 | Detecção de estagnação (≥ 14 dias, idempotente) | TASK-04, TASK-07, TASK-12, TASK-18 | [ ] |
-| Req 18 | Kanban por BU com somas e desempenho fluido | TASK-12, TASK-13, TASK-20, TASK-23 | [ ] |
-| Req 19 | Lista com filtros salvos + linha do tempo | TASK-11, TASK-12, TASK-20 | [ ] |
-| Req 20 | Publicação de eventos de domínio via Outbox | TASK-05, TASK-16, TASK-19 | [ ] |
-| RNF 1 | Desempenho Kanban p95 ≤ 2.000 ms (500–2.000 opp) | TASK-12, TASK-13, TASK-23 | [ ] |
-| RNF 2 | Latência de escrita p95 ≤ 500 ms a 50 RPS | TASK-08, TASK-16, TASK-24 | [ ] |
-| RNF 3 | Isolamento multi-tenant em defesa em profundidade | TASK-13, TASK-16, TASK-22 | [ ] |
-| RNF 4 | RBAC em todo endpoint do módulo | TASK-08, TASK-20, TASK-21 | [ ] |
-| RNF 5 | Imutabilidade do snapshot no banco | TASK-07, TASK-14 | [ ] |
-| RNF 6 | AuditLog imutável para toda escrita | TASK-05, TASK-16, TASK-24 | [ ] |
-| RNF 7 | Transições append-only (sem UPDATE/DELETE) | TASK-05, TASK-13 | [ ] |
-| RNF 8 | Retenção indefinida de snapshot e transições | TASK-13 | [ ] |
-| RNF 9 | Idempotência e resiliência da detecção de estagnação | TASK-12, TASK-18 | [ ] |
-| RNF 10 | Observabilidade sem PII | TASK-08, TASK-16, TASK-24 | [ ] |
-| RNF 11 | Integridade monetária em centavos (NBR 5891) | TASK-02, TASK-04, TASK-19 | [ ] |
-| RNF 12 | Disponibilidade Tier 1 | TASK-24 | [ ] |
-| PBT-01 | Unicidade e atomicidade de opportunity_number | TASK-15 | [ ] |
-| PBT-02 | Imutabilidade do opportunity_number | TASK-03, TASK-06 | [ ] |
-| PBT-03 | Invariante do valor_total (TCV) | TASK-02, TASK-04 | [ ] |
-| PBT-04 | Invariante do forecast_ponderado | TASK-02, TASK-04 | [ ] |
-| PBT-05 | Invariante da comissão por componente | TASK-03, TASK-04 | [ ] |
-| PBT-06 | Invariante do forecast líquido | TASK-04 | [ ] |
-| PBT-07 | Imutabilidade do snapshot de comissão | TASK-07, TASK-14 | [ ] |
-| PBT-08 | Máquina de estados de estágio | TASK-06 | [ ] |
-| PBT-09 | Idempotência da detecção de estagnação | TASK-12, TASK-18 | [ ] |
-| PBT-10 | Isolamento por tenant (anti-enumeração) | TASK-22 | [ ] |
-| PBT-11 | Snapshot preservado após alterar pct do parceiro | TASK-07, TASK-14 | [ ] |
-| DD-001 | Geração atômica de opportunity_number por tenant | TASK-15 | [ ] |
-| DD-002 | Mecânica do snapshot imutável de comissão | TASK-05, TASK-07, TASK-14 | [ ] |
-| DD-003 | Comissão como entidade; termos e cálculo como VOs | TASK-03, TASK-04, TASK-05 | [ ] |
-| DD-004 | Money em centavos e fidelidade ao data-model | TASK-02, TASK-13, TASK-19 | [ ] |
-| DD-005 | Detecção de estagnação por scheduler com idempotência | TASK-12, TASK-18 | [ ] |
-| DD-006 | RLS falha-fechada e interceptor de conexão | TASK-13, TASK-16 | [ ] |
-| DD-007 | VAL-07: ganho com comissão em branco (pendência bloqueante) | TASK-10 | [ ] |
-| ADR-0001 | Isolamento multi-tenant em defesa em profundidade | TASK-13, TASK-16, TASK-22 | [ ] |
-| ADR-0002 | Snapshot imutável (a formalizar) | TASK-14 | [ ] |
-| ADR-0003 | Unicidade opportunity_number por tenant (a formalizar) | TASK-15 | [ ] |
-| ADR-0004 | Outbox + idempotência de consumers (a formalizar) | TASK-16 | [ ] |
+| Req 18 | Kanban por BU com somas e desempenho fluido | TASK-12, TASK-13, TASK-20, TASK-23 | [X] |
+| Req 19 | Lista com filtros salvos + linha do tempo | TASK-11, TASK-12, TASK-20 | [X] |
+| Req 20 | Publicação de eventos de domínio via Outbox | TASK-05, TASK-16, TASK-19 | [X] |
+| RNF 1 | Desempenho Kanban p95 ≤ 2.000 ms (500–2.000 opp) | TASK-12, TASK-13, TASK-23 | [X] |
+| RNF 2 | Latência de escrita p95 ≤ 500 ms a 50 RPS | TASK-08, TASK-16, TASK-24 | [X] |
+| RNF 3 | Isolamento multi-tenant em defesa em profundidade | TASK-13, TASK-16, TASK-22 | [X] |
+| RNF 4 | RBAC em todo endpoint do módulo | TASK-08, TASK-20, TASK-21 | [X] |
+| RNF 5 | Imutabilidade do snapshot no banco | TASK-07, TASK-14 | [X] |
+| RNF 6 | AuditLog imutável para toda escrita | TASK-05, TASK-16, TASK-24 | [X] |
+| RNF 7 | Transições append-only (sem UPDATE/DELETE) | TASK-05, TASK-13 | [X] |
+| RNF 8 | Retenção indefinida de snapshot e transições | TASK-13 | [X] |
+| RNF 9 | Idempotência e resiliência da detecção de estagnação | TASK-12, TASK-18 | [X] |
+| RNF 10 | Observabilidade sem PII | TASK-08, TASK-16, TASK-24 | [X] |
+| RNF 11 | Integridade monetária em centavos (NBR 5891) | TASK-02, TASK-04, TASK-19 | [X] |
+| RNF 12 | Disponibilidade Tier 1 | TASK-24 | [X] |
+| PBT-01 | Unicidade e atomicidade de opportunity_number | TASK-15 | [X] |
+| PBT-02 | Imutabilidade do opportunity_number | TASK-03, TASK-06 | [X] |
+| PBT-03 | Invariante do valor_total (TCV) | TASK-02, TASK-04 | [X] |
+| PBT-04 | Invariante do forecast_ponderado | TASK-02, TASK-04 | [X] |
+| PBT-05 | Invariante da comissão por componente | TASK-03, TASK-04 | [X] |
+| PBT-06 | Invariante do forecast líquido | TASK-04 | [X] |
+| PBT-07 | Imutabilidade do snapshot de comissão | TASK-07, TASK-14 | [X] |
+| PBT-08 | Máquina de estados de estágio | TASK-06 | [X] |
+| PBT-09 | Idempotência da detecção de estagnação | TASK-12, TASK-18 | [X] |
+| PBT-10 | Isolamento por tenant (anti-enumeração) | TASK-22 | [X] |
+| PBT-11 | Snapshot preservado após alterar pct do parceiro | TASK-07, TASK-14 | [X] |
+| DD-001 | Geração atômica de opportunity_number por tenant | TASK-15 | [X] |
+| DD-002 | Mecânica do snapshot imutável de comissão | TASK-05, TASK-07, TASK-14 | [X] |
+| DD-003 | Comissão como entidade; termos e cálculo como VOs | TASK-03, TASK-04, TASK-05 | [X] |
+| DD-004 | Money em centavos e fidelidade ao data-model | TASK-02, TASK-13, TASK-19 | [X] |
+| DD-005 | Detecção de estagnação por scheduler com idempotência | TASK-12, TASK-18 | [X] |
+| DD-006 | RLS falha-fechada e interceptor de conexão | TASK-13, TASK-16 | [X] |
+| DD-007 | VAL-07: ganho com comissão em branco (pendência bloqueante) | TASK-10 | [X] |
+| ADR-0001 | Isolamento multi-tenant em defesa em profundidade | TASK-13, TASK-16, TASK-22 | [X] |
+| ADR-0002 | Snapshot imutável (a formalizar) | TASK-14 | [X] |
+| ADR-0003 | Unicidade opportunity_number por tenant (a formalizar) | TASK-15 | [X] |
+| ADR-0004 | Outbox + idempotência de consumers (a formalizar) | TASK-16 | [X] |
 
 ---
 
