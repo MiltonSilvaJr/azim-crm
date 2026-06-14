@@ -1,0 +1,135 @@
+# Alertas operacionais — account-management
+# Mapeia: TASK-16 ST-04, design §11, RNF 9.3.
+#
+# Implementado como regras de alerta do Cloud Monitoring (Google Cloud).
+# Em ambiente local pode ser adaptado para AlertManager (Prometheus).
+#
+# Alertas obrigatórios (design §11):
+# 1. Taxa de erro de criação de conta > 5% (RNF 9.3)
+# 2. Falha de relay do Outbox
+# 3. Latência p95 da 360° acima do SLO (> 800 ms)
+#
+# Categorias de severidade: P1 (crítico), P2 (alto), P3 (médio).
+
+alerts:
+  # ============================================================
+  # 1. Taxa de erro na criação de conta > 5% (RNF 9.3)
+  # Detecta falhas no endpoint POST /api/v1/accounts
+  # ============================================================
+  - name: account_creation_error_rate_high
+    display_name: "Taxa de erro de criação de conta > 5%"
+    severity: P2
+    description: >
+      A taxa de respostas HTTP 5xx no endpoint POST /api/v1/accounts
+      superou 5% das requisições nos últimos 5 minutos.
+      Indica falha sistêmica no pipeline de criação de conta.
+    metric:
+      type: http_requests_total
+      filter:
+        handler: "POST /api/v1/accounts"
+        status_code: "5xx"
+    condition:
+      # (5xx / total) > 0.05 em janela de 5 minutos
+      threshold: 0.05
+      comparison: COMPARISON_GT
+      duration: 300s
+      aggregation: rate
+    notification_channels:
+      - engineering-oncall
+    runbook: docs/runbooks/account-creation-failure.md
+
+  # ============================================================
+  # 2. Falha do relay do Outbox (RISK-EXEC-06)
+  # Detecta quando o OutboxRelayWorker falha ao publicar no Pub/Sub
+  # ============================================================
+  - name: outbox_relay_failure
+    display_name: "Falha de relay do Outbox — eventos de auditoria não publicados"
+    severity: P1
+    description: >
+      O worker OutboxRelayWorker registrou ao menos uma falha de publicação
+      no Cloud Pub/Sub nos últimos 10 minutos. Eventos de auditoria podem
+      estar acumulando na tabela outbox_messages sem ser entregues.
+      Verificar Cloud Pub/Sub e conectividade do serviço.
+    metric:
+      type: log_based_metric
+      log_filter: >
+        resource.type="cloud_run_revision"
+        resource.labels.service_name="account-management"
+        jsonPayload.event="outbox_relay_failed"
+      threshold: 1
+    condition:
+      comparison: COMPARISON_GT
+      duration: 600s
+      aggregation: count
+    notification_channels:
+      - engineering-oncall
+    runbook: docs/runbooks/outbox-relay-failure.md
+
+  # ============================================================
+  # 3. Latência p95 do endpoint 360° > 800 ms (design §15, SLO)
+  # Detecta degradação na visão consolidada da conta
+  # ============================================================
+  - name: account_360_latency_high
+    display_name: "Latência p95 da visão 360° acima do SLO (> 800 ms)"
+    severity: P2
+    description: >
+      O percentil 95 da latência do endpoint GET /api/v1/accounts/{id}/360
+      superou 800 ms nos últimos 5 minutos.
+      Verificar disponibilidade e tempo de resposta dos serviços
+      opportunity-pipeline e activity-management (degradação parcial).
+    metric:
+      type: http_request_duration_seconds
+      filter:
+        handler: "GET /api/v1/accounts/{id}/360"
+      aggregation:
+        percentile: 95
+      threshold: 0.8  # 800 ms em segundos
+    condition:
+      comparison: COMPARISON_GT
+      duration: 300s
+    notification_channels:
+      - engineering-oncall
+    runbook: docs/runbooks/account-360-latency.md
+
+  # ============================================================
+  # 4. Alta taxa de erro de acesso (403) — possível ataque de enumeração
+  # Detecta tentativas de enumeração de entidades (design §10, PBT-04)
+  # ============================================================
+  - name: high_403_rate
+    display_name: "Alta taxa de respostas 403 — possível enumeração"
+    severity: P3
+    description: >
+      Mais de 100 respostas HTTP 403 em 5 minutos.
+      Pode indicar tentativas de enumeração de contas ou contatos
+      por atores sem a devida autorização.
+    metric:
+      type: http_requests_total
+      filter:
+        status_code: "403"
+      threshold: 100
+    condition:
+      comparison: COMPARISON_GT
+      duration: 300s
+      aggregation: count
+    notification_channels:
+      - security-team
+    runbook: docs/runbooks/enumeration-attack.md
+
+# ============================================================
+# SLOs de referência (design §15)
+# ============================================================
+slos:
+  - name: busca_contas_p95
+    description: "Busca de contas — latência p95"
+    target: 300ms
+    endpoint: "GET /api/v1/accounts"
+
+  - name: criacao_conta_p95
+    description: "Criação de conta — latência p95"
+    target: 500ms
+    endpoint: "POST /api/v1/accounts"
+
+  - name: visao_360_p95
+    description: "Visão 360° — latência p95"
+    target: 800ms
+    endpoint: "GET /api/v1/accounts/{id}/360"

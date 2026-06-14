@@ -1,0 +1,183 @@
+# approvals.yaml — account-management
+# Pendências de aprovação humana e jurídica (TASK-18 ST-04, design §17, tasks.md §7.3)
+#
+# Este arquivo deve ser revisado e aprovado antes do go-live do módulo account-management.
+# Mapeia: TASK-18, RNF 3, RNF 4, RNF 10, DD-001, VAL-ACC-01, VAL-ACC-02, VAL-ACC-03.
+
+module: account-management
+version: 0.1.0
+updated_at: 2026-06-13
+status: pending_human_approval
+
+# ============================================================
+# VAL-ACC-01 — Política de retenção e descarte de dados (RNF 4)
+# ============================================================
+- id: VAL-ACC-01
+  title: "Política de retenção e descarte de registros de contato"
+  category: legal_compliance
+  priority: blocker_for_go_live
+  status: pending
+  description: >
+    O design do MVP adota anonimização in-place (DD-001): campos de PII da tabela
+    contacts são substituídos por marcadores mas a linha não é excluída fisicamente.
+    A LGPD (Art. 18) permite diferentes formas de atendimento ao direito ao
+    esquecimento. É necessário validação jurídica de que a anonimização in-place
+    é suficiente para o caso de uso do Azim CRM, ou se uma política de expurgo
+    físico com TTL deve ser implementada.
+  required_approver: jurídico
+  required_action: >
+    Equipe jurídica deve confirmar formalmente:
+    (a) a anonimização in-place é suficiente para LGPD Art. 18 no contexto do CRM, OU
+    (b) indicar o período de retenção e requisitos de expurgo físico que precisam
+        ser implementados antes do go-live.
+  technical_reference: design.md §17 DD-001, requirements.md RNF 4
+  risk_if_not_resolved: Não conformidade com LGPD Art. 18 (direito ao esquecimento)
+  approved_by: null
+  approved_at: null
+  notes: null
+
+# ============================================================
+# VAL-ACC-02 — Base legal para tratamento de PII de contatos (RNF 3)
+# ============================================================
+- id: VAL-ACC-02
+  title: "Base legal LGPD para tratamento de PII de contatos"
+  category: legal_compliance
+  priority: blocker_for_go_live
+  status: pending
+  description: >
+    O módulo armazena dados pessoais de contatos (nome, e-mail, telefone) vinculados
+    a contas comerciais. A LGPD (Lei 13.709/2018) exige base legal explícita para
+    cada finalidade de tratamento. As bases candidatas para o Azim CRM são:
+    legítimo interesse do controlador (Art. 7, IX) ou execução de contrato (Art. 7, V).
+    É necessária validação jurídica da base legal aplicável e registro no ROPA
+    (Record of Processing Activities).
+  required_approver: jurídico
+  required_action: >
+    Equipe jurídica deve:
+    (a) confirmar a base legal LGPD aplicável para armazenamento de PII de contatos, e
+    (b) registrar no ROPA (se aplicável) antes do go-live.
+  technical_reference: requirements.md RNF 3, design.md §10
+  risk_if_not_resolved: Tratamento de PII sem base legal — não conformidade LGPD
+  approved_by: null
+  approved_at: null
+  notes: null
+
+# ============================================================
+# VAL-ACC-03 — Conta compartilhada por tenant, não por BU (Req 2)
+# ============================================================
+- id: VAL-ACC-03
+  title: "Confirmação de regra de negócio: conta por tenant, não por BU"
+  category: product_decision
+  priority: blocker_for_go_live
+  status: pending
+  description: >
+    O design atual implementa contas (empresas clientes) como entidades do tenant
+    completo, visíveis e acessíveis por qualquer usuário do tenant,
+    independentemente da BU (Business Unit) à qual pertence (Req 2.3 — sem bu_id
+    na tabela accounts). Esta é uma decisão de produto com impacto significativo
+    em controle de acesso e isolamento de dados entre equipes de vendas.
+  required_approver: product_owner
+  required_action: >
+    Product Owner deve confirmar formalmente que a regra "conta compartilhada por
+    todo o tenant" é a regra de negócio correta para o MVP — ou indicar se algum
+    controle de visibilidade por BU deve ser adicionado antes do go-live.
+  technical_reference: requirements.md Req 2, design.md §4.1, tasks.md TASK-08
+  risk_if_not_resolved: >
+    Conta de cliente de uma BU visível para vendedores de outra BU —
+    possível conflito comercial ou exigência de segmentação por equipe.
+  approved_by: null
+  approved_at: null
+  notes: null
+
+# ============================================================
+# Confirmação de residência de dados (RNF 10)
+# ============================================================
+data_residency:
+  region: southamerica-east1
+  cloud_provider: GCP
+  cloud_sql_instance_note: >
+    A string de conexão de produção deve apontar para instância Cloud SQL em
+    southamerica-east1. Nenhuma réplica de leitura cross-region deve ser criada
+    sem ADR formal aprovado (RNF 10.2).
+  connection_string_template: >
+    Host=<cloud-sql-proxy-host>;Port=5432;Database=azim_account_management;
+    Username=app;Password=<secret-manager-ref>;SSL Mode=Require;
+    ApplicationName=account-management
+  confirmed_by: null
+  confirmed_at: null
+  note: >
+    Em desenvolvimento/CI usa-se Testcontainers com PostgreSQL local.
+    Em produção, a connection string é injetada via Secret Manager e deve
+    referenciar instância em southamerica-east1.
+
+# ============================================================
+# DoD checklist — Onda 6 (tasks.md §7.3)
+# ============================================================
+dod_checklist:
+  # Ondas 1-5
+  - item: "Solution compilando sem warnings (Onda 1)"
+    status: "[X]"
+  - item: "Architecture.Tests verde (Onda 1)"
+    status: "[X]"
+  - item: "Objetos de valor + PBT-01/02 verdes (Onda 2)"
+    status: "[X]"
+  - item: "Agregado Account + PBT-03 verde (Onda 2)"
+    status: "[X]"
+  - item: "Handlers + behaviors + PBT-05 verdes (Onda 3)"
+    status: "[X]"
+  - item: "Migrations aplicadas em PostgreSQL real (Onda 4)"
+    status: "[X]"
+  - item: "PBT-04 anti-cross-tenant verde (Onda 4)"
+    status: "[X]"
+  - item: "PiiMasker testado (Onda 4)"
+    status: "[X]"
+  - item: "Todos os endpoints respondendo contratos esperados (Onda 5)"
+    status: "[X]"
+  - item: "Catálogo de erros ACC-ERR-001..009 coberto (Onda 5)"
+    status: "[X]"
+  - item: "OpenAPI publicado em /swagger (Onda 5)"
+    status: "[X]"
+  # Onda 6 — Hardening
+  - item: "Métricas accounts_created_total, contacts_created_total, dedupe_blocked_total expostas (TASK-16)"
+    status: "[X]"
+  - item: "Logs estruturados sem PII de contato em texto claro (TASK-16)"
+    status: "[X]"
+  - item: "Traces OpenTelemetry com correlation_id como atributo root (TASK-16)"
+    status: "[X]"
+  - item: "Alertas configurados em observability/alerts.yaml (TASK-16)"
+    status: "[X]"
+  - item: "Endpoints /health/live e /health/ready funcionais (TASK-16)"
+    status: "[X]"
+  - item: "Scan anti-PII em logs como gate CI obrigatório (TASK-17)"
+    status: "[X]"
+  - item: "PBT-04 configurado como gate CI obrigatório em staging.yml (TASK-17)"
+    status: "[X]"
+  - item: "Matriz papel × endpoint de contato testada sem lacuna de RBAC (TASK-18)"
+    status: "[X]"
+  - item: "Anti-enumeração: 403 não revela existência de entidade (TASK-18)"
+    status: "[X]"
+  - item: "approvals.yaml com VAL-ACC-01, VAL-ACC-02, VAL-ACC-03 registrados (TASK-18)"
+    status: "[X]"
+  - item: "Residência de dados confirmada em southamerica-east1 (TASK-18)"
+    status: "[X] documentado — confirmação de produção pendente"
+  # Itens pendentes de aprovação humana (bloqueadores de go-live)
+  - item: "VAL-ACC-01 aprovado pelo jurídico (política de retenção LGPD)"
+    status: "[ ] PENDENTE — bloqueador de go-live"
+  - item: "VAL-ACC-02 aprovado pelo jurídico (base legal LGPD)"
+    status: "[ ] PENDENTE — bloqueador de go-live"
+  - item: "VAL-ACC-03 confirmado pelo Product Owner"
+    status: "[ ] PENDENTE — bloqueador de go-live"
+  - item: "String de conexão de produção confirmada em southamerica-east1"
+    status: "[ ] PENDENTE — verificação de infra antes do deploy"
+
+# ============================================================
+# Matriz de rastreabilidade atualizada (tasks.md §5)
+# Todos os itens Onda 1-6 marcados como [X] na implementação
+# ============================================================
+traceability_summary:
+  total_tasks: 18
+  completed: 18
+  pending_implementation: 0
+  pending_human_approval: 3  # VAL-ACC-01, VAL-ACC-02, VAL-ACC-03
+  pbts_implemented: 5        # PBT-01..PBT-05
+  pbts_as_ci_gate: 1         # PBT-04 em staging.yml

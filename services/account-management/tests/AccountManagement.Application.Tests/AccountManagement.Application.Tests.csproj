@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    AccountManagement.Application.Tests
+    Foco: handlers de Command/Query (CreateAccount, UpdateAccount, CreateContact,
+          UpdateContact, ForgetContact, SearchAccounts, GetAccount360), pipeline
+          behaviors (TenantScope, PiiAccess, Validation, Transaction, CorrelationLogging),
+          composição da 360° com degradação parcial.
+    PBTs obrigatórios: PBT-05 (oportunidades na 360° restritas ao escopo de BUs).
+    Meta de cobertura: Application >= 85% (critério de fechamento da Onda 3).
+    Mapeia: design §13 (testes), TASK-04..TASK-07.
+  -->
+  <PropertyGroup>
+    <AssemblyName>AccountManagement.Application.Tests</AssemblyName>
+    <RootNamespace>AccountManagement.Application.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AccountManagement.Application\AccountManagement.Application.csproj" />
+    <ProjectReference Include="..\..\src\AccountManagement.Domain\AccountManagement.Domain.csproj" />
+    <ProjectReference Include="..\..\src\AccountManagement.Contracts\AccountManagement.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- NSubstitute: mock de ports e repositórios (sem dependência de EF Core) -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <!-- FluentValidation: validators de application -->
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+  </ItemGroup>
+</Project>

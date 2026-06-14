@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    AccountManagement.Domain
+    Papel: agregado Account (Aggregate Root) com entidade Contact, objetos de valor
+           (AccountName, NormalizedName, ContactInfo, Email, Phone, ContactPrivacyState),
+           domain events (AccountCreated, AccountUpdated, ContactLinked, ContactForgotten),
+           domain service NameNormalizer, specifications (SimilarAccountSpecification,
+           TenantScopeSpecification), policies (ForgetContactPolicy, PiiAccessPolicy),
+           IAccountRepository e exceções de domínio.
+    Regra de dependência: Domain -> (nenhum projeto interno).
+    Domain não referencia EF Core, GCP SDK, web framework, MediatR ou mensageria.
+  -->
+  <PropertyGroup>
+    <AssemblyName>AccountManagement.Domain</AssemblyName>
+    <RootNamespace>AccountManagement.Domain</RootNamespace>
+    <Description>Agregados, objetos de valor, eventos de domínio, policies e specifications do módulo account-management. Sem dependência de infraestrutura (Clean Architecture, DDD).</Description>
+  </PropertyGroup>
+</Project>

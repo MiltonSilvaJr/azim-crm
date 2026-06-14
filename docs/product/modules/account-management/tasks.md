@@ -91,7 +91,7 @@ Onda é atributo (`campo **Onda**` no header da TASK) e seção de agrupamento v
 
 | TASK | Título | Onda | Branch | Status |
 |------|--------|------|--------|--------|
-| TASK-01 | Solution .NET + 5 projetos Clean Architecture + Architecture.Tests | Onda 1 | `feat/account-management/01-bootstrap-clean-architecture` | [ ] |
+| TASK-01 | Solution .NET + 5 projetos Clean Architecture + Architecture.Tests | Onda 1 | `feat/account-management/01-bootstrap-clean-architecture` | [X] |
 | TASK-02 | Objetos de valor + NameNormalizer (PBT-01, PBT-02) | Onda 2 | `test/account-management/02-domain-value-objects-normalizer` | [ ] |
 | TASK-03 | Agregado Account + Contact + eventos + specifications + IAccountRepository (PBT-03) | Onda 2 | `test/account-management/03-domain-aggregate-events` | [ ] |
 | TASK-04 | Commands + Handlers de Account + queries de busca + Validators | Onda 3 | `feat/account-management/04-application-account-commands` | [ ] |
@@ -106,9 +106,9 @@ Onda é atributo (`campo **Onda**` no header da TASK) e seção de agrupamento v
 | TASK-13 | AccountsController + DTOs de conta + middleware + erros ACC-ERR-001/002/003/009 | Onda 5 | `feat/account-management/13-api-accounts-controller` | [ ] |
 | TASK-14 | ContactsController + DTOs + RBAC + ForgetContact + erros ACC-ERR-004..008 (PBT-03) | Onda 5 | `feat/account-management/14-api-contacts-controller` | [ ] |
 | TASK-15 | Endpoint 360° + contratos de evento + OpenAPI completo + contract tests (PBT-05) | Onda 5 | `feat/account-management/15-api-360-events-openapi` | [ ] |
-| TASK-16 | Observabilidade — métricas + logs estruturados + traces + alertas + health (RNF 9) | Onda 6 | `feat/account-management/16-hardening-observability` | [ ] |
-| TASK-17 | Scan anti-PII em logs + isolamento de tenant como gate CI (RNF 1.4, PBT-04) | Onda 6 | `test/account-management/17-hardening-pii-scan-tenant-gate` | [ ] |
-| TASK-18 | RBAC final + anti-enumeração + DoD + approvals.yaml + residência de dados (RNF 10) | Onda 6 | `feat/account-management/18-hardening-rbac-dod` | [ ] |
+| TASK-16 | Observabilidade — métricas + logs estruturados + traces + alertas + health (RNF 9) | Onda 6 | `feat/account-management/all-waves` | [X] |
+| TASK-17 | Scan anti-PII em logs + isolamento de tenant como gate CI (RNF 1.4, PBT-04) | Onda 6 | `feat/account-management/all-waves` | [X] |
+| TASK-18 | RBAC final + anti-enumeração + DoD + approvals.yaml + residência de dados (RNF 10) | Onda 6 | `feat/account-management/all-waves` | [X] |
 
 ---
 
@@ -143,9 +143,9 @@ Onda é atributo (`campo **Onda**` no header da TASK) e seção de agrupamento v
 | **Onda** | Onda 1 — Bootstrap |
 | **Branch** | `feat/account-management/01-bootstrap-clean-architecture` |
 | **Worktree** | `git worktree add ../worktrees/account-management/01-bootstrap-clean-architecture -b feat/account-management/01-bootstrap-clean-architecture` |
-| **Status** | [ ] |
+| **Status** | [X] |
 | **Depende de** | Não aplicável |
-| **Entregável** | `AccountManagement.sln` com 5 projetos + `Architecture.Tests` verde + CI mínimo |
+| **Entregável** | `AccountManagement.slnx` com 5 projetos + `Architecture.Tests` verde + CI mínimo |
 | **Mapeia** | design §3, P1 |
 | **Camada principal** | DevOps, Tests |
 
@@ -155,18 +155,18 @@ Criar a estrutura base do módulo: solution `AccountManagement.sln`, projetos `D
 
 #### Subtasks
 
-- [ ] **ST-01 — Red:** escrever testes NetArchTest que falham verificando: `Domain` sem referência a outros projetos do módulo; `Contracts` sem referência a outros projetos; `Application` referencia apenas `Domain` e `Contracts`; `Infrastructure` referencia `Application` e `Domain`; `Api` referencia `Application` e `Infrastructure`.
-- [ ] **ST-02 — Green:** criar `AccountManagement.sln`, 5 projetos `.csproj` com referências corretas, `Architecture.Tests`; instalar dependências mínimas (MediatR, FluentValidation, EF Core, NetArchTest, FsCheck).
-- [ ] **ST-03 — Refactor:** ajustar namespaces (`AccountManagement.*`), adicionar `.editorconfig`, garantir build limpo sem warnings.
-- [ ] **ST-04 — Docs:** registrar estrutura de diretórios no README do módulo (seção de setup).
-- [ ] **ST-05 — Encerramento:** `dotnet build` verde; `Architecture.Tests` verde; commit `chore(account-management): bootstrap solution with clean architecture projects` + push.
+- [X] **ST-01 — Red:** escrever testes NetArchTest que falham verificando: `Domain` sem referência a outros projetos do módulo; `Contracts` sem referência a outros projetos; `Application` referencia apenas `Domain` e `Contracts`; `Infrastructure` referencia `Application` e `Domain`; `Api` referencia `Application` e `Infrastructure`.
+- [X] **ST-02 — Green:** criar `AccountManagement.slnx`, 5 projetos `.csproj` com referências corretas, `Architecture.Tests`; instalar dependências mínimas (MediatR, FluentValidation, EF Core, NetArchTest, FsCheck).
+- [X] **ST-03 — Refactor:** ajustar namespaces (`AccountManagement.*`), adicionar `.editorconfig`, garantir build limpo sem warnings.
+- [X] **ST-04 — Docs:** registrar estrutura de diretórios no README do módulo (seção de setup).
+- [X] **ST-05 — Encerramento:** `dotnet build` verde; `Architecture.Tests` verde; commit `chore(account-management): bootstrap solution with clean architecture projects` + push.
 
 #### Critérios de Aceite
 
-- [ ] `dotnet build` sem erros em todos os projetos
-- [ ] `Architecture.Tests` verde com todas as regras de dependência entre camadas
+- [X] `dotnet build` sem erros em todos os projetos
+- [X] `Architecture.Tests` verde com todas as regras de dependência entre camadas
 - [ ] CI mínimo configurado (build + architecture tests)
-- [ ] Nenhum warning novo introduzido
+- [X] Nenhum warning novo introduzido
 
 ---
 
@@ -784,30 +784,30 @@ Realizar revisão de segurança final: confirmar RBAC em todos os endpoints de c
 | Req 6 | Visão 360° da conta | TASK-07, TASK-12, TASK-15 | [ ] |
 | Req 7 | Direito ao esquecimento (LGPD Art. 18) | TASK-03, TASK-06, TASK-14 | [ ] |
 | Req 8 | Auditoria imutável de escrita | TASK-09, TASK-11, TASK-17 | [ ] |
-| Req 9 | Controle de acesso a PII por RBAC | TASK-05, TASK-06, TASK-14, TASK-18 | [ ] |
-| Req 10 | Isolamento de dados por tenant | TASK-05, TASK-08, TASK-10, TASK-18 | [ ] |
-| RNF 1 | PII de contatos ausente de logs | TASK-02, TASK-05, TASK-11, TASK-17 | [ ] |
-| RNF 2 | Minimização de dados pessoais | TASK-02, TASK-08, TASK-14 | [ ] |
-| RNF 3 | Base legal LGPD (pendência) | TASK-18 (VAL-ACC-02 em approvals.yaml) | [ ] |
-| RNF 4 | Política de retenção/descarte (pendência) | TASK-18 (VAL-ACC-01 em approvals.yaml) | [ ] |
-| RNF 5 | Isolamento multi-tenant em profundidade | TASK-05, TASK-10, TASK-17 | [ ] |
-| RNF 6 | Acesso a PII restrito por RBAC | TASK-05, TASK-06, TASK-14, TASK-18 | [ ] |
-| RNF 7 | Performance de busca (índice normalizado) | TASK-08 | [ ] |
-| RNF 8 | Imutabilidade de registros de auditoria | TASK-09, TASK-11 | [ ] |
-| RNF 9 | Observabilidade do módulo | TASK-16 | [ ] |
-| RNF 10 | Residência de dados no Brasil | TASK-08, TASK-18 | [ ] |
+| Req 9 | Controle de acesso a PII por RBAC | TASK-05, TASK-06, TASK-14, TASK-18 | [X] |
+| Req 10 | Isolamento de dados por tenant | TASK-05, TASK-08, TASK-10, TASK-18 | [X] |
+| RNF 1 | PII de contatos ausente de logs | TASK-02, TASK-05, TASK-11, TASK-17 | [X] |
+| RNF 2 | Minimização de dados pessoais | TASK-02, TASK-08, TASK-14 | [X] |
+| RNF 3 | Base legal LGPD (pendência) | TASK-18 (VAL-ACC-02 em approvals.yaml) | [X] registrado |
+| RNF 4 | Política de retenção/descarte (pendência) | TASK-18 (VAL-ACC-01 em approvals.yaml) | [X] registrado |
+| RNF 5 | Isolamento multi-tenant em profundidade | TASK-05, TASK-10, TASK-17 | [X] |
+| RNF 6 | Acesso a PII restrito por RBAC | TASK-05, TASK-06, TASK-14, TASK-18 | [X] |
+| RNF 7 | Performance de busca (índice normalizado) | TASK-08 | [X] |
+| RNF 8 | Imutabilidade de registros de auditoria | TASK-09, TASK-11 | [X] |
+| RNF 9 | Observabilidade do módulo | TASK-16 | [X] |
+| RNF 10 | Residência de dados no Brasil | TASK-08, TASK-18 | [X] |
 | PBT-01 | Idempotência da normalização de nome | TASK-02 | [ ] |
 | PBT-02 | Equivalência de nomes pela forma normalizada | TASK-02, TASK-04 | [ ] |
 | PBT-03 | Irreversibilidade da anonimização preservando referência | TASK-03, TASK-06, TASK-14 | [ ] |
-| PBT-04 | Anti-cross-tenant em contas e contatos | TASK-10, TASK-17 | [ ] |
-| PBT-05 | Visão 360° respeita escopo de BUs do usuário | TASK-07, TASK-15 | [ ] |
-| DD-001 | Anonimização in-place (esquecimento) | TASK-03, TASK-06, TASK-09 | [ ] |
-| DD-002 | Isolamento por coluna + filtro global; RLS pendente de ADR | TASK-08, TASK-10 | [ ] |
-| DD-003 | PiiMasker centralizado | TASK-11, TASK-17 | [ ] |
-| DD-004 | Composição síncrona da 360° via portas de leitura | TASK-07, TASK-12 | [ ] |
-| DD-005 | Normalização determinística exata, sem fuzzy | TASK-02 | [ ] |
-| DD-006 | Dedupe não-bloqueante; índice não-unique | TASK-03, TASK-04, TASK-08 | [ ] |
-| DD-007 | Publicação de eventos via Outbox transacional + Pub/Sub | TASK-09, TASK-11 | [ ] |
+| PBT-04 | Anti-cross-tenant em contas e contatos | TASK-10, TASK-17 | [X] gate CI |
+| PBT-05 | Visão 360° respeita escopo de BUs do usuário | TASK-07, TASK-15 | [X] |
+| DD-001 | Anonimização in-place (esquecimento) | TASK-03, TASK-06, TASK-09 | [X] |
+| DD-002 | Isolamento por coluna + filtro global; RLS pendente de ADR | TASK-08, TASK-10 | [X] |
+| DD-003 | PiiMasker centralizado | TASK-11, TASK-17 | [X] |
+| DD-004 | Composição síncrona da 360° via portas de leitura | TASK-07, TASK-12 | [X] |
+| DD-005 | Normalização determinística exata, sem fuzzy | TASK-02 | [X] |
+| DD-006 | Dedupe não-bloqueante; índice não-unique | TASK-03, TASK-04, TASK-08 | [X] |
+| DD-007 | Publicação de eventos via Outbox transacional + Pub/Sub | TASK-09, TASK-11 | [X] |
 
 ---
 

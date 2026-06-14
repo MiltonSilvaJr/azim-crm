@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    AccountManagement.Contracts
+    Papel: DTOs de request/response (contas e contatos) e contratos de evento
+           (AccountCreated.v1, AccountUpdated.v1, ContactLinked.v1, ContactForgotten.v1).
+    Regra de dependência: Contracts -> (nenhum projeto interno).
+    Contratos são consumidos por módulos externos; sem dependência interna para evitar ciclos.
+  -->
+  <PropertyGroup>
+    <AssemblyName>AccountManagement.Contracts</AssemblyName>
+    <RootNamespace>AccountManagement.Contracts</RootNamespace>
+    <Description>DTOs de request/response e contratos de evento do módulo account-management. Sem dependência de projetos internos (Clean Architecture, design §3).</Description>
+  </PropertyGroup>
+</Project>

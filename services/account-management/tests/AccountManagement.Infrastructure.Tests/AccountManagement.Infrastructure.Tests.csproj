@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    AccountManagement.Infrastructure.Tests
+    Foco: repositório (AccountRepository), filtro global de tenant (HasQueryFilter),
+          migrations (accounts, contacts, audit_logs, outbox_messages, idempotency_keys),
+          trigger de imutabilidade de audit_logs, Outbox relay, PiiMasker,
+          AuditPublisher e IdempotencyKeyRepository.
+    Infra de teste: Testcontainers + PostgreSQL real (não SQLite).
+    PBTs obrigatórios: PBT-04 (anti-cross-tenant — gate CI obrigatório, RNF 5.2).
+    Meta de cobertura: Infrastructure >= 70% (critério de fechamento da Onda 4).
+    Mapeia: design §13 (testes), TASK-08..TASK-12.
+  -->
+  <PropertyGroup>
+    <AssemblyName>AccountManagement.Infrastructure.Tests</AssemblyName>
+    <RootNamespace>AccountManagement.Infrastructure.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AccountManagement.Infrastructure\AccountManagement.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\AccountManagement.Application\AccountManagement.Application.csproj" />
+    <ProjectReference Include="..\..\src\AccountManagement.Domain\AccountManagement.Domain.csproj" />
+    <ProjectReference Include="..\..\src\AccountManagement.Contracts\AccountManagement.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Testcontainers para PostgreSQL real em testes de integração -->
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.4.0" />
+    <!-- NSubstitute: mock de serviços externos (Pub/Sub, etc.) -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <!-- Npgsql: conexão direta para verificações de schema RLS/REVOKE -->
+    <PackageReference Include="Npgsql" Version="9.0.4" />
+    <!-- FsCheck e FluentAssertions já vêm do Directory.Build.props -->
+  </ItemGroup>
+</Project>

@@ -250,6 +250,98 @@ jobs:
             --logger "console;verbosity=normal"
 
   # ---------------------------------------------------------------------------
+  # Gate PBT-04 — Isolamento cross-tenant do módulo account-management (TASK-17)
+  # Garante que nenhuma query/leitura cruza a fronteira de tenant.
+  # Gate obrigatório de nível sev-1: falha o build se quebrar (RNF 5.2, PBT-04).
+  # ---------------------------------------------------------------------------
+  account-management-tenant-isolation-gate:
+    name: account-management / PBT-04 tenant isolation (RNF 5.2 gate)
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/staging' ||
+      github.ref == 'refs/heads/develop' ||
+      startsWith(github.ref, 'refs/heads/feat/account-management') ||
+      startsWith(github.ref, 'refs/heads/test/account-management') ||
+      github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Build account-management
+        working-directory: services/account-management
+        run: dotnet build AccountManagement.slnx --configuration Release
+
+      - name: PBT-04 — Isolamento cross-tenant (gate obrigatório sev-1 — RNF 5.2, PBT-04)
+        working-directory: services/account-management
+        run: |
+          dotnet test tests/AccountManagement.Infrastructure.Tests/ \
+            --no-build --configuration Release \
+            --filter "FullyQualifiedName~TenantIsolation|FullyQualifiedName~CrossTenant|FullyQualifiedName~PBT04" \
+            --logger "console;verbosity=normal"
+        # Gate de segurança sev-1 (TASK-10, TASK-17, PBT-04):
+        # Garante que nenhuma busca/repositório cruza fronteira de tenant.
+        # Usa Testcontainers com PostgreSQL real (Docker necessário no runner).
+        # Violação = breaking change de segurança crítico.
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+
+      - name: Architecture.Tests (gate de dependências — Clean Architecture)
+        working-directory: services/account-management
+        run: |
+          dotnet test tests/AccountManagement.Architecture.Tests/ \
+            --no-build --configuration Release \
+            --logger "console;verbosity=normal"
+
+  # ---------------------------------------------------------------------------
+  # Gate anti-PII em logs do módulo account-management (TASK-17, RNF 1.4)
+  # Falha o build se PII de contato aparecer em texto claro em logs/deltas.
+  # ---------------------------------------------------------------------------
+  account-management-anti-pii-gate:
+    name: account-management / scan anti-PII em logs (RNF 1.4 gate)
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/staging' ||
+      github.ref == 'refs/heads/develop' ||
+      startsWith(github.ref, 'refs/heads/feat/account-management') ||
+      startsWith(github.ref, 'refs/heads/test/account-management') ||
+      github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Build account-management
+        working-directory: services/account-management
+        run: dotnet build AccountManagement.slnx --configuration Release
+
+      - name: Scan anti-PII — Infrastructure.Tests (gate obrigatório — RNF 1.4, TASK-17)
+        working-directory: services/account-management
+        run: |
+          dotnet test tests/AccountManagement.Infrastructure.Tests/ \
+            --no-build --configuration Release \
+            --filter "FullyQualifiedName~AntiPiiLogScan|FullyQualifiedName~PiiMasker" \
+            --logger "console;verbosity=normal"
+        # Gate obrigatório (TASK-17, RNF 1.4):
+        # - AntiPiiLogScanTests: ciclo completo de criação/edição de contato sem PII em logs
+        # - PiiMaskerTests: mascaramento de todos os campos de PII em JSON delta
+        # Falha o build imediatamente se qualquer PII aparecer em texto claro.
+
+      - name: Scan anti-PII — Application.Tests (CorrelationLoggingBehavior sem PII)
+        working-directory: services/account-management
+        run: |
+          dotnet test tests/AccountManagement.Application.Tests/ \
+            --no-build --configuration Release \
+            --filter "FullyQualifiedName~NoPiiInLogs" \
+            --logger "console;verbosity=normal"
+
+  # ---------------------------------------------------------------------------
   # Gate de Architecture Tests do módulo organization (design §3, TASK-02)
   # Valida regra de dependência entre camadas (Clean Architecture).
   # Roda em pushes de branches feat/organization/** e em develop/staging.
