@@ -3,7 +3,7 @@
     Reporting.Api.Tests
     Foco: contratos REST, RBAC por endpoint, catálogo de erros, anti-enumeração,
           equivalência relatório × export (Req 5.5), ausência de PII no corpo de erro.
-    Mapeia: design §13.4, §8.2, §12, RNF 4.3, Req 5.5, ADR-0001.
+    Mapeia: design §13.4, §8.2, §12, RNF 4.3, Req 5.5, ADR-0001, TASK-22.
   -->
   <PropertyGroup>
     <AssemblyName>Reporting.Api.Tests</AssemblyName>
@@ -15,5 +15,16 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Reporting.Api\Reporting.Api.csproj" />
     <ProjectReference Include="..\..\src\Reporting.Contracts\Reporting.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Reporting.Application\Reporting.Application.csproj" />
+    <ProjectReference Include="..\..\src\Reporting.Infrastructure\Reporting.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WebApplicationFactory para testes de integração de API -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
+    <!-- NSubstitute para mocks de dependências -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <!-- FsCheck.Xunit: Property-Based Testing PBT-05 ao nível de API -->
+    <!-- Já incluído via Directory.Build.props para projetos .Tests -->
   </ItemGroup>
 </Project>
