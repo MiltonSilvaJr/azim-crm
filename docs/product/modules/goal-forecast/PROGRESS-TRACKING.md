@@ -17,8 +17,8 @@
 | 2 | Domain | TASK-03..07 | [X] (5 commits) — 108 Domain + PBT-02/05; money-as-cents long |
 | 3 | Application | TASK-08..14 | [X] (7 commits) — 56 App + PBT-01/02/03/04; forecast degradação graciosa |
 | 4 | Infrastructure (RLS) | TASK-15..20 | [X] (6 commits) — 40 Infra (RLS Testcontainers, PBT-05); circuit breaker pipeline; EF 9.0.6 |
-| 5 | API + Contracts | TASK-21..26 | [-] |
-| 6 | Hardening | TASK-27..30 | [ ] |
+| 5 | API + Contracts | TASK-21..26 | [X] (6 commits) — 71 Api; RBAC/GF-ERR; internal mTLS; forecast total |
+| 6 | Hardening | TASK-27..30 | [-] |
 
 ## Detalhe por onda
 
