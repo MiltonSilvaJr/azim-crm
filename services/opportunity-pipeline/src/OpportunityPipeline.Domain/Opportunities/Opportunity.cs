@@ -387,6 +387,10 @@ public sealed class Opportunity
     /// </summary>
     public void Reopen(Guid actorId, string? reason, DateTimeOffset now)
     {
+        // Reopen apenas faz sentido quando fechada (won ou lost)
+        if (StageCategory == ValueObjects.StageCategory.Open)
+            throw new InvalidStageTransitionException(StageCategory, ValueObjects.StageCategory.Open);
+
         OpportunityLifecycle.ValidateTransition(StageCategory, ValueObjects.StageCategory.Open);
 
         var previousCategory = StageCategory;
