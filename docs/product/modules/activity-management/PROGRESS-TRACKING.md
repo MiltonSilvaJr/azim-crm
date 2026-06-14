@@ -14,8 +14,8 @@
 |------|------|-------|--------|
 | 1 | Bootstrap | TASK-01 | [X] (`73c1c4f`) — 10 Architecture; EF 9.0.6 |
 | 2 | Domínio (PBT-01/04/05) | TASK-02..05 | [X] (4 commits) — 141 Domain + PBT-01/04/05 (dívida: Reschedule usa UtcNow, corrigir Onda 3) |
-| 3 | Application (PBT-02/03) | TASK-06..12 | [-] |
-| 4 | Infrastructure (RLS) | TASK-13..17 | [ ] |
+| 3 | Application (PBT-02/03) | TASK-06..12 | [X] (7 commits) — 70 App + PBT-02/03; Reschedule corrigido (now via IClock); 7 ports |
+| 4 | Infrastructure (RLS) | TASK-13..17 | [-] |
 | 5 | API + Contratos (Pact) | TASK-18..21 | [ ] |
 | 6 | Hardening | TASK-22..24 | [ ] |
 
