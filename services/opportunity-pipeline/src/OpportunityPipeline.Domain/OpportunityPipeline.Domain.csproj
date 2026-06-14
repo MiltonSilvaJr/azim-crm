@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    OpportunityPipeline.Domain
+    Papel: aggregate root Opportunity, entidades internas (OpportunityStageTransition,
+           OpportunityPartnerCommission, OpportunityContactLink), objetos de valor
+           (Money, ContractValue, Probability, OpportunityNumber, StageCategory,
+           CommissionTerms, CommissionCalculation, CommissionRole, ContactLink,
+           StageRef, OriginChannelRef, LossReasonRef), eventos de domínio,
+           serviços de domínio puros (CommissionCalculator, ForecastCalculator,
+           NetForecastCalculator, NbrRounding, ExpectedCloseDatePolicy,
+           StagnationSpecification, OverdueSpecification, OpportunityLifecycle),
+           interfaces de repositório e portas, exceções de domínio tipadas.
+    Regra de dependência: Domain -> (nenhum projeto interno).
+    Domain não referencia EF Core, GCP SDK, web framework, mensageria ou MediatR.
+    Mapeia: design §3, §4, PBT-01..11, INV-1..13, RNF 11.
+  -->
+  <PropertyGroup>
+    <AssemblyName>OpportunityPipeline.Domain</AssemblyName>
+    <RootNamespace>OpportunityPipeline.Domain</RootNamespace>
+    <Description>Agregados, objetos de valor, eventos de domínio, serviços de domínio puros, políticas, interfaces de repositório e exceções tipadas do módulo opportunity-pipeline. Sem dependência de infraestrutura (Clean Architecture, DDD).</Description>
+  </PropertyGroup>
+</Project>

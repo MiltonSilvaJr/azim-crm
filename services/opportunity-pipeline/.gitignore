@@ -1,0 +1,19 @@
+# Artefatos de build .NET — nunca versionar
+bin/
+obj/
+
+# Arquivos de usuário do Visual Studio / Rider
+*.user
+*.suo
+.vs/
+.idea/
+
+# Cobertura de código
+coverage/
+TestResults/
+*.coverage
+*.coveragexml
+
+# NuGet
+*.nupkg
+packages/

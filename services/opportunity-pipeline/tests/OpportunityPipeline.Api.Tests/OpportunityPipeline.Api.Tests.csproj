@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    OpportunityPipeline.Api.Tests
+    Foco: contratos HTTP (códigos de status, payloads), RBAC por endpoint
+          (200/403 para cada papel × capacidade — design §10), ProblemDetails,
+          erros OP-ERR-*, endpoints internos (/internal/*) com mTLS.
+    Coverage gate: ≥ 80% nas rotas de Api (Onda 5 — TASK-20..21).
+    Usa WebApplicationFactory para testes de integração in-process.
+    Mapeia: design §13, RNF 4, TASK-20..21.
+  -->
+  <PropertyGroup>
+    <AssemblyName>OpportunityPipeline.Api.Tests</AssemblyName>
+    <RootNamespace>OpportunityPipeline.Api.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OpportunityPipeline.Api\OpportunityPipeline.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WebApplicationFactory para testes de integração do pipeline HTTP -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
+    <!-- NSubstitute: mocks de handlers e portas -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+  </ItemGroup>
+</Project>

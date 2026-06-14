@@ -1,0 +1,34 @@
+<Solution>
+  <!--
+    OpportunityPipeline.slnx — formato XML nativo .NET 10
+    Módulo: BC-01 Opportunity Pipeline (Core Domain, Tier 1)
+    Estrutura: 5 projetos de produção + 5 de teste (Clean Architecture + DDD).
+
+    Regra de dependência (validada por Architecture.Tests — TASK-01, design §3):
+      Api            -> Application, Infrastructure, Contracts
+      Application    -> Domain, Contracts (NUNCA Infrastructure)
+      Infrastructure -> Application, Domain, Contracts
+      Domain         -> (nenhum projeto interno)
+      Contracts      -> (nenhum projeto interno)
+
+    ADRs aplicáveis:
+      ADR-0001 (Multi-tenancy pooled DB + RLS — Aceito)
+      ADR-0002 (Snapshot imutável de comissão — a formalizar)
+      ADR-0003 (Unicidade opportunity_number por tenant — a formalizar)
+      ADR-0004 (Outbox pattern + idempotência de consumers — a formalizar)
+  -->
+  <Folder Name="/src/">
+    <Project Path="src/OpportunityPipeline.Contracts/OpportunityPipeline.Contracts.csproj" />
+    <Project Path="src/OpportunityPipeline.Domain/OpportunityPipeline.Domain.csproj" />
+    <Project Path="src/OpportunityPipeline.Application/OpportunityPipeline.Application.csproj" />
+    <Project Path="src/OpportunityPipeline.Infrastructure/OpportunityPipeline.Infrastructure.csproj" />
+    <Project Path="src/OpportunityPipeline.Api/OpportunityPipeline.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OpportunityPipeline.Domain.Tests/OpportunityPipeline.Domain.Tests.csproj" />
+    <Project Path="tests/OpportunityPipeline.Application.Tests/OpportunityPipeline.Application.Tests.csproj" />
+    <Project Path="tests/OpportunityPipeline.Infrastructure.Tests/OpportunityPipeline.Infrastructure.Tests.csproj" />
+    <Project Path="tests/OpportunityPipeline.Api.Tests/OpportunityPipeline.Api.Tests.csproj" />
+    <Project Path="tests/OpportunityPipeline.Architecture.Tests/OpportunityPipeline.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>

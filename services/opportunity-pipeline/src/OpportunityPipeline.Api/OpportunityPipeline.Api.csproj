@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!--
+    OpportunityPipeline.Api
+    Papel: controllers REST (OpportunitiesController, CommissionsController,
+           KanbanController, InternalPipelineController), políticas RBAC,
+           middleware de ProblemDetails, configuração do pipeline ASP.NET Core,
+           OpenAPI, mapeamento DTO → command/query.
+    Regra de dependência: Api -> Application, Infrastructure, Contracts.
+    Nenhuma lógica de negócio nos controllers — tudo delegado para Application.
+    Mapeia: design §3, §8, §10, TASK-20, TASK-21.
+  -->
+  <PropertyGroup>
+    <AssemblyName>OpportunityPipeline.Api</AssemblyName>
+    <RootNamespace>OpportunityPipeline.Api</RootNamespace>
+    <Description>Pipeline HTTP, controllers REST, RBAC e OpenAPI do módulo opportunity-pipeline. Sem lógica de negócio nos controllers (Clean Architecture).</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpportunityPipeline.Application\OpportunityPipeline.Application.csproj" />
+    <ProjectReference Include="..\OpportunityPipeline.Infrastructure\OpportunityPipeline.Infrastructure.csproj" />
+    <ProjectReference Include="..\OpportunityPipeline.Contracts\OpportunityPipeline.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Autenticação JWT (rule jwt-authentication, design §10) -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <!-- OpenAPI/Swagger (TASK-20, design §8) -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
+    <!-- FluentValidation DI extensions -->
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+  </ItemGroup>
+</Project>
