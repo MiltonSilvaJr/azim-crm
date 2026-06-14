@@ -1,8 +1,8 @@
 # Tasks — OP — Opportunity Pipeline (Pipeline de Oportunidades)
 
-- Versão: 0.1.0
-- Data: 2026-06-11
-- Status: Rascunho para revisão
+- Versão: 0.1.1
+- Data: 2026-06-14
+- Status: Aprovado para desenvolvimento
 - Referência base requirements: docs/product/modules/opportunity-pipeline/requirements.md v0.1.0
 - Referência base design: docs/product/modules/opportunity-pipeline/design.md v0.1.0
 - ADRs aplicáveis: ADR-0001 (isolamento multi-tenant — Aceito); ADR-0002 (snapshot imutável — a formalizar); ADR-0003 (unicidade opportunity_number — a formalizar); ADR-0004 (Outbox + idempotência de consumers — a formalizar)
@@ -15,6 +15,7 @@
 | Versão | Data | Status | Descrição da alteração |
 |--------|------|--------|------------------------|
 | 0.1.0 | 2026-06-11 | Rascunho para revisão | Criação inicial derivada de requirements.md v0.1.0 e design.md v0.1.0 (Req 1..20, RNF 1..12, PBT-01..11, DD-001..007, INV-1..13). |
+| 0.1.1 | 2026-06-14 | Aprovado para desenvolvimento | Aprovação humana (HITL #1, VAL-07 resolvida); execução via `/forge:coding-loop` autônomo (6 ondas). |
 
 ---
 
