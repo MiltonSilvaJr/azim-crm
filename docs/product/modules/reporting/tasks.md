@@ -103,8 +103,8 @@ Onda é atributo no header da TASK — nunca entra no ID.
 
 | TASK | Título | Onda | Branch | Status |
 |------|--------|------|--------|--------|
-| TASK-01 | Bootstrap solution e dez projetos Clean Architecture | Onda 1 | `feat/reporting/01-bootstrap-solution` | [ ] |
-| TASK-02 | Testes de arquitetura e dependências entre camadas | Onda 1 | `test/reporting/02-architecture-tests` | [ ] |
+| TASK-01 | Bootstrap solution e dez projetos Clean Architecture | Onda 1 | `feat/reporting/all-waves` | [X] |
+| TASK-02 | Testes de arquitetura e dependências entre camadas | Onda 1 | `feat/reporting/all-waves` | [X] |
 | TASK-03 | Objetos de valor: Money, Period, ChannelShare e StageBucket | Onda 2 | `feat/reporting/03-domain-value-objects` | [ ] |
 | TASK-04 | ReportScope, ReportType e enums de papel RBAC | Onda 2 | `feat/reporting/04-report-scope-enum` | [ ] |
 | TASK-05 | Portas de aplicação: IReportingReadRepository, IScopeResolver, ICsvReportWriter, ICsvStorage | Onda 3 | `feat/reporting/05-application-ports` | [ ] |
@@ -153,7 +153,7 @@ Onda é atributo no header da TASK — nunca entra no ID.
 | **Onda** | Onda 1 — Bootstrap |
 | **Branch** | `feat/reporting/01-bootstrap-solution` |
 | **Worktree** | `git worktree add ../worktrees/reporting/01-bootstrap-solution -b feat/reporting/01-bootstrap-solution` |
-| **Status** | [ ] |
+| **Status** | [X] |
 | **Depende de** | Não aplicável |
 | **Entregável** | Dez projetos (cinco fonte + cinco de teste) compilando com referências corretas conforme design §3 |
 | **Mapeia** | DD-003, ADR-0001, design §3 |
@@ -165,18 +165,18 @@ Criar a estrutura de solução do slice `reporting` com os cinco projetos da Cle
 
 #### Subtasks
 
-- [ ] **ST-01 — Red:** escrever teste de compilação que verifica a existência dos assemblies `Reporting.Domain`, `Reporting.Application`, `Reporting.Infrastructure`, `Reporting.Api` e `Reporting.Contracts` — falha porque os projetos não existem.
-- [ ] **ST-02 — Green:** criar os dez projetos com referências conforme design §3; registrar na solution do `azim-api`.
-- [ ] **ST-03 — Refactor:** confirmar namespaces em inglês (`Reporting.*`); remover boilerplate; validar ausência de dependências circulares.
-- [ ] **ST-04 — Docs:** anotar estrutura no README do módulo.
-- [ ] **ST-05 — Encerramento:** `dotnet build` verde; commit `feat(reporting): bootstrap dez projetos Clean Architecture read-side`; push.
+- [X] **ST-01 — Red:** escrever teste de compilação que verifica a existência dos assemblies `Reporting.Domain`, `Reporting.Application`, `Reporting.Infrastructure`, `Reporting.Api` e `Reporting.Contracts` — falha porque os projetos não existem.
+- [X] **ST-02 — Green:** criar os dez projetos com referências conforme design §3; registrar na solution do `azim-api`.
+- [X] **ST-03 — Refactor:** confirmar namespaces em inglês (`Reporting.*`); remover boilerplate; validar ausência de dependências circulares.
+- [X] **ST-04 — Docs:** anotar estrutura no README do módulo.
+- [X] **ST-05 — Encerramento:** `dotnet build` verde; commit `feat(reporting): bootstrap dez projetos Clean Architecture read-side`; push.
 
 #### Critérios de Aceite
 
-- [ ] Dez projetos criados com namespaces `Reporting.*`.
-- [ ] Referências seguem hierarquia do design §3 sem dependências circulares.
-- [ ] `dotnet build` sem erro ou warning de dependência circular.
-- [ ] `Domain` e `Contracts` sem referências externas proibidas.
+- [X] Dez projetos criados com namespaces `Reporting.*`.
+- [X] Referências seguem hierarquia do design §3 sem dependências circulares.
+- [X] `dotnet build` sem erro ou warning de dependência circular.
+- [X] `Domain` e `Contracts` sem referências externas proibidas.
 
 ---
 
@@ -187,7 +187,7 @@ Criar a estrutura de solução do slice `reporting` com os cinco projetos da Cle
 | **Onda** | Onda 1 — Bootstrap |
 | **Branch** | `test/reporting/02-architecture-tests` |
 | **Worktree** | `git worktree add ../worktrees/reporting/02-architecture-tests -b test/reporting/02-architecture-tests` |
-| **Status** | [ ] |
+| **Status** | [X] |
 | **Depende de** | TASK-01 |
 | **Entregável** | Suite `Reporting.Architecture.Tests` com regras de dependência automatizadas e bloqueadoras no CI |
 | **Mapeia** | design §3, DD-003, ADR-0001 |
@@ -199,18 +199,18 @@ Implementar testes de arquitetura que validam as regras de dependência entre ca
 
 #### Subtasks
 
-- [ ] **ST-01 — Red:** criar `Reporting.Architecture.Tests`; escrever testes referenciando os assemblies — falham porque não há conteúdo mínimo.
-- [ ] **ST-02 — Green:** implementar via NetArchTest ou equivalente: `Api` não acessa `Domain` diretamente; `Infrastructure` não referencia `Api`; `Domain` e `Contracts` sem dependências proibidas; `Domain` não contém classes que herdam de aggregate base transacional.
-- [ ] **ST-03 — Refactor:** agrupar por categoria; garantir mensagens de falha que identificam o violador.
-- [ ] **ST-04 — Docs:** não aplicável.
-- [ ] **ST-05 — Encerramento:** testes verdes; commit `test(reporting): testes de arquitetura Clean Architecture read-side`; push.
+- [X] **ST-01 — Red:** criar `Reporting.Architecture.Tests`; escrever testes referenciando os assemblies — falham porque não há conteúdo mínimo.
+- [X] **ST-02 — Green:** implementar via NetArchTest ou equivalente: `Api` não acessa `Domain` diretamente; `Infrastructure` não referencia `Api`; `Domain` e `Contracts` sem dependências proibidas; `Domain` não contém classes que herdam de aggregate base transacional.
+- [X] **ST-03 — Refactor:** agrupar por categoria; garantir mensagens de falha que identificam o violador.
+- [X] **ST-04 — Docs:** não aplicável.
+- [X] **ST-05 — Encerramento:** testes verdes; commit `test(reporting): testes de arquitetura Clean Architecture read-side`; push.
 
 #### Critérios de Aceite
 
-- [ ] Todas as regras de dependência do design §3 cobertas por testes automatizados.
-- [ ] Violação de qualquer regra quebra o CI imediatamente.
-- [ ] `Domain` validado como camada sem aggregate transacional.
-- [ ] Mensagens de falha descritivas.
+- [X] Todas as regras de dependência do design §3 cobertas por testes automatizados.
+- [X] Violação de qualquer regra quebra o CI imediatamente.
+- [X] `Domain` validado como camada sem aggregate transacional.
+- [X] Mensagens de falha descritivas.
 
 ---
 
