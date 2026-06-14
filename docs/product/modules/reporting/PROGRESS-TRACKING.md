@@ -12,8 +12,8 @@
 
 | Onda | Foco | TASKs | Status |
 |------|------|-------|--------|
-| 1 | Bootstrap | TASK-01..02 | [ ] |
-| 2 | Domain | TASK-03..04 | [ ] |
+| 1 | Bootstrap | TASK-01..02 | [X] (`f1c75e1`,`6c10c3c`) — 13 Architecture (read-side purity); EF 9.0.6 |
+| 2 | Domain | TASK-03..04 | [-] |
 | 3 | Application | TASK-05..12 | [ ] |
 | 4 | Infrastructure (views security_invoker, RLS, GCS) | TASK-13..19 | [ ] |
 | 5 | API + Contracts | TASK-20..22 | [ ] |
