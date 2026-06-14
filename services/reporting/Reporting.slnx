@@ -1,0 +1,31 @@
+<Solution>
+  <!--
+    Reporting.slnx — formato XML nativo .NET 10
+    Módulo: BC-07 Reporting (Supporting Subdomain, Tier 2)
+    Estrutura: 5 projetos de produção + 5 de teste (Clean Architecture, read side puro).
+
+    Regra de dependência (validada por Architecture.Tests, design §3):
+      Api            -> Application, Infrastructure, Contracts
+      Application    -> Domain, Contracts  (NUNCA Infrastructure)
+      Infrastructure -> Application, Domain, Contracts  (NUNCA Api)
+      Domain         -> ∅  (NUNCA nenhum projeto interno)
+      Contracts      -> ∅  (NUNCA nenhum projeto interno)
+
+    Read side puro (DD-003): Reporting.Domain sem aggregates transacionais.
+    ADRs aplicáveis: ADR-0001 (Multi-tenancy pooled DB + RLS com security_invoker).
+  -->
+  <Folder Name="/src/">
+    <Project Path="src/Reporting.Contracts/Reporting.Contracts.csproj" />
+    <Project Path="src/Reporting.Domain/Reporting.Domain.csproj" />
+    <Project Path="src/Reporting.Application/Reporting.Application.csproj" />
+    <Project Path="src/Reporting.Infrastructure/Reporting.Infrastructure.csproj" />
+    <Project Path="src/Reporting.Api/Reporting.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Reporting.Domain.Tests/Reporting.Domain.Tests.csproj" />
+    <Project Path="tests/Reporting.Application.Tests/Reporting.Application.Tests.csproj" />
+    <Project Path="tests/Reporting.Infrastructure.Tests/Reporting.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Reporting.Api.Tests/Reporting.Api.Tests.csproj" />
+    <Project Path="tests/Reporting.Architecture.Tests/Reporting.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>

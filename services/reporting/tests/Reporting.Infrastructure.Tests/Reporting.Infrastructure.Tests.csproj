@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Reporting.Infrastructure.Tests
+    Foco: views/SQL com RLS security_invoker, PBT-03 (isolamento cross-tenant), índices,
+          GCS client. Testes de integração com Testcontainers (Postgres).
+    PBT-03 é gate de CI obrigatório (ADR-0001, Req 8.3).
+    Mapeia: design §13.3, DD-002, DD-004, DD-005, PBT-03, ADR-0001.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Reporting.Infrastructure.Tests</AssemblyName>
+    <RootNamespace>Reporting.Infrastructure.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Reporting.Infrastructure\Reporting.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Reporting.Domain\Reporting.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Reporting.Contracts\Reporting.Contracts.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Reporting.Application.Tests
+    Foco: handlers por escopo RBAC, RbacScopeSpecification, PBT-01 (snapshot imutável),
+          PBT-04 (handler canal), PBT-05 (round-trip relatório × CSV).
+    Mapeia: design §13.2, DD-003, DD-006, DD-007, PBT-01, PBT-04, PBT-05.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Reporting.Application.Tests</AssemblyName>
+    <RootNamespace>Reporting.Application.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Reporting.Application\Reporting.Application.csproj" />
+    <ProjectReference Include="..\..\src\Reporting.Domain\Reporting.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Reporting.Contracts\Reporting.Contracts.csproj" />
+  </ItemGroup>
+</Project>

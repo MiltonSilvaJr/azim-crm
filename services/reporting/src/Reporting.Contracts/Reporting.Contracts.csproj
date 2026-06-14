@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Reporting.Contracts
+    Papel: DTOs de request/response, enums de tipo de relatório (ReportType), contrato do CSV.
+    Regra de dependência (design §3): sem referências internas (∅).
+    Consumido por Api, Application, Infrastructure e projetos externos.
+    Mapeia: design §3, DD-003.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Reporting.Contracts</AssemblyName>
+    <RootNamespace>Reporting.Contracts</RootNamespace>
+    <Description>Contratos públicos do módulo reporting: DTOs de request/response, enums de tipo de relatório e contrato de export CSV. Sem dependências internas (design §3).</Description>
+  </PropertyGroup>
+</Project>

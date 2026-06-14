@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Reporting.Application
+    Papel: queries, handlers, validators, portas de leitura (IReportingReadRepository,
+           IScopeResolver, ICsvReportWriter, ICsvStorage), scope resolver, pipeline behaviors.
+    Regra de dependência (design §3): Application -> Domain, Contracts.
+    NUNCA referencia Infrastructure.
+    Mapeia: design §3, §5, DD-003, DD-006.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Reporting.Application</AssemblyName>
+    <RootNamespace>Reporting.Application</RootNamespace>
+    <Description>Queries, handlers e portas de leitura do módulo reporting. Orquestra o read side puro sem acesso direto a Infrastructure (design §3, DD-003).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Reporting.Domain\Reporting.Domain.csproj" />
+    <ProjectReference Include="..\Reporting.Contracts\Reporting.Contracts.csproj" />
+  </ItemGroup>
+</Project>

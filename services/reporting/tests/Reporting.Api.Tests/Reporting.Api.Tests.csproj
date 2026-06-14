@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Reporting.Api.Tests
+    Foco: contratos REST, RBAC por endpoint, catálogo de erros, anti-enumeração,
+          equivalência relatório × export (Req 5.5), ausência de PII no corpo de erro.
+    Mapeia: design §13.4, §8.2, §12, RNF 4.3, Req 5.5, ADR-0001.
+  -->
+  <PropertyGroup>
+    <AssemblyName>Reporting.Api.Tests</AssemblyName>
+    <RootNamespace>Reporting.Api.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Reporting.Api\Reporting.Api.csproj" />
+    <ProjectReference Include="..\..\src\Reporting.Contracts\Reporting.Contracts.csproj" />
+  </ItemGroup>
+</Project>
