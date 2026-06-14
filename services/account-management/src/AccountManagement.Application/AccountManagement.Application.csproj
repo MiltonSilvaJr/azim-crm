@@ -31,6 +31,10 @@
     <PackageReference Include="MediatR" Version="12.5.0" />
     <!-- FluentValidation: validação sintática na borda (ValidationBehavior) -->
     <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <!-- FluentValidation DI: AddValidatorsFromAssembly para registro em ApplicationServiceExtensions -->
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <!-- Abstrações de DI: IServiceCollection para ApplicationServiceExtensions -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
     <!-- Abstrações de logging estruturado (observabilidade — RNF 9) -->
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
     <!-- Options pattern para configurações -->
