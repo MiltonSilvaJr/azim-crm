@@ -17,7 +17,10 @@
 | 3 | Application | TASK-04..07 | [X] (4 commits) — 55 App + PBT-05 (Account360 degradação) |
 | 4 | Infrastructure (PiiMasker, Outbox) | TASK-08..12 | [X] (6 commits) — 81 Infra (RLS/PBT-04 Testcontainers); +testes PiiMasker (`730f61d`, bug ReadPorts corrigido); EF 9.0.6 |
 | 5 | API + Contracts | TASK-13..15 | [X] (3 commits) — 32 Api + PBT-03/05; ACC-ERR catálogo |
-| 6 | Hardening (anti-PII, RBAC, DoD) | TASK-16..18 | [-] |
+| 6 | Hardening (anti-PII, RBAC, DoD) | TASK-16..18 | [X] (3 commits) — observ/anti-PII gate/RBAC/DoD |
+
+> **🎯 Módulo completo — 6/6 ondas, 18 TASKs, 294 testes verdes** (Domain 94 + Application 63 + Api 39 + Infrastructure 88 c/ Testcontainers RLS/PBT-04 + Architecture 10). 5 PBTs. EF 9.0.6. PR #9.
+> Account360 com degradação parcial; PiiMasker testado (anti-PII gate CI); ForgetContact (LGPD). Pendências go-live: VAL-ACC-01/02/03 (jurídico) em approvals.yaml.
 
 ## Detalhe por onda
 
