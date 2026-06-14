@@ -207,6 +207,154 @@ public sealed class PartnersController(IMediator mediator, ITenantContext tenant
     }
 
     // =========================================================================
+    // POST /api/v1/partners/{id}/deactivate
+    // =========================================================================
+
+    /// <summary>
+    /// Inativa um parceiro (soft-delete lógico). Operação idempotente: retorna 200
+    /// mesmo que o parceiro já esteja inativo (DD-006, Req 3.5).
+    /// Papel mínimo: Gestor de BU ou Tenant Admin (<c>partners:write</c>).
+    /// </summary>
+    /// <param name="id">Identificador do parceiro.</param>
+    /// <param name="cancellationToken">Token de cancelamento.</param>
+    [HttpPost("{id:guid}/deactivate")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeactivatePartner(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        DeactivatePartnerResult result = await mediator.Send(
+            new DeactivatePartnerCommand(
+                PartnerId: id,
+                TenantId: tenantContext.CurrentTenantId,
+                ActorId: GetActorId(),
+                CorrelationId: GetCorrelationId()),
+            cancellationToken);
+
+        return Ok(new { partnerId = id, transitionEffective = result.TransitionEffective });
+    }
+
+    // =========================================================================
+    // POST /api/v1/partners/{id}/reactivate
+    // =========================================================================
+
+    /// <summary>
+    /// Reativa um parceiro. Operação idempotente: retorna 200 mesmo que o parceiro
+    /// já esteja ativo (DD-006, Req 3.5).
+    /// Papel mínimo: Gestor de BU ou Tenant Admin (<c>partners:write</c>).
+    /// </summary>
+    /// <param name="id">Identificador do parceiro.</param>
+    /// <param name="cancellationToken">Token de cancelamento.</param>
+    [HttpPost("{id:guid}/reactivate")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ReactivatePartner(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        ReactivatePartnerResult result = await mediator.Send(
+            new ReactivatePartnerCommand(
+                PartnerId: id,
+                TenantId: tenantContext.CurrentTenantId,
+                ActorId: GetActorId(),
+                CorrelationId: GetCorrelationId()),
+            cancellationToken);
+
+        return Ok(new { partnerId = id, transitionEffective = result.TransitionEffective });
+    }
+
+    // =========================================================================
+    // GET /api/v1/partners/{id}/eligibility
+    // =========================================================================
+
+    /// <summary>
+    /// Retorna o status de elegibilidade do parceiro para vinculação a oportunidades.
+    /// Consumida internamente pelo opportunity-pipeline via mTLS (Req 8.1, DD-007).
+    /// Papel mínimo: Viewer (<c>partners:read</c>).
+    /// </summary>
+    /// <param name="id">Identificador do parceiro.</param>
+    /// <param name="cancellationToken">Token de cancelamento.</param>
+    [HttpGet("{id:guid}/eligibility")]
+    [ProducesResponseType(typeof(PartnerEligibilityResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPartnerEligibility(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        PartnerEligibilityResult result = await mediator.Send(
+            new GetPartnerEligibilityQuery(id, tenantContext.CurrentTenantId),
+            cancellationToken);
+
+        return Ok(new PartnerEligibilityResponse
+        {
+            PartnerId = result.PartnerId,
+            Active = result.Active
+        });
+    }
+
+    // =========================================================================
+    // GET /api/v1/partners/{id}/commissions
+    // =========================================================================
+
+    /// <summary>
+    /// Retorna a visão de comissão de um parceiro (projetada × consolidada) para o período.
+    /// Valores em centavos inteiros (money-as-cents, RNF 6). Em indisponibilidade do
+    /// read port, retorna 200 com <c>commissionUnavailable = true</c> (design §5.3).
+    /// Papel mínimo: Gestor de BU ou Tenant Admin (<c>partners:commissions:read</c>).
+    /// </summary>
+    /// <param name="id">Identificador do parceiro.</param>
+    /// <param name="from">Início do período (formato yyyy-MM-dd).</param>
+    /// <param name="to">Fim do período (formato yyyy-MM-dd).</param>
+    /// <param name="cancellationToken">Token de cancelamento.</param>
+    [HttpGet("{id:guid}/commissions")]
+    [ProducesResponseType(typeof(CommissionViewResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPartnerCommissions(
+        [FromRoute] Guid id,
+        [FromQuery] DateTimeOffset? from,
+        [FromQuery] DateTimeOffset? to,
+        CancellationToken cancellationToken = default)
+    {
+        if (from is null || to is null)
+        {
+            return BadRequest(new
+            {
+                error = "Período de comissão é obrigatório.",
+                code = PartnerErrors.InvalidCommissionPeriod,
+                correlationId = GetCorrelationId()
+            });
+        }
+
+        CommissionViewResult result = await mediator.Send(
+            new GetPartnerCommissionViewQuery(
+                PartnerId: id,
+                TenantId: tenantContext.CurrentTenantId,
+                From: from.Value,
+                To: to.Value,
+                CorrelationId: GetCorrelationId()),
+            cancellationToken);
+
+        return Ok(new CommissionViewResponse
+        {
+            PartnerId = result.PartnerId,
+            PeriodFrom = result.PeriodFrom,
+            PeriodTo = result.PeriodTo,
+            ProjectedCommissionCents = result.ProjectedCommissionCents,
+            ConsolidatedCommissionCents = result.ConsolidatedCommissionCents,
+            CommissionUnavailable = result.CommissionUnavailable
+        });
+    }
+
+    // =========================================================================
     // Auxiliares
     // =========================================================================
 
