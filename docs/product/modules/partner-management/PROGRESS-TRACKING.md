@@ -18,7 +18,10 @@
 | 3 | Application (PBTs) | TASK-09..14 | [X] (6 commits) — 61 App + PBT-01/05; IPartnerCommissionReadPort |
 | 4 | Infrastructure (RLS, outbox) | TASK-15..21 | [X] (7 commits) — 60 Infra (RLS/PBT-04 Testcontainers, PartnerPiiMasker); EF 9.0.6 |
 | 5 | API + Contratos (Pact) | TASK-22..25 | [X] (4 commits) — 70 Api; RBAC/PM-ERR; commissions degradação |
-| 6 | Hardening | TASK-26..29 | [-] |
+| 6 | Hardening | TASK-26..29 | [X] (4 commits) — observ/anti-PII gate/resiliência Polly/DoD |
+
+> **🎯 Módulo completo — 6/6 ondas, 29 TASKs, 348 testes verdes** (Domain 128 + Application 62 + Api 70 + Infrastructure 78 c/ Testcontainers RLS/PBT-04 + Architecture 10). 5 PBTs. EF 9.0.6. PR #10.
+> Comissões: Percentage decimal NBR-5891 (money em centavos fica no opportunity-pipeline). `IPartnerCommissionReadPort` resiliente (Polly). PartnerPiiMasker gate CI. Pendência: VAL-PARTNER-01 (partner.name é PII? mascarado por precaução).
 
 ## Detalhe por onda
 
