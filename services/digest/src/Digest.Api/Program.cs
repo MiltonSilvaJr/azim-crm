@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Digest.Api.Endpoints;
 using Digest.Api.Infrastructure;
+using Digest.Api.Jobs;
 using FluentValidation;
 using Digest.Application.Abstractions;
 using Digest.Application.Behaviors;
@@ -178,6 +179,11 @@ builder.Services.AddScoped<IEmailSender, NoOpEmailSender>();
 // Api — Fan-out Pub/Sub (MVP: in-process; produção: SDK do GCP Pub/Sub)
 // ---------------------------------------------------------------------------
 builder.Services.AddScoped<IPubSubFanout, InProcessFanout>();
+
+// ---------------------------------------------------------------------------
+// Jobs — Purge de retenção diário às 02:00 UTC (TASK-24, RNF 9)
+// ---------------------------------------------------------------------------
+builder.Services.AddHostedService<DigestRetentionHostedService>();
 
 // ---------------------------------------------------------------------------
 // Health Checks: live/ready (design §8.2)
