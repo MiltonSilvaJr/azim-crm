@@ -62,6 +62,14 @@ public sealed class Goal
     }
 
     /// <summary>
+    /// Construtor sem validação para uso exclusivo do EF Core na materialização de entidades.
+    /// Não deve ser chamado diretamente — use <see cref="Create"/>.
+    /// </summary>
+#pragma warning disable CS8618
+    private Goal() { }
+#pragma warning restore CS8618
+
+    /// <summary>
     /// Factory que cria um novo aggregate Goal validando todas as invariantes INV-1..4.
     /// Emite <see cref="GoalUpdated"/> com <c>action=created</c>.
     /// </summary>

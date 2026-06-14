@@ -33,6 +33,14 @@ public sealed record GoalScope
     }
 
     /// <summary>
+    /// Construtor sem validação para uso exclusivo do EF Core na materialização de entidades.
+    /// Não deve ser chamado diretamente — use <see cref="ForBu"/> ou <see cref="ForResponsavel"/>.
+    /// </summary>
+#pragma warning disable CS8618
+    private GoalScope() { }
+#pragma warning restore CS8618
+
+    /// <summary>
     /// Factory para escopo BU. OwnerId é nulo; Kind derivado como BU.
     /// </summary>
     /// <param name="buId">Identificador da BU. Não pode ser <see cref="Guid.Empty"/>.</param>
