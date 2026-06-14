@@ -18,7 +18,10 @@
 | 3 | Application | TASK-08..13 | [X] (6 commits) — 40 App + PBT-01/02/04; import tudo-ou-nada |
 | 4 | Infrastructure (RLS) | TASK-14..20 | [X] (7 commits) — 90 Infra (RLS Testcontainers, parser ClosedXML, PBT-02 idempotência); import adapters in-process; EF 9.0.6 |
 | 5 | API + Contratos | TASK-21..23 | [X] (3 commits) — 48 Api; MIG-ERR; execute confirmação explícita + feature flag |
-| 6 | Hardening | TASK-24..28 | [-] |
+| 6 | Hardening | TASK-24..28 | [X] (5 commits) — PiiSafeLogger/observ/volume 108-500/feature-flag/DoD |
+
+> **🎯 Módulo completo — 6/6 ondas, 28 TASKs, 415 testes verdes** (Domain 179 + Application 59 + Api 48 + Infrastructure 114 c/ Testcontainers RLS + Architecture 15). 7 PBTs. EF 9.0.6. PR #13.
+> Import tudo-ou-nada (UnitOfWork compartilhado DD-001 in-process), parser ClosedXML, idempotência por import_key, feature flag `migration.import_enabled`. Import adapters in-process (substituir por chamadas reais aos módulos alvo). Pendência: VAL-MIGR-01 (approvals.yaml).
 
 ## Detalhe por onda
 
