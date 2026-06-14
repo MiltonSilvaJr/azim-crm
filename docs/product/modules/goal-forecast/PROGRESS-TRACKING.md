@@ -1,0 +1,29 @@
+# PROGRESS-TRACKING — goal-forecast
+
+> Tracker do `/forge:coding-loop goal-forecast` (modo autônomo).
+> Legenda: `[ ]` pendente · `[-]` em progresso · `[X]` concluído · `[!]` falhou (HALT).
+
+- Módulo: `goal-forecast` (GF, Supporting — Sprint 11/12)
+- tasks.md base: v0.1.1 (Aprovado para desenvolvimento)
+- Raiz da solution: `services/goal-forecast/`
+- Domínio sensível: **metas/forecast** (money-as-cents `long`).
+- Estratégia: branch contínua `feat/goal-forecast/all-waves`, PR único ao fim, merge **isolado** + sanidade + cleanup separado.
+
+## Ondas
+
+| Onda | Foco | TASKs | Status |
+|------|------|-------|--------|
+| 1 | Bootstrap | TASK-01..02 | [ ] |
+| 2 | Domain | TASK-03..07 | [ ] |
+| 3 | Application | TASK-08..14 | [ ] |
+| 4 | Infrastructure (RLS) | TASK-15..20 | [ ] |
+| 5 | API + Contracts | TASK-21..26 | [ ] |
+| 6 | Hardening | TASK-27..30 | [ ] |
+
+## Detalhe por onda
+
+_(preenchido conforme execução)_
+
+## Última falha
+
+_(nenhuma)_
