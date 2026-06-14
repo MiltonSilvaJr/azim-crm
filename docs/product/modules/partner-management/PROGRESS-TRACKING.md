@@ -14,8 +14,8 @@
 | Onda | Foco | TASKs | Status |
 |------|------|-------|--------|
 | 1 | Bootstrap | TASK-01..02 | [X] (`02bd902`,`e5b7702`) — 10 Architecture; EF 9.0.6 |
-| 2 | Domain (PBTs) | TASK-03..08 | [-] |
-| 3 | Application (PBTs) | TASK-09..14 | [ ] |
+| 2 | Domain (PBTs) | TASK-03..08 | [X] (6 commits) — 128 Domain + PBT-02/03; Percentage decimal NBR-5891 |
+| 3 | Application (PBTs) | TASK-09..14 | [-] |
 | 4 | Infrastructure (RLS, outbox) | TASK-15..21 | [ ] |
 | 5 | API + Contratos (Pact) | TASK-22..25 | [ ] |
 | 6 | Hardening | TASK-26..29 | [ ] |
