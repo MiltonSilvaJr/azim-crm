@@ -18,4 +18,13 @@
     <ProjectReference Include="..\GoalForecast.Infrastructure\GoalForecast.Infrastructure.csproj" />
     <ProjectReference Include="..\GoalForecast.Contracts\GoalForecast.Contracts.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- JWT Bearer para autenticação (produção) — substituído por FakeAuthHandler nos testes -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <!-- FluentValidation DI extension para AddValidatorsFromAssembly -->
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <!-- OpenAPI / Swagger UI -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+  </ItemGroup>
 </Project>
