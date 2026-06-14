@@ -8,6 +8,7 @@ using ActivityManagement.Application.Validators;
 using ActivityManagement.Domain.Activities;
 using ActivityManagement.Domain.Activities.Repositories;
 using FluentValidation;
+using Microsoft.Extensions.Logging.Abstractions;
 
 /// <summary>
 /// Testes unitários dos handlers CRUD: Create, Update, Delete.
@@ -22,6 +23,7 @@ public sealed class CreateActivityCommandTests
     private readonly IOpportunityReadPort _opportunityPort = Substitute.For<IOpportunityReadPort>();
     private readonly IAccountReadPort     _accountPort     = Substitute.For<IAccountReadPort>();
     private readonly IClock               _clock           = Substitute.For<IClock>();
+    private readonly IActivityMetrics     _metrics         = Substitute.For<IActivityMetrics>();
 
     private static readonly Guid      TenantId = Guid.NewGuid();
     private static readonly Guid      BuId     = Guid.NewGuid();
@@ -60,7 +62,7 @@ public sealed class CreateActivityCommandTests
     [Fact]
     public async Task Handle_ValidCommand_SavesActivityAndReturnsId()
     {
-        var handler  = new CreateActivityCommandHandler(_repository, _opportunityPort, _accountPort, _clock);
+        var handler  = new CreateActivityCommandHandler(_repository, _opportunityPort, _accountPort, _clock, _metrics, NullLogger<CreateActivityCommandHandler>.Instance);
         var command  = ValidCommand();
 
         var id = await handler.Handle(command, CancellationToken.None);
@@ -74,7 +76,7 @@ public sealed class CreateActivityCommandTests
     [Fact]
     public async Task Handle_ValidCommand_ActivityHasCreatedEvent()
     {
-        var handler = new CreateActivityCommandHandler(_repository, _opportunityPort, _accountPort, _clock);
+        var handler = new CreateActivityCommandHandler(_repository, _opportunityPort, _accountPort, _clock, _metrics, NullLogger<CreateActivityCommandHandler>.Instance);
         var command = ValidCommand();
 
         await handler.Handle(command, CancellationToken.None);
@@ -90,7 +92,7 @@ public sealed class CreateActivityCommandTests
         var oppId = Guid.NewGuid();
         _opportunityPort.ExistsAsync(oppId, TenantId, Arg.Any<CancellationToken>()).Returns(false);
 
-        var handler = new CreateActivityCommandHandler(_repository, _opportunityPort, _accountPort, _clock);
+        var handler = new CreateActivityCommandHandler(_repository, _opportunityPort, _accountPort, _clock, _metrics, NullLogger<CreateActivityCommandHandler>.Instance);
         var command = ValidCommand(opportunityId: oppId);
 
         var act = async () => await handler.Handle(command, CancellationToken.None);
@@ -107,7 +109,7 @@ public sealed class CreateActivityCommandTests
         var accId = Guid.NewGuid();
         _accountPort.ExistsAsync(accId, TenantId, Arg.Any<CancellationToken>()).Returns(false);
 
-        var handler = new CreateActivityCommandHandler(_repository, _opportunityPort, _accountPort, _clock);
+        var handler = new CreateActivityCommandHandler(_repository, _opportunityPort, _accountPort, _clock, _metrics, NullLogger<CreateActivityCommandHandler>.Instance);
         var command = ValidCommand(accountId: accId);
 
         var act = async () => await handler.Handle(command, CancellationToken.None);

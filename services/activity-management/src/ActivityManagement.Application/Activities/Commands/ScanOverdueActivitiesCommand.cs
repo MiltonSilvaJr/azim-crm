@@ -4,6 +4,7 @@ using ActivityManagement.Application.Ports;
 using ActivityManagement.Domain.Activities.Events;
 using ActivityManagement.Domain.Activities.Repositories;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Command para varredura de atividades vencidas.
@@ -25,15 +26,21 @@ internal sealed class ScanOverdueActivitiesCommandHandler : IRequestHandler<Scan
     private readonly IActivityRepository _repository;
     private readonly IOutboxPublisher    _outbox;
     private readonly IClock              _clock;
+    private readonly IActivityMetrics    _metrics;
+    private readonly ILogger<ScanOverdueActivitiesCommandHandler> _logger;
 
     public ScanOverdueActivitiesCommandHandler(
         IActivityRepository repository,
         IOutboxPublisher    outbox,
-        IClock              clock)
+        IClock              clock,
+        IActivityMetrics    metrics,
+        ILogger<ScanOverdueActivitiesCommandHandler> logger)
     {
         _repository = repository;
         _outbox     = outbox;
         _clock      = clock;
+        _metrics    = metrics;
+        _logger     = logger;
     }
 
     public async Task Handle(ScanOverdueActivitiesCommand request, CancellationToken cancellationToken)
@@ -68,6 +75,14 @@ internal sealed class ScanOverdueActivitiesCommandHandler : IRequestHandler<Scan
 
                 await _outbox.EnqueueAsync(@event, deduplicationKey, cancellationToken);
             }
+
+            // Métrica: atividades vencidas detectadas nesta iteração (RNF 6.2, design §11)
+            _metrics.IncrementOverdue(batch.Count);
+
+            _logger.LogInformation(
+                "Scan overdue: {Count} atividades vencidas enfileiradas scan_date={ScanDate}",
+                batch.Count,
+                scanDate);
 
             skip += batch.Count;
 

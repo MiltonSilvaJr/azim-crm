@@ -3,6 +3,7 @@ namespace ActivityManagement.Infrastructure;
 using ActivityManagement.Application.Behaviors;
 using ActivityManagement.Application.Ports;
 using ActivityManagement.Infrastructure.Audit;
+using ActivityManagement.Infrastructure.Observability;
 using ActivityManagement.Infrastructure.Outbox;
 using ActivityManagement.Infrastructure.Persistence;
 using ActivityManagement.Infrastructure.Persistence.Repositories;
@@ -14,6 +15,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
+using Polly;
+using Polly.Extensions.Http;
 
 /// <summary>
 /// Extensões de registro de dependências da camada Infrastructure.
@@ -52,16 +58,47 @@ public static class DependencyInjection
         services.AddScoped<IDigestActionTokenPort, DigestActionTokenAdapter>();
         services.AddScoped<IAuditPublisher, AuditPublisher>();
 
-        // ── Adapters de leitura (HTTP interno com timeout configurado — design §6.4) ─
-        // Resiliência via Polly retry+circuit breaker será adicionada em TASK-22
-        // quando Microsoft.Extensions.Http.Resilience for incorporado.
+        // ── Métricas Prometheus (TASK-22, RNF 6.2) ──────────────────────────────────
+        services.AddSingleton<ActivityMetrics>();
+        services.AddSingleton<IActivityMetrics>(sp => sp.GetRequiredService<ActivityMetrics>());
+
+        // ── OpenTelemetry: traces + métricas (TASK-22, design §11) ──────────────────
+        services.AddOpenTelemetry()
+            .ConfigureResource(r => r.AddService(
+                serviceName:    "activity-management",
+                serviceVersion: "1.0.0"))
+            .WithTracing(tracing => tracing
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+                .AddConsoleExporter())
+            .WithMetrics(metrics => metrics
+                .AddMeter(ActivityMetrics.MeterName)
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation());
+
+        // ── Adapters de leitura com Polly (timeout + retry + circuit breaker — design §6.4) ─
+        // TASK-22: dívida das ondas anteriores resolvida — Polly adicionado.
+        var retryPolicy = HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .WaitAndRetryAsync(
+                retryCount: 3,
+                sleepDurationProvider: attempt => TimeSpan.FromMilliseconds(200 * Math.Pow(2, attempt - 1)));
+
+        var circuitBreakerPolicy = HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .CircuitBreakerAsync(
+                handledEventsAllowedBeforeBreaking: 5,
+                durationOfBreak:                   TimeSpan.FromSeconds(30));
+
         services.AddHttpClient<IOpportunityReadPort, OpportunityReadAdapter>(client =>
         {
             client.BaseAddress = new Uri(
                 configuration["Services:OpportunityPipeline:BaseUrl"]
                 ?? "http://opportunity-pipeline/");
             client.Timeout = TimeSpan.FromSeconds(5);
-        });
+        })
+        .AddPolicyHandler(retryPolicy)
+        .AddPolicyHandler(circuitBreakerPolicy);
 
         services.AddHttpClient<IAccountReadPort, AccountReadAdapter>(client =>
         {
@@ -69,7 +106,9 @@ public static class DependencyInjection
                 configuration["Services:AccountManagement:BaseUrl"]
                 ?? "http://account-management/");
             client.Timeout = TimeSpan.FromSeconds(5);
-        });
+        })
+        .AddPolicyHandler(retryPolicy)
+        .AddPolicyHandler(circuitBreakerPolicy);
 
         // ── Outbox publisher (scoped — usado pela UnitOfWork) ─────────────────
         services.AddScoped<OutboxPublisher>();

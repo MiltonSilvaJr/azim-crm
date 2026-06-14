@@ -8,6 +8,7 @@ using ActivityManagement.Domain.Activities;
 using ActivityManagement.Domain.Activities.Events;
 using ActivityManagement.Domain.Activities.Repositories;
 using ActivityManagement.Domain.Activities.ValueObjects;
+using Microsoft.Extensions.Logging.Abstractions;
 
 /// <summary>
 /// Testes unitários das queries de sistema:
@@ -137,6 +138,7 @@ public sealed class ScanOverdueActivitiesCommandTests
     private readonly IActivityRepository _repository     = Substitute.For<IActivityRepository>();
     private readonly IOutboxPublisher    _outbox         = Substitute.For<IOutboxPublisher>();
     private readonly IClock              _clock          = Substitute.For<IClock>();
+    private readonly IActivityMetrics    _metrics        = Substitute.For<IActivityMetrics>();
 
     private static readonly DateTimeOffset Now = DateTimeOffset.UtcNow;
 
@@ -174,7 +176,7 @@ public sealed class ScanOverdueActivitiesCommandTests
                     : Task.FromResult<IReadOnlyList<Activity>>([]);
             });
 
-        var handler = new ScanOverdueActivitiesCommandHandler(_repository, _outbox, _clock);
+        var handler = new ScanOverdueActivitiesCommandHandler(_repository, _outbox, _clock, _metrics, NullLogger<ScanOverdueActivitiesCommandHandler>.Instance);
         var command = new ScanOverdueActivitiesCommand();
 
         await handler.Handle(command, CancellationToken.None);
@@ -201,7 +203,7 @@ public sealed class ScanOverdueActivitiesCommandTests
                     : Task.FromResult<IReadOnlyList<Activity>>([]);
             });
 
-        var handler = new ScanOverdueActivitiesCommandHandler(_repository, _outbox, _clock);
+        var handler = new ScanOverdueActivitiesCommandHandler(_repository, _outbox, _clock, _metrics, NullLogger<ScanOverdueActivitiesCommandHandler>.Instance);
         var command = new ScanOverdueActivitiesCommand();
 
         await handler.Handle(command, CancellationToken.None);
@@ -233,7 +235,7 @@ public sealed class ScanOverdueActivitiesCommandTests
                     : Task.FromResult<IReadOnlyList<Activity>>([]);
             });
 
-        var handler = new ScanOverdueActivitiesCommandHandler(_repository, _outbox, _clock);
+        var handler = new ScanOverdueActivitiesCommandHandler(_repository, _outbox, _clock, _metrics, NullLogger<ScanOverdueActivitiesCommandHandler>.Instance);
         var command = new ScanOverdueActivitiesCommand();
 
         await handler.Handle(command, CancellationToken.None);
@@ -250,7 +252,7 @@ public sealed class ScanOverdueActivitiesCommandTests
         _repository.GetOverduePageAsync(Arg.Any<DateTimeOffset>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var handler = new ScanOverdueActivitiesCommandHandler(_repository, _outbox, _clock);
+        var handler = new ScanOverdueActivitiesCommandHandler(_repository, _outbox, _clock, _metrics, NullLogger<ScanOverdueActivitiesCommandHandler>.Instance);
         var command = new ScanOverdueActivitiesCommand();
 
         await handler.Handle(command, CancellationToken.None);

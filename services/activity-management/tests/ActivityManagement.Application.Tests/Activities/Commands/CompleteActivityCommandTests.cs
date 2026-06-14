@@ -12,6 +12,7 @@ using ActivityManagement.Domain.Activities.ValueObjects;
 using FsCheck;
 using FsCheck.Fluent;
 using FsCheck.Xunit;
+using Microsoft.Extensions.Logging.Abstractions;
 
 /// <summary>
 /// Testes unitários e PBT-02 do CompleteActivityCommand e SuggestNextActivityQuery.
@@ -24,6 +25,7 @@ public sealed class CompleteActivityCommandTests
     private readonly IActivityRepository _repository     = Substitute.For<IActivityRepository>();
     private readonly IAuditPublisher     _auditPublisher = Substitute.For<IAuditPublisher>();
     private readonly IClock              _clock          = Substitute.For<IClock>();
+    private readonly IActivityMetrics    _metrics        = Substitute.For<IActivityMetrics>();
 
     private static readonly DateTimeOffset Now = DateTimeOffset.UtcNow;
 
@@ -66,7 +68,7 @@ public sealed class CompleteActivityCommandTests
         var activity = CreatePendingActivity();
         _repository.FindByIdAsync(activity.Id, Arg.Any<CancellationToken>()).Returns(activity);
 
-        var handler = new CompleteActivityCommandHandler(_repository, _auditPublisher, _clock);
+        var handler = new CompleteActivityCommandHandler(_repository, _auditPublisher, _clock, _metrics, NullLogger<CompleteActivityCommandHandler>.Instance);
         var command = new CompleteActivityCommand(activity.Id) { TenantContext = MakeContext() };
 
         var result = await handler.Handle(command, CancellationToken.None);
@@ -88,7 +90,7 @@ public sealed class CompleteActivityCommandTests
 
         _repository.FindByIdAsync(activity.Id, Arg.Any<CancellationToken>()).Returns(activity);
 
-        var handler = new CompleteActivityCommandHandler(_repository, _auditPublisher, _clock);
+        var handler = new CompleteActivityCommandHandler(_repository, _auditPublisher, _clock, _metrics, NullLogger<CompleteActivityCommandHandler>.Instance);
         var command = new CompleteActivityCommand(activity.Id) { TenantContext = MakeContext() };
 
         var result = await handler.Handle(command, CancellationToken.None);
@@ -108,7 +110,7 @@ public sealed class CompleteActivityCommandTests
         activity.Cancel(Now);
         _repository.FindByIdAsync(activity.Id, Arg.Any<CancellationToken>()).Returns(activity);
 
-        var handler = new CompleteActivityCommandHandler(_repository, _auditPublisher, _clock);
+        var handler = new CompleteActivityCommandHandler(_repository, _auditPublisher, _clock, _metrics, NullLogger<CompleteActivityCommandHandler>.Instance);
         var command = new CompleteActivityCommand(activity.Id) { TenantContext = MakeContext() };
 
         var act = async () => await handler.Handle(command, CancellationToken.None);
@@ -124,7 +126,7 @@ public sealed class CompleteActivityCommandTests
         _repository.FindByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns((Activity?)null);
 
-        var handler = new CompleteActivityCommandHandler(_repository, _auditPublisher, _clock);
+        var handler = new CompleteActivityCommandHandler(_repository, _auditPublisher, _clock, _metrics, NullLogger<CompleteActivityCommandHandler>.Instance);
         var command = new CompleteActivityCommand(Guid.NewGuid()) { TenantContext = MakeContext() };
 
         var act = async () => await handler.Handle(command, CancellationToken.None);

@@ -7,6 +7,7 @@ using ActivityManagement.Domain.Activities;
 using ActivityManagement.Domain.Activities.Repositories;
 using ActivityManagement.Domain.Activities.ValueObjects;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Command para criar uma nova atividade comercial (Req 1).
@@ -55,17 +56,23 @@ internal sealed class CreateActivityCommandHandler : IRequestHandler<CreateActiv
     private readonly IOpportunityReadPort _opportunityPort;
     private readonly IAccountReadPort     _accountPort;
     private readonly IClock               _clock;
+    private readonly IActivityMetrics     _metrics;
+    private readonly ILogger<CreateActivityCommandHandler> _logger;
 
     public CreateActivityCommandHandler(
         IActivityRepository  repository,
         IOpportunityReadPort opportunityPort,
         IAccountReadPort     accountPort,
-        IClock               clock)
+        IClock               clock,
+        IActivityMetrics     metrics,
+        ILogger<CreateActivityCommandHandler> logger)
     {
         _repository      = repository;
         _opportunityPort = opportunityPort;
         _accountPort     = accountPort;
         _clock           = clock;
+        _metrics         = metrics;
+        _logger          = logger;
     }
 
     public async Task<Guid> Handle(CreateActivityCommand request, CancellationToken cancellationToken)
@@ -114,6 +121,17 @@ internal sealed class CreateActivityCommandHandler : IRequestHandler<CreateActiv
 
         await _repository.SaveAsync(activity, cancellationToken);
         request.SetDomainEvents(activity.DomainEvents);
+
+        // Métrica: atividade criada (RNF 6.2, design §11)
+        _metrics.IncrementCreated();
+
+        // Log estruturado sem title/description (RNF 7.2)
+        _logger.LogInformation(
+            "Atividade criada activity_id={ActivityId} tenant_id={TenantId} owner_id={OwnerId} type={Type}",
+            activity.Id,
+            ctx.TenantId,
+            request.OwnerId,
+            request.Type);
 
         return activity.Id;
     }

@@ -9,6 +9,7 @@ using ActivityManagement.Domain.Activities.ValueObjects;
 using FsCheck;
 using FsCheck.Fluent;
 using FsCheck.Xunit;
+using Microsoft.Extensions.Logging.Abstractions;
 
 /// <summary>
 /// Testes unitários e PBTs do ProcessDigestActionCommand.
@@ -22,6 +23,7 @@ public sealed class ProcessDigestActionCommandTests
     private readonly IActivityRepository    _repository     = Substitute.For<IActivityRepository>();
     private readonly IAuditPublisher        _auditPublisher = Substitute.For<IAuditPublisher>();
     private readonly IClock                 _clock          = Substitute.For<IClock>();
+    private readonly IActivityMetrics       _metrics        = Substitute.For<IActivityMetrics>();
 
     private static readonly DateTimeOffset Now      = DateTimeOffset.UtcNow;
     private static readonly Guid           TenantId = Guid.NewGuid();
@@ -82,7 +84,7 @@ public sealed class ProcessDigestActionCommandTests
         _tokenPort.FindByHashAsync(hash, Arg.Any<CancellationToken>()).Returns(token);
         _repository.FindByIdAsync(activity.Id, Arg.Any<CancellationToken>()).Returns(activity);
 
-        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock);
+        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock, _metrics, NullLogger<ProcessDigestActionCommandHandler>.Instance);
         var command = new ProcessDigestActionCommand(hash);
 
         var result = await handler.Handle(command, CancellationToken.None);
@@ -105,7 +107,7 @@ public sealed class ProcessDigestActionCommandTests
 
         _tokenPort.FindByHashAsync(hash, Arg.Any<CancellationToken>()).Returns(token);
 
-        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock);
+        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock, _metrics, NullLogger<ProcessDigestActionCommandHandler>.Instance);
         var command = new ProcessDigestActionCommand(hash);
 
         var result = await handler.Handle(command, CancellationToken.None);
@@ -126,7 +128,7 @@ public sealed class ProcessDigestActionCommandTests
 
         _tokenPort.FindByHashAsync(hash, Arg.Any<CancellationToken>()).Returns(token);
 
-        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock);
+        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock, _metrics, NullLogger<ProcessDigestActionCommandHandler>.Instance);
         var command = new ProcessDigestActionCommand(hash);
 
         var act = async () => await handler.Handle(command, CancellationToken.None);
@@ -143,7 +145,7 @@ public sealed class ProcessDigestActionCommandTests
         _tokenPort.FindByHashAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((DigestActionTokenData?)null);
 
-        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock);
+        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock, _metrics, NullLogger<ProcessDigestActionCommandHandler>.Instance);
         var command = new ProcessDigestActionCommand("hash-inexistente");
 
         var act = async () => await handler.Handle(command, CancellationToken.None);
@@ -163,7 +165,7 @@ public sealed class ProcessDigestActionCommandTests
         _repository.FindByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns((Activity?)null);
 
-        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock);
+        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock, _metrics, NullLogger<ProcessDigestActionCommandHandler>.Instance);
         var command = new ProcessDigestActionCommand(hash);
 
         var act = async () => await handler.Handle(command, CancellationToken.None);
@@ -193,7 +195,7 @@ public sealed class ProcessDigestActionCommandTests
         _tokenPort.FindByHashAsync(hash, Arg.Any<CancellationToken>()).Returns(rescheduleToken);
         _repository.FindByIdAsync(activity.Id, Arg.Any<CancellationToken>()).Returns(activity);
 
-        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock);
+        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock, _metrics, NullLogger<ProcessDigestActionCommandHandler>.Instance);
         var command = new ProcessDigestActionCommand(hash, NewDueAt: newDueAt);
 
         var result = await handler.Handle(command, CancellationToken.None);

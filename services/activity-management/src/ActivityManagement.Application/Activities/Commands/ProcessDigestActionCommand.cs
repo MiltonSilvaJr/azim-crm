@@ -5,6 +5,7 @@ using ActivityManagement.Application.Ports;
 using ActivityManagement.Domain.Activities.Repositories;
 using ActivityManagement.Domain.Activities.ValueObjects;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 // ── Exceções de token ────────────────────────────────────────────────────────
 
@@ -81,17 +82,23 @@ internal sealed class ProcessDigestActionCommandHandler
     private readonly IActivityRepository   _repository;
     private readonly IAuditPublisher        _auditPublisher;
     private readonly IClock                 _clock;
+    private readonly IActivityMetrics       _metrics;
+    private readonly ILogger<ProcessDigestActionCommandHandler> _logger;
 
     public ProcessDigestActionCommandHandler(
         IDigestActionTokenPort tokenPort,
         IActivityRepository    repository,
         IAuditPublisher        auditPublisher,
-        IClock                 clock)
+        IClock                 clock,
+        IActivityMetrics       metrics,
+        ILogger<ProcessDigestActionCommandHandler> logger)
     {
         _tokenPort      = tokenPort;
         _repository     = repository;
         _auditPublisher = auditPublisher;
         _clock          = clock;
+        _metrics        = metrics;
+        _logger         = logger;
     }
 
     public async Task<DigestActionResult> Handle(
@@ -108,7 +115,13 @@ internal sealed class ProcessDigestActionCommandHandler
 
         // (2) Expirado
         if (token.ExpiresAt <= now)
+        {
+            _metrics.IncrementDigestTokenExpired();
+            _logger.LogWarning(
+                "Token expirado expires_at={ExpiresAt}",
+                token.ExpiresAt);
             throw new ExpiredDigestTokenException(); // ACT-ERR-009
+        }
 
         // (3) Já usado → retorna sucesso idempotente (MSG-029, DD-004)
         if (token.UsedAt.HasValue)
@@ -157,6 +170,14 @@ internal sealed class ProcessDigestActionCommandHandler
             Action:        token.Action,
             DeltaJson:     "{}",
             CorrelationId: Guid.NewGuid()), cancellationToken);
+
+        // Métrica: token usado com sucesso (RNF 6.2, design §11)
+        _metrics.IncrementDigestTokenUsed();
+
+        _logger.LogInformation(
+            "Token de digest processado activity_id={ActivityId} action={Action}",
+            activity.Id,
+            token.Action);
 
         return new DigestActionResult(
             ActivityId:          activity.Id,

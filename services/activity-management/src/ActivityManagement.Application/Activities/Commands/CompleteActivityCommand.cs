@@ -5,6 +5,7 @@ using ActivityManagement.Application.Common;
 using ActivityManagement.Application.Ports;
 using ActivityManagement.Domain.Activities.Repositories;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Resultado da conclusão de uma atividade.
@@ -48,15 +49,21 @@ internal sealed class CompleteActivityCommandHandler
     private readonly IActivityRepository _repository;
     private readonly IAuditPublisher     _auditPublisher;
     private readonly IClock              _clock;
+    private readonly IActivityMetrics    _metrics;
+    private readonly ILogger<CompleteActivityCommandHandler> _logger;
 
     public CompleteActivityCommandHandler(
         IActivityRepository repository,
         IAuditPublisher     auditPublisher,
-        IClock              clock)
+        IClock              clock,
+        IActivityMetrics    metrics,
+        ILogger<CompleteActivityCommandHandler> logger)
     {
         _repository     = repository;
         _auditPublisher = auditPublisher;
         _clock          = clock;
+        _metrics        = metrics;
+        _logger         = logger;
     }
 
     public async Task<CompleteActivityResult> Handle(
@@ -88,6 +95,14 @@ internal sealed class CompleteActivityCommandHandler
                 Action:        "completed",
                 DeltaJson:     "{}",
                 CorrelationId: ctx.CorrelationId), cancellationToken);
+
+            // Métrica: conclusão efetiva (RNF 6.2, design §11) — não conta idempotente
+            _metrics.IncrementCompleted();
+
+            _logger.LogInformation(
+                "Atividade concluída activity_id={ActivityId} tenant_id={TenantId}",
+                activity.Id,
+                ctx.TenantId);
         }
 
         return new CompleteActivityResult(

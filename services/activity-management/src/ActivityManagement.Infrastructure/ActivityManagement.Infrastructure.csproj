@@ -41,6 +41,8 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.13.0" />
     <!-- Resiliência: retry, circuit breaker, timeout (Polly) — portas de leitura (design §6.4) -->
     <PackageReference Include="Polly" Version="8.5.2" />
+    <!-- Polly HttpClient integration (TASK-22: Polly nos read adapters, design §6.4) -->
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.12" />
     <!-- Serilog: logs estruturados (RNF 6.1) -->
     <PackageReference Include="Serilog" Version="4.3.0" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
