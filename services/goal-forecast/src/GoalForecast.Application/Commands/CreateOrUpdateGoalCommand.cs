@@ -1,3 +1,4 @@
+using GoalForecast.Application.Behaviors;
 using GoalForecast.Application.Common;
 using GoalForecast.Domain.Authorization;
 using GoalForecast.Domain.ValueObjects;
@@ -15,7 +16,7 @@ namespace GoalForecast.Application.Commands;
 ///
 /// Mapeia: Req 1, Req 2, Req 4, PBT-01, DD-002, design §5.1, TASK-09.
 /// </summary>
-public sealed record CreateOrUpdateGoalCommand : IRequest<CreateOrUpdateGoalResult>
+public sealed record CreateOrUpdateGoalCommand : IRequest<CreateOrUpdateGoalResult>, IHasPrincipal
 {
     /// <summary>
     /// Principal autenticado que origina o comando.
