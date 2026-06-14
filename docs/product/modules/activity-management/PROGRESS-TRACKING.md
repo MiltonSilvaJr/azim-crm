@@ -12,8 +12,8 @@
 
 | Onda | Foco | TASKs | Status |
 |------|------|-------|--------|
-| 1 | Bootstrap | TASK-01 | [ ] |
-| 2 | Domínio (PBT-01/04/05) | TASK-02..05 | [ ] |
+| 1 | Bootstrap | TASK-01 | [X] (`73c1c4f`) — 10 Architecture; EF 9.0.6 |
+| 2 | Domínio (PBT-01/04/05) | TASK-02..05 | [-] |
 | 3 | Application (PBT-02/03) | TASK-06..12 | [ ] |
 | 4 | Infrastructure (RLS) | TASK-13..17 | [ ] |
 | 5 | API + Contratos (Pact) | TASK-18..21 | [ ] |
