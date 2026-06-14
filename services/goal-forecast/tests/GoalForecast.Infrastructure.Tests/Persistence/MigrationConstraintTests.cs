@@ -42,12 +42,12 @@ public sealed class MigrationConstraintTests(PostgresContainerFixture db)
         var goal1 = BuildResponsavelGoal(tenantId, buId, ownerId, year: 2026, month: 2);
         var goal2 = BuildResponsavelGoal(tenantId, buId, ownerId, year: 2026, month: 2);
 
-        await using var ctx1 = db.BuildContextWithRls(tenantId);
+        await using var ctx1 = db.BuildOwnerContext(tenantId);
         ctx1.Goals.Add(goal1);
         await ctx1.SaveChangesAsync();
 
         // Act
-        await using var ctx2 = db.BuildContextWithRls(tenantId);
+        await using var ctx2 = db.BuildOwnerContext(tenantId);
         ctx2.Goals.Add(goal2);
         Func<Task> act = () => ctx2.SaveChangesAsync();
 
@@ -68,12 +68,12 @@ public sealed class MigrationConstraintTests(PostgresContainerFixture db)
         var goal1 = BuildBuGoal(tenantId, buId, year: 2026, month: 3);
         var goal2 = BuildBuGoal(tenantId, buId, year: 2026, month: 3);
 
-        await using var ctx1 = db.BuildContextWithRls(tenantId);
+        await using var ctx1 = db.BuildOwnerContext(tenantId);
         ctx1.Goals.Add(goal1);
         await ctx1.SaveChangesAsync();
 
         // Act
-        await using var ctx2 = db.BuildContextWithRls(tenantId);
+        await using var ctx2 = db.BuildOwnerContext(tenantId);
         ctx2.Goals.Add(goal2);
         Func<Task> act = () => ctx2.SaveChangesAsync();
 
@@ -92,7 +92,7 @@ public sealed class MigrationConstraintTests(PostgresContainerFixture db)
         var goal1 = BuildBuGoal(tenantId, buId, year: 2026, month: 4);
         var goal2 = BuildBuGoal(tenantId, buId, year: 2026, month: 5);
 
-        await using var ctx = db.BuildContextWithRls(tenantId);
+        await using var ctx = db.BuildOwnerContext(tenantId);
         ctx.Goals.Add(goal1);
         ctx.Goals.Add(goal2);
 
@@ -113,7 +113,7 @@ public sealed class MigrationConstraintTests(PostgresContainerFixture db)
         var goalBu = BuildBuGoal(tenantId, buId, year: 2026, month: 6);
         var goalResp = BuildResponsavelGoal(tenantId, buId, ownerId, year: 2026, month: 6);
 
-        await using var ctx = db.BuildContextWithRls(tenantId);
+        await using var ctx = db.BuildOwnerContext(tenantId);
         ctx.Goals.Add(goalBu);
         ctx.Goals.Add(goalResp);
 

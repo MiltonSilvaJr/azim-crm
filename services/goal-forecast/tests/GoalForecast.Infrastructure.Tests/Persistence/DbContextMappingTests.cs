@@ -31,7 +31,7 @@ public sealed class DbContextMappingTests(PostgresContainerFixture db)
         const long cents = 9_999_999_999L; // valor grande que representaria perda em double
         var goal = BuildGoal(tenantId, buId, cents: cents);
 
-        await using var ctx = db.BuildContextWithRls(tenantId);
+        await using var ctx = db.BuildOwnerContext(tenantId);
 
         // Act
         ctx.Goals.Add(goal);
@@ -99,7 +99,7 @@ public sealed class DbContextMappingTests(PostgresContainerFixture db)
         var buId = Guid.NewGuid();
         var goal = BuildGoal(tenantId, buId, year: 2025, month: 11);
 
-        await using var ctx = db.BuildContextWithRls(tenantId);
+        await using var ctx = db.BuildOwnerContext(tenantId);
         ctx.Goals.Add(goal);
         await ctx.SaveChangesAsync();
         ctx.ChangeTracker.Clear();
@@ -120,7 +120,7 @@ public sealed class DbContextMappingTests(PostgresContainerFixture db)
         var buId = Guid.NewGuid();
         var goal = BuildGoal(tenantId, buId);
 
-        await using var ctx = db.BuildContextWithRls(tenantId);
+        await using var ctx = db.BuildOwnerContext(tenantId);
         ctx.Goals.Add(goal);
         await ctx.SaveChangesAsync();
         ctx.ChangeTracker.Clear();
@@ -144,7 +144,7 @@ public sealed class DbContextMappingTests(PostgresContainerFixture db)
         var period = new GoalPeriod(2026, 3);
         var goal = Goal.Create(tenantId, scope, period, Money.Of(1000L));
 
-        await using var ctx = db.BuildContextWithRls(tenantId);
+        await using var ctx = db.BuildOwnerContext(tenantId);
         ctx.Goals.Add(goal);
         await ctx.SaveChangesAsync();
         ctx.ChangeTracker.Clear();

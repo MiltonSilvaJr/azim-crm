@@ -1,4 +1,3 @@
-using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Testcontainers.PostgreSql;
@@ -7,13 +6,28 @@ namespace GoalForecast.Infrastructure.Tests.Fixtures;
 
 /// <summary>
 /// Fixture compartilhada que sobe um container PostgreSQL real via Testcontainers
-/// e aplica as migrations do EF Core. Compartilhada na collection para evitar
-/// múltiplos containers por classe de teste.
+/// e aplica o schema de testes (EF EnsureCreated + SQL de RLS e índices).
 ///
-/// Mapeia: TASK-15..20, design §6.1, §7.
+/// Dois perfis de acesso para testar defesa em profundidade (ADR-0001):
+/// <list type="bullet">
+///   <item><term>owner (azim_test)</term><description>Superuser/owner; bypassa RLS para inserção de dados de teste via owner context.</description></item>
+///   <item><term>app (azim_app, NOSUPERUSER)</term><description>Usuário de aplicação; sujeito à RLS. Usado em testes de isolamento (TASK-18, KPI-06).</description></item>
+/// </list>
+///
+/// Estratégia de uso:
+/// <list type="bullet">
+///   <item><term>BuildOwnerContext</term><description>Inserção de dados de fixture (bypassa RLS do owner).</description></item>
+///   <item><term>BuildContextWithRls</term><description>Testes de aplicação (app_user + app.tenant_id via interceptor EF Core).</description></item>
+///   <item><term>OpenAppConnection</term><description>Testes de SQL direto (RLS bruta).</description></item>
+/// </list>
+///
+/// Mapeia: TASK-15..20, design §6.1, §7, ADR-0001.
 /// </summary>
 public sealed class PostgresContainerFixture : IAsyncLifetime
 {
+    private const string AppUser = "azim_app";
+    private const string AppPassword = "azim_app_pwd";
+
     private readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
         .WithImage("postgres:16-alpine")
         .WithUsername("azim_test")
@@ -21,29 +35,36 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         .WithDatabase("goal_forecast_test")
         .Build();
 
-    /// <summary>String de conexão para criar contextos EF Core nos testes.</summary>
+    /// <summary>String de conexão do owner (azim_test) para setup do schema.</summary>
     public string ConnectionString { get; private set; } = string.Empty;
+
+    /// <summary>String de conexão do app_user (azim_app, NOSUPERUSER) sujeito à RLS.</summary>
+    public string AppConnectionString { get; private set; } = string.Empty;
 
     public async Task InitializeAsync()
     {
         await _container.StartAsync();
         ConnectionString = _container.GetConnectionString();
 
-        // Cria o schema via EnsureCreated (do EF model) + SQL adicional para RLS.
-        // EnsureCreated usa o modelo EF para criar as tabelas sem precisar de migrations
-        // registradas no assembly. O SQL de RLS e índices parciais é aplicado manualmente.
-        using var ctx = BuildContext(Guid.NewGuid());
+        // Cria schema via EnsureCreated (owner) + SQL de RLS, índices e app_user
+        using var ctx = BuildOwnerContext(Guid.NewGuid());
         await ctx.Database.EnsureCreatedAsync();
-        await ApplyRlsAndIndexesAsync();
+        await ApplyRlsIndexesAndAppUserAsync();
+
+        var builder = new NpgsqlConnectionStringBuilder(ConnectionString)
+        {
+            Username = AppUser,
+            Password = AppPassword
+        };
+        AppConnectionString = builder.ConnectionString;
     }
 
-    private async Task ApplyRlsAndIndexesAsync()
+    private async Task ApplyRlsIndexesAndAppUserAsync()
     {
-        using var conn = OpenRawConnection();
-        using var cmd = conn.CreateCommand();
+        await using var conn = OpenOwnerConnection();
+        await using var cmd = conn.CreateCommand();
 
-        // Índice único parcial para escopo RESPONSAVEL (DD-002)
-        cmd.CommandText = """
+        cmd.CommandText = $"""
             CREATE UNIQUE INDEX IF NOT EXISTS ux_goals_responsavel_scope
                 ON goals (tenant_id, bu_id, owner_id, year, month)
                 WHERE owner_id IS NOT NULL;
@@ -86,7 +107,28 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
                         THEN '00000000-0000-0000-0000-000000000000'::uuid
                         ELSE current_setting('app.tenant_id', true)::uuid
                     END
+                )
+                WITH CHECK (
+                    tenant_id = CASE
+                        WHEN current_setting('app.tenant_id', true) = '' OR
+                             current_setting('app.tenant_id', true) IS NULL
+                        THEN '00000000-0000-0000-0000-000000000000'::uuid
+                        ELSE current_setting('app.tenant_id', true)::uuid
+                    END
                 );
+
+            -- Usuário de aplicação NOSUPERUSER para testar RLS sem ser owner (TASK-18)
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '{AppUser}') THEN
+                    CREATE ROLE {AppUser} WITH LOGIN PASSWORD '{AppPassword}' NOSUPERUSER NOCREATEDB NOCREATEROLE;
+                END IF;
+            END $$;
+
+            GRANT CONNECT ON DATABASE goal_forecast_test TO {AppUser};
+            GRANT USAGE ON SCHEMA public TO {AppUser};
+            GRANT SELECT, INSERT, UPDATE, DELETE ON goals TO {AppUser};
+            GRANT SELECT, INSERT ON outbox_events TO {AppUser};
             """;
         await cmd.ExecuteNonQueryAsync();
     }
@@ -96,11 +138,14 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         await _container.DisposeAsync();
     }
 
+    // ── Owner context (usado para inserção de dados de teste) ────────────────
+
     /// <summary>
-    /// Cria um DbContext EF Core com o tenantId informado.
-    /// Global Query Filter usa este tenantId em todas as queries.
+    /// Cria DbContext EF Core com o owner (azim_test). O owner bypassa FORCE RLS
+    /// como comportamento padrão do PostgreSQL (owner da tabela não sofre RLS).
+    /// Usar para inserções de dados de fixture em testes de GoalRepository e DbContextMapping.
     /// </summary>
-    public GoalForecastDbContext BuildContext(Guid tenantId)
+    public GoalForecastDbContext BuildOwnerContext(Guid tenantId)
     {
         var options = new DbContextOptionsBuilder<GoalForecastDbContext>()
             .UseNpgsql(ConnectionString)
@@ -109,11 +154,49 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         return new GoalForecastDbContext(options, tenantId);
     }
 
+    // ── App context (sujeito à RLS — usado em testes de aplicação) ───────────
+
     /// <summary>
-    /// Abre uma conexão Npgsql raw sem passar pelo DbContext / EF Core.
-    /// Usado nos testes de isolamento RLS (TASK-18) para exercitar a segunda camada.
+    /// Cria DbContext EF Core com o usuário de aplicação (azim_app, NOSUPERUSER),
+    /// sujeito à RLS. O parâmetro <c>app.tenant_id</c> é embutido na connection string
+    /// via interceptor de sessão de conexão para garantir aplicação em cada conexão aberta.
     /// </summary>
-    public NpgsqlConnection OpenRawConnection()
+    public GoalForecastDbContext BuildContextWithRls(Guid tenantId)
+    {
+        // Usa NpgsqlDataSource com um callback que executa SET app.tenant_id
+        // antes de entregar a conexão ao pool EF Core. Isso garante que cada
+        // conexão nova (inclusive reconexões) terá app.tenant_id configurado.
+        var dataSourceBuilder = new NpgsqlDataSourceBuilder(AppConnectionString);
+        dataSourceBuilder.UsePhysicalConnectionInitializer(
+            conn =>
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = $"SET app.tenant_id = '{tenantId}'";
+                cmd.ExecuteNonQuery();
+            },
+            async conn =>
+            {
+                await using var cmd = conn.CreateCommand();
+                cmd.CommandText = $"SET app.tenant_id = '{tenantId}'";
+                await cmd.ExecuteNonQueryAsync();
+            });
+
+        var dataSource = dataSourceBuilder.Build();
+
+        var options = new DbContextOptionsBuilder<GoalForecastDbContext>()
+            .UseNpgsql(dataSource)
+            .Options;
+
+        return new GoalForecastDbContext(options, tenantId);
+    }
+
+    // ── Conexões raw ──────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Abre conexão raw com o owner (azim_test).
+    /// Usado em setup do schema e em inserções de dados de teste sem RLS.
+    /// </summary>
+    public NpgsqlConnection OpenOwnerConnection()
     {
         var conn = new NpgsqlConnection(ConnectionString);
         conn.Open();
@@ -121,14 +204,14 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
     }
 
     /// <summary>
-    /// Cria um DbContext com o tenantId configurado como parâmetro de sessão
-    /// (SET app.tenant_id = '...') para que a RLS permita o acesso.
+    /// Abre conexão raw com o usuário de aplicação (azim_app, NOSUPERUSER), sem SET app.tenant_id.
+    /// Usado nos testes de isolamento RLS para verificar que RLS retorna 0 linhas
+    /// quando não há contexto de tenant (segunda camada ADR-0001, TASK-18, KPI-06).
     /// </summary>
-    public GoalForecastDbContext BuildContextWithRls(Guid tenantId)
+    public NpgsqlConnection OpenAppConnection()
     {
-        var ctx = BuildContext(tenantId);
-        // Configura o parâmetro de sessão para que a policy RLS libere as linhas
-        ctx.Database.ExecuteSql($"SET app.tenant_id = '{tenantId}'");
-        return ctx;
+        var conn = new NpgsqlConnection(AppConnectionString);
+        conn.Open();
+        return conn;
     }
 }

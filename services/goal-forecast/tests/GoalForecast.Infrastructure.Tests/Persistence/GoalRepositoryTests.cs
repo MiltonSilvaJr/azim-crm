@@ -28,8 +28,10 @@ public sealed class GoalRepositoryTests(PostgresContainerFixture db)
         return Goal.Create(tenantId, scope, period, Money.Of(cents));
     }
 
-    private GoalRepository BuildRepo(GoalForecastDbContext ctx)
-        => new(ctx);
+    private GoalRepository BuildRepo(GoalForecastDbContext ctx) => new(ctx);
+
+    /// <summary>Constrói contexto owner (sem RLS ativa para owner) para inserções de dados de teste.</summary>
+    private GoalForecastDbContext OwnerCtx(Guid tenantId) => db.BuildOwnerContext(tenantId);
 
     // ── ST-01: FindByKey retorna null para chave inexistente ──────────────────
 
@@ -37,7 +39,7 @@ public sealed class GoalRepositoryTests(PostgresContainerFixture db)
     public async Task FindByKey_returns_null_for_nonexistent_key()
     {
         var tenantId = Guid.NewGuid();
-        await using var ctx = db.BuildContextWithRls(tenantId);
+        await using var ctx = OwnerCtx(tenantId);
         var repo = BuildRepo(ctx);
 
         var result = await repo.FindByKey(tenantId, Guid.NewGuid(), null, 2026, 7);
@@ -53,14 +55,14 @@ public sealed class GoalRepositoryTests(PostgresContainerFixture db)
         var buId = Guid.NewGuid();
         var goal = BuildBuGoal(tenantId, buId, year: 2026, month: 8);
 
-        await using (var ctxInsert = db.BuildContextWithRls(tenantId))
+        await using (var ctxInsert = OwnerCtx(tenantId))
         {
             var repo = BuildRepo(ctxInsert);
             await repo.Add(goal);
         }
 
         // Act
-        await using var ctx = db.BuildContextWithRls(tenantId);
+        await using var ctx = OwnerCtx(tenantId);
         var found = await BuildRepo(ctx).FindByKey(tenantId, buId, null, 2026, 8);
 
         // Assert
@@ -86,7 +88,7 @@ public sealed class GoalRepositoryTests(PostgresContainerFixture db)
 
         // Act — tenant B tenta encontrar pela chave
         var tenantB = Guid.NewGuid();
-        await using var ctxB = db.BuildContextWithRls(tenantB);
+        await using var ctxB = OwnerCtx(tenantB);
         var found = await BuildRepo(ctxB).FindByKey(tenantB, buId, null, 2026, 9);
 
         // Assert — Global Query Filter retorna null
@@ -104,13 +106,13 @@ public sealed class GoalRepositoryTests(PostgresContainerFixture db)
         const long cents = 12_345_678_901L;
         var goal = BuildBuGoal(tenantId, buId, year: 2026, month: 10, cents: cents);
 
-        await using (var ctxInsert = db.BuildContextWithRls(tenantId))
+        await using (var ctxInsert = OwnerCtx(tenantId))
         {
             await BuildRepo(ctxInsert).Add(goal);
         }
 
         // Act
-        await using var ctx = db.BuildContextWithRls(tenantId);
+        await using var ctx = OwnerCtx(tenantId);
         var found = await BuildRepo(ctx).FindById(tenantId, goal.Id);
 
         // Assert — PBT-05: long preservado exatamente
@@ -128,7 +130,7 @@ public sealed class GoalRepositoryTests(PostgresContainerFixture db)
         var buId = Guid.NewGuid();
         var goal = BuildBuGoal(tenantId, buId, year: 2026, month: 11, cents: 1_000L);
 
-        await using (var ctxInsert = db.BuildContextWithRls(tenantId))
+        await using (var ctxInsert = OwnerCtx(tenantId))
         {
             await BuildRepo(ctxInsert).Add(goal);
         }
@@ -136,8 +138,8 @@ public sealed class GoalRepositoryTests(PostgresContainerFixture db)
         var createdAt = goal.CreatedAt;
         await Task.Delay(50); // garante delta de timestamp
 
-        // Act
-        await using (var ctxUpdate = db.BuildContextWithRls(tenantId))
+        // Act — usa owner context para Update (não requer RLS para este teste de repositório)
+        await using (var ctxUpdate = OwnerCtx(tenantId))
         {
             var loaded = await BuildRepo(ctxUpdate).FindById(tenantId, goal.Id);
             loaded!.ChangeValorMeta(Money.Of(2_000L));
@@ -145,7 +147,7 @@ public sealed class GoalRepositoryTests(PostgresContainerFixture db)
         }
 
         // Assert
-        await using var ctx = db.BuildContextWithRls(tenantId);
+        await using var ctx = OwnerCtx(tenantId);
         var updated = await BuildRepo(ctx).FindById(tenantId, goal.Id);
 
         updated!.ValorMeta.Cents.Should().Be(2_000L);
@@ -165,7 +167,7 @@ public sealed class GoalRepositoryTests(PostgresContainerFixture db)
         var goalA = BuildBuGoal(tenantId, buA, year: 2025, month: 1);
         var goalB = BuildBuGoal(tenantId, buB, year: 2025, month: 1);
 
-        await using (var ctxInsert = db.BuildContextWithRls(tenantId))
+        await using (var ctxInsert = OwnerCtx(tenantId))
         {
             var repo = BuildRepo(ctxInsert);
             await repo.Add(goalA);
@@ -173,7 +175,7 @@ public sealed class GoalRepositoryTests(PostgresContainerFixture db)
         }
 
         // Act
-        await using var ctx = db.BuildContextWithRls(tenantId);
+        await using var ctx = OwnerCtx(tenantId);
         var filter = new GoalQueryFilter(TenantId: tenantId, BuId: buA);
         var result = await BuildRepo(ctx).Query(filter);
 
@@ -212,7 +214,7 @@ public sealed class GoalRepositoryTests(PostgresContainerFixture db)
         var tenantId = Guid.NewGuid();
         var buId = Guid.NewGuid();
 
-        await using (var ctxInsert = db.BuildContextWithRls(tenantId))
+        await using (var ctxInsert = OwnerCtx(tenantId))
         {
             var repo = BuildRepo(ctxInsert);
             for (var m = 1; m <= 6; m++)
@@ -220,7 +222,7 @@ public sealed class GoalRepositoryTests(PostgresContainerFixture db)
         }
 
         // Act
-        await using var ctx = db.BuildContextWithRls(tenantId);
+        await using var ctx = OwnerCtx(tenantId);
         var goals = await BuildRepo(ctx).ListByYear(tenantId, buId, null, 2023);
 
         // Assert
@@ -237,7 +239,7 @@ public sealed class GoalRepositoryTests(PostgresContainerFixture db)
         var tenantId = Guid.NewGuid();
         var buId = Guid.NewGuid();
 
-        await using (var ctxInsert = db.BuildContextWithRls(tenantId))
+        await using (var ctxInsert = OwnerCtx(tenantId))
         {
             var repo = BuildRepo(ctxInsert);
             for (var m = 1; m <= 3; m++)
@@ -245,7 +247,7 @@ public sealed class GoalRepositoryTests(PostgresContainerFixture db)
         }
 
         // Act — página 1 com pageSize 2
-        await using var ctx = db.BuildContextWithRls(tenantId);
+        await using var ctx = OwnerCtx(tenantId);
         var page1 = await BuildRepo(ctx).Query(
             new GoalQueryFilter(TenantId: tenantId, Year: 2022, Page: 1, PageSize: 2));
 

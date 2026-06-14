@@ -62,7 +62,15 @@ public sealed class GoalRepository(GoalForecastDbContext dbContext) : IGoalRepos
     /// <inheritdoc/>
     public async Task Update(Goal goal, CancellationToken cancellationToken = default)
     {
-        dbContext.Goals.Update(goal);
+        // Verifica se a entidade já está tracked no contexto corrente.
+        // Se estiver, SaveChangesAsync detecta as mudanças automaticamente.
+        // Caso contrário (entidade desconectada), usa Attach + Modified.
+        if (dbContext.Entry(goal).State == Microsoft.EntityFrameworkCore.EntityState.Detached)
+        {
+            dbContext.Goals.Attach(goal);
+            dbContext.Entry(goal).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
         goal.ClearDomainEvents();
     }
