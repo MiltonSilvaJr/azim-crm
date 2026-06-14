@@ -38,6 +38,15 @@ public sealed class OpportunityPartnerCommission
     /// <summary>Data/hora de criação.</summary>
     public DateTimeOffset CreatedAt { get; }
 
+    /// <summary>
+    /// Construtor privado sem parâmetros para uso exclusivo do EF Core durante materialização.
+    /// EF Core popula as propriedades (incluindo owned types) após a construção.
+    /// Nunca deve ser chamado diretamente pelo domínio.
+    /// </summary>
+#pragma warning disable CS8618
+    private OpportunityPartnerCommission() { }
+#pragma warning restore CS8618
+
     /// <summary>Inicializa como entidade projetada (is_snapshot = false).</summary>
     public OpportunityPartnerCommission(
         Guid id,

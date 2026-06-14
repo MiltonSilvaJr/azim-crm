@@ -12,6 +12,12 @@
     <RootNamespace>OpportunityPipeline.Infrastructure.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!--
+      EF1002: SQL interpolado via ExecuteSqlRawAsync/SqlQueryRaw.
+      Nesses testes de integração todo o SQL usa GUIDs gerados internamente (sem input externo).
+      O risco real de SQL injection é zero; a supressão é intencional e revisada.
+    -->
+    <NoWarn>$(NoWarn);EF1002</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,5 +31,10 @@
     <PackageReference Include="Testcontainers.PostgreSql" Version="4.4.0" />
     <!-- EF Core InMemory para testes unitários de contexto -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- xunit.runner.json: desabilita paralelismo para evitar race condition no Testcontainers -->
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
