@@ -121,6 +121,18 @@ public sealed class OrganizationApiFactory : WebApplicationFactory<Program>, IAs
             // ── Redis — remover conexão real ──────────────────────────────────
             services.RemoveAll<StackExchange.Redis.IConnectionMultiplexer>();
 
+            // ── Observabilidade — substituir por mocks no ambiente de teste ────
+            services.RemoveAll<Organization.Infrastructure.Observability.OrganizationMetrics>();
+            services.RemoveAll<IOrganizationMetrics>();
+            services.AddSingleton(Substitute.For<IOrganizationMetrics>());
+
+            services.RemoveAll<ILastTenantAdminAlertService>();
+            services.AddSingleton(Substitute.For<ILastTenantAdminAlertService>());
+
+            // Health checks: remover concretos que dependem de Postgres/Redis reais
+            services.RemoveAll<Organization.Infrastructure.Observability.PostgresHealthCheck>();
+            services.RemoveAll<Organization.Infrastructure.Observability.RedisHealthCheck>();
+
             // ── Remover OutboxWorker (hosted service) ─────────────────────────
             services.RemoveAll<Microsoft.Extensions.Hosting.IHostedService>();
 
