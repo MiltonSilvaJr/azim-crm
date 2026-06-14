@@ -125,11 +125,11 @@ TASK-NN — <título>
 | TASK-21 | MigrationController — upload + dry-run + status (MIG-ERR-001..004) | Onda 5 | `feat/data-migration/21-api-upload-dryrun` | [ ] |
 | TASK-22 | MigrationController — endpoints de triagem (owners, stages, partners, dedupe, ready) | Onda 5 | `feat/data-migration/22-api-triage` | [ ] |
 | TASK-23 | MigrationController — execute + confirmação explícita + catálogo MIG-ERR-005..010 | Onda 5 | `feat/data-migration/23-api-execute` | [ ] |
-| TASK-24 | PiiSafeLogger + PiiSafeLoggingBehavior (RNF 3, LGPD) | Onda 6 | `feat/data-migration/24-pii-safe-logging` | [ ] |
-| TASK-25 | Métricas + logs estruturados + traces (RNF 6) | Onda 6 | `feat/data-migration/25-observability` | [ ] |
-| TASK-26 | Teste de staging — dry-run e rollback com 108 e 500 linhas (RNF 1.3, RNF 5.2) | Onda 6 | `test/data-migration/26-staging-volume-tests` | [ ] |
-| TASK-27 | Feature flag migration.import_enabled + plano de remoção pós-Fase 1 (DD-009, Req 14) | Onda 6 | `feat/data-migration/27-feature-flag-lifecycle` | [ ] |
-| TASK-28 | DoD final — README corrigido (DD-001), rastreabilidade sincronizada, VAL-MIGR-01 registrado | Onda 6 | `docs/data-migration/28-dod-final` | [ ] |
+| TASK-24 | PiiSafeLogger + PiiSafeLoggingBehavior (RNF 3, LGPD) | Onda 6 | `feat/data-migration/24-pii-safe-logging` | [X] |
+| TASK-25 | Métricas + logs estruturados + traces (RNF 6) | Onda 6 | `feat/data-migration/25-observability` | [X] |
+| TASK-26 | Teste de staging — dry-run e rollback com 108 e 500 linhas (RNF 1.3, RNF 5.2) | Onda 6 | `test/data-migration/26-staging-volume-tests` | [X] |
+| TASK-27 | Feature flag migration.import_enabled + plano de remoção pós-Fase 1 (DD-009, Req 14) | Onda 6 | `feat/data-migration/27-feature-flag-lifecycle` | [X] |
+| TASK-28 | DoD final — README corrigido (DD-001), rastreabilidade sincronizada, VAL-MIGR-01 registrado | Onda 6 | `docs/data-migration/28-dod-final` | [X] |
 
 ## 3. Ondas de Implementação
 
@@ -960,7 +960,7 @@ Implementar o endpoint `POST /api/v1/migrations/{jobId}/execute` (PlatOp, `confi
 | **Onda** | Onda 6 — Hardening |
 | **Branch** | `feat/data-migration/24-pii-safe-logging` |
 | **Worktree** | `git worktree add ../worktrees/data-migration/24-pii-safe-logging -b feat/data-migration/24-pii-safe-logging` |
-| **Status** | [ ] |
+| **Status** | [X] |
 | **Depende de** | TASK-23 |
 | **Entregável** | `PiiSafeLogger` e `PiiSafeLoggingBehavior` validados; teste automático confirma ausência de PII em logs |
 | **Mapeia** | RNF 3; design §5.4, §10; RN-025; RISK-MIGR-03 |
@@ -994,7 +994,7 @@ Implementar `PiiSafeLogger` (wrapper de logger estruturado que rejeita campos ma
 | **Onda** | Onda 6 — Hardening |
 | **Branch** | `feat/data-migration/25-observability` |
 | **Worktree** | `git worktree add ../worktrees/data-migration/25-observability -b feat/data-migration/25-observability` |
-| **Status** | [ ] |
+| **Status** | [X] |
 | **Depende de** | TASK-24 |
 | **Entregável** | Métricas `migration_rows_*` + `migration_duration_seconds` expostas; logs estruturados por linha; spans de trace |
 | **Mapeia** | RNF 6; design §11; `.forge/rules/architecture/observability.md` |
@@ -1029,7 +1029,7 @@ Implementar a observabilidade do processo de migração: métricas `migration_ro
 | **Onda** | Onda 6 — Hardening |
 | **Branch** | `test/data-migration/26-staging-volume-tests` |
 | **Worktree** | `git worktree add ../worktrees/data-migration/26-staging-volume-tests -b test/data-migration/26-staging-volume-tests` |
-| **Status** | [ ] |
+| **Status** | [X] |
 | **Depende de** | TASK-25 |
 | **Entregável** | Evidência de dry-run e rollback total bem-sucedidos com 108 e 500 linhas em staging; SLO ≤ 5 min validado |
 | **Mapeia** | RNF 1, RNF 5; design §13, §15; RISK-MIGR-02 |
@@ -1064,7 +1064,7 @@ Executar testes de volume em ambiente de staging com os volumes reais da Vellus 
 | **Onda** | Onda 6 — Hardening |
 | **Branch** | `feat/data-migration/27-feature-flag-lifecycle` |
 | **Worktree** | `git worktree add ../worktrees/data-migration/27-feature-flag-lifecycle -b feat/data-migration/27-feature-flag-lifecycle` |
-| **Status** | [ ] |
+| **Status** | [X] |
 | **Depende de** | TASK-23 |
 | **Entregável** | Feature flag `migration.import_enabled` operacional; checklist de remoção pós-Fase 1 registrado |
 | **Mapeia** | Req 14; DD-009; VAL-MIGR-01; design §2, §10 |
@@ -1098,7 +1098,7 @@ Garantir que o endpoint de import é protegido pela flag `migration.import_enabl
 | **Onda** | Onda 6 — Hardening |
 | **Branch** | `docs/data-migration/28-dod-final` |
 | **Worktree** | `git worktree add ../worktrees/data-migration/28-dod-final -b docs/data-migration/28-dod-final` |
-| **Status** | [ ] |
+| **Status** | [X] |
 | **Depende de** | TASK-27 |
 | **Entregável** | README corrigido (DD-001); matriz de rastreabilidade completa; DoD de design §19 verificado item a item |
 | **Mapeia** | Req 14, todos os requisitos; design §19; VAL-MIGR-01; DD-001 |
@@ -1130,46 +1130,46 @@ Completar o DoD do módulo conforme design §19: verificar cada item, corrigir o
 
 | Origem | Descrição | TASKs | Status |
 |--------|-----------|-------|--------|
-| Req 1 | Upload da planilha Pipeline Vellus.xlsx | TASK-08, TASK-14, TASK-21 | [ ] |
-| Req 2 | Dry-run sem efeitos colaterais com relatório de triagem | TASK-09, TASK-13, TASK-21 | [ ] |
-| Req 3 | Mapeamento canônico das colunas da planilha | TASK-07, TASK-14 | [ ] |
-| Req 4 | Triagem obrigatória de owners faltantes | TASK-03, TASK-10, TASK-22 | [ ] |
-| Req 5 | Triagem de estágios faltantes e parceiros sem percentual | TASK-07, TASK-10, TASK-22 | [ ] |
-| Req 6 | Import transacional tudo ou nada com rollback total | TASK-11, TASK-18, TASK-23 | [ ] |
-| Req 7 | Criação de contas com dedupe e contatos vinculados | TASK-07, TASK-09, TASK-16 | [ ] |
-| Req 8 | Preservação e geração de número AZ-NNNN | TASK-06, TASK-17 | [ ] |
-| Req 9 | Transformação de datas serial Excel para ISO | TASK-04, TASK-14 | [ ] |
-| Req 10 | Import de atividades da aba Ações Comerciais | TASK-18, TASK-14 | [ ] |
-| Req 11 | Relatório final auditado e evento de conclusão | TASK-11, TASK-13, TASK-20, TASK-23 | [ ] |
-| Req 12 | Idempotência do import | TASK-11, TASK-19 | [ ] |
-| Req 13 | Congelamento da planilha de origem | TASK-11, TASK-23 | [ ] |
-| Req 14 | Ciclo de vida temporário do módulo | TASK-01, TASK-27, TASK-28 | [ ] |
-| RNF 1 | Desempenho do dry-run e do import (≤ 5 min) | TASK-25, TASK-26 | [ ] |
-| RNF 2 | Isolamento por tenant (RLS, tenant_id) | TASK-12, TASK-15 | [ ] |
-| RNF 3 | PII ausente dos logs de migração | TASK-24, TASK-28 | [ ] |
-| RNF 4 | Auditoria append-only do import | TASK-20, TASK-28 | [ ] |
-| RNF 5 | Resiliência e atomicidade da transação | TASK-11, TASK-18, TASK-19, TASK-26 | [ ] |
-| RNF 6 | Observabilidade do processo | TASK-25 | [ ] |
-| PBT-01 | Atomicidade do import (rollback total) | TASK-11 | [ ] |
-| PBT-02 | Idempotência da reexecução | TASK-11, TASK-19 | [ ] |
-| PBT-03 | Round-trip de datas serial Excel ↔ ISO | TASK-04 | [ ] |
-| PBT-04 | Conservação de contagem no import | TASK-09 | [ ] |
-| PBT-05 | Preservação e unicidade do número AZ-NNNN | TASK-06 | [ ] |
-| PBT-06 | Detecção de divergência de forecast recalculado | TASK-05 | [ ] |
-| PBT-07 | Invariante de owner obrigatório (state machine) | TASK-03, TASK-10 | [ ] |
-| DD-001 | Import in-process com transação única, não HTTP | TASK-18, TASK-28 | [ ] |
-| DD-002 | Biblioteca de parsing .xlsx: ClosedXML | TASK-14 | [ ] |
-| DD-003 | Idempotência por import_key determinística | TASK-19 | [ ] |
-| DD-004 | Alocação de número AZ-NNNN via IOpportunityNumberPort | TASK-06, TASK-17 | [ ] |
-| DD-005 | Forecast com arredondamento bancário NBR 5891 | TASK-05 | [ ] |
-| DD-006 | Conversão de datas com epoch Excel 1899-12-30 | TASK-04, TASK-14 | [ ] |
-| DD-007 | Triagem persistida como snapshot JSONB | TASK-10 | [ ] |
-| DD-008 | RLS obrigatória nas tabelas de migração | TASK-15 | [ ] |
-| DD-009 | Ciclo de vida temporário via feature flag | TASK-12, TASK-27 | [ ] |
-| DD-010 | Congelamento como instrução operacional | TASK-11, TASK-23 | [ ] |
-| ADR-0001 | Isolamento multi-tenant (RLS, EF Filter) | TASK-12, TASK-15 | [ ] |
-| ADR-0003 | Unicidade de opportunity_number por tenant | TASK-06, TASK-17 | [ ] |
-| VAL-MIGR-01 | Remoção do módulo após Fase 1 | TASK-27, TASK-28 | [ ] |
+| Req 1 | Upload da planilha Pipeline Vellus.xlsx | TASK-08, TASK-14, TASK-21 | [X] |
+| Req 2 | Dry-run sem efeitos colaterais com relatório de triagem | TASK-09, TASK-13, TASK-21 | [X] |
+| Req 3 | Mapeamento canônico das colunas da planilha | TASK-07, TASK-14 | [X] |
+| Req 4 | Triagem obrigatória de owners faltantes | TASK-03, TASK-10, TASK-22 | [X] |
+| Req 5 | Triagem de estágios faltantes e parceiros sem percentual | TASK-07, TASK-10, TASK-22 | [X] |
+| Req 6 | Import transacional tudo ou nada com rollback total | TASK-11, TASK-18, TASK-23 | [X] |
+| Req 7 | Criação de contas com dedupe e contatos vinculados | TASK-07, TASK-09, TASK-16 | [X] |
+| Req 8 | Preservação e geração de número AZ-NNNN | TASK-06, TASK-17 | [X] |
+| Req 9 | Transformação de datas serial Excel para ISO | TASK-04, TASK-14 | [X] |
+| Req 10 | Import de atividades da aba Ações Comerciais | TASK-18, TASK-14 | [X] |
+| Req 11 | Relatório final auditado e evento de conclusão | TASK-11, TASK-13, TASK-20, TASK-23 | [X] |
+| Req 12 | Idempotência do import | TASK-11, TASK-19 | [X] |
+| Req 13 | Congelamento da planilha de origem | TASK-11, TASK-23 | [X] |
+| Req 14 | Ciclo de vida temporário do módulo | TASK-01, TASK-27, TASK-28 | [X] |
+| RNF 1 | Desempenho do dry-run e do import (≤ 5 min) | TASK-25, TASK-26 | [X] |
+| RNF 2 | Isolamento por tenant (RLS, tenant_id) | TASK-12, TASK-15 | [X] |
+| RNF 3 | PII ausente dos logs de migração | TASK-24, TASK-28 | [X] |
+| RNF 4 | Auditoria append-only do import | TASK-20, TASK-28 | [X] |
+| RNF 5 | Resiliência e atomicidade da transação | TASK-11, TASK-18, TASK-19, TASK-26 | [X] |
+| RNF 6 | Observabilidade do processo | TASK-25 | [X] |
+| PBT-01 | Atomicidade do import (rollback total) | TASK-11 | [X] |
+| PBT-02 | Idempotência da reexecução | TASK-11, TASK-19 | [X] |
+| PBT-03 | Round-trip de datas serial Excel ↔ ISO | TASK-04 | [X] |
+| PBT-04 | Conservação de contagem no import | TASK-09 | [X] |
+| PBT-05 | Preservação e unicidade do número AZ-NNNN | TASK-06 | [X] |
+| PBT-06 | Detecção de divergência de forecast recalculado | TASK-05 | [X] |
+| PBT-07 | Invariante de owner obrigatório (state machine) | TASK-03, TASK-10 | [X] |
+| DD-001 | Import in-process com transação única, não HTTP | TASK-18, TASK-28 | [X] |
+| DD-002 | Biblioteca de parsing .xlsx: ClosedXML | TASK-14 | [X] |
+| DD-003 | Idempotência por import_key determinística | TASK-19 | [X] |
+| DD-004 | Alocação de número AZ-NNNN via IOpportunityNumberPort | TASK-06, TASK-17 | [X] |
+| DD-005 | Forecast com arredondamento bancário NBR 5891 | TASK-05 | [X] |
+| DD-006 | Conversão de datas com epoch Excel 1899-12-30 | TASK-04, TASK-14 | [X] |
+| DD-007 | Triagem persistida como snapshot JSONB | TASK-10 | [X] |
+| DD-008 | RLS obrigatória nas tabelas de migração | TASK-15 | [X] |
+| DD-009 | Ciclo de vida temporário via feature flag | TASK-12, TASK-27 | [X] |
+| DD-010 | Congelamento como instrução operacional | TASK-11, TASK-23 | [X] |
+| ADR-0001 | Isolamento multi-tenant (RLS, EF Filter) | TASK-12, TASK-15 | [X] |
+| ADR-0003 | Unicidade de opportunity_number por tenant | TASK-06, TASK-17 | [X] |
+| VAL-MIGR-01 | Remoção do módulo após Fase 1 | TASK-27, TASK-28 | [X] |
 
 ## 6. Coverage Gates
 
