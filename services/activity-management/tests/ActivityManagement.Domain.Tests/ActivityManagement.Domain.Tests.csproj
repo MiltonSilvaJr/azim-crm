@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    ActivityManagement.Domain.Tests
+    Foco: máquina de estados ActivityStatus, invariantes do agregado Activity,
+          objetos de valor (ActivityType, Priority, DueDate, OpportunityLink, AccountLink),
+          specifications (OverdueSpecification, FunnelHealthSpecification, ScopeSpecification).
+    PBTs obrigatórios: PBT-01 (integridade da máquina de estados), PBT-04 (invariante
+    de atividade vencida), PBT-05 (saúde do funil após sugestão).
+    Meta de cobertura: Domain >= 95% (critério de fechamento da Onda 2).
+    Mapeia: design §13 (testes), TASK-02, TASK-03, TASK-04, TASK-05.
+  -->
+  <PropertyGroup>
+    <AssemblyName>ActivityManagement.Domain.Tests</AssemblyName>
+    <RootNamespace>ActivityManagement.Domain.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ActivityManagement.Domain\ActivityManagement.Domain.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    ActivityManagement.Domain
+    Papel: agregado Activity (Aggregate Root) com objetos de valor
+           (ActivityType, Priority, ActivityStatus, DueDate, OpportunityLink, AccountLink),
+           domain events (ActivityCreated, ActivityCompleted, ActivityOverdue),
+           specifications (OverdueSpecification, TodaySpecification, UpcomingSpecification,
+           FunnelHealthSpecification, ScopeSpecification),
+           IActivityRepository e exceções de domínio.
+    Regra de dependência: Domain -> (nenhum projeto interno).
+    Domain não referencia EF Core, GCP SDK, web framework, MediatR ou mensageria.
+    Mapeia: design §3, design §4, design §2 (P1 — domínio rico).
+  -->
+  <PropertyGroup>
+    <AssemblyName>ActivityManagement.Domain</AssemblyName>
+    <RootNamespace>ActivityManagement.Domain</RootNamespace>
+    <Description>Agregados, objetos de valor, eventos de domínio, specifications e IActivityRepository do módulo activity-management. Sem dependência de infraestrutura (Clean Architecture, DDD).</Description>
+  </PropertyGroup>
+</Project>

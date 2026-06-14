@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    ActivityManagement.Infrastructure
+    Papel: adapters concretos — EF Core (ActivityManagementDbContext,
+           IEntityTypeConfiguration<Activity>, ActivityRepository, migrations),
+           TenantContext (TenantConnectionInterceptor, filtro global de tenant_id + RLS),
+           Outbox transacional, AuditPublisher, PiiMasker,
+           DigestActionTokenAdapter, OpportunityReadAdapter, AccountReadAdapter
+           (HTTP/gRPC interno com mTLS).
+    Regra de dependência: Infrastructure -> Application, Domain, Contracts.
+    Infrastructure é o único projeto autorizado a usar EF Core, Npgsql, Polly,
+    GCP SDKs e drivers de mensageria.
+    Mapeia: design §3, design §6.
+  -->
+  <PropertyGroup>
+    <AssemblyName>ActivityManagement.Infrastructure</AssemblyName>
+    <RootNamespace>ActivityManagement.Infrastructure</RootNamespace>
+    <Description>Adapters de infraestrutura do módulo activity-management: EF Core, tenant filter (RLS), Outbox/Pub/Sub, PiiMasker, AuditPublisher e adapters de leitura. Único projeto autorizado a usar drivers de persistência e mensageria.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ActivityManagement.Application\ActivityManagement.Application.csproj" />
+    <ProjectReference Include="..\ActivityManagement.Domain\ActivityManagement.Domain.csproj" />
+    <ProjectReference Include="..\ActivityManagement.Contracts\ActivityManagement.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- EF Core 9.0.6 — versão alinhada com os demais módulos do repositório -->
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.6" />
+    <!-- Npgsql 9.0.4 — driver PostgreSQL alinhado com os demais módulos -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.16.0" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.16.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.13.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.13.0" />
+    <!-- Resiliência: retry, circuit breaker, timeout (Polly) — portas de leitura (design §6.4) -->
+    <PackageReference Include="Polly" Version="8.5.2" />
+    <!-- Serilog: logs estruturados (RNF 6.1) -->
+    <PackageReference Include="Serilog" Version="4.3.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
+    <!-- Health checks: live e ready endpoints -->
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.0" />
+    <!-- HTTP client para adapters externos (OpportunityReadAdapter, AccountReadAdapter) -->
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+  </ItemGroup>
+</Project>

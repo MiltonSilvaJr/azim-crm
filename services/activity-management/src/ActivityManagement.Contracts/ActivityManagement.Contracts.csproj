@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    ActivityManagement.Contracts
+    Papel: DTOs de request/response (atividades, tokens) e contratos de evento
+           (ActivityCreated.v1, ActivityCompleted.v1, ActivityOverdue.v1).
+    Regra de dependência: Contracts -> (nenhum projeto interno).
+    Contratos são consumidos por módulos externos; sem dependência interna para evitar ciclos.
+    Mapeia: design §3, design §9 (AsyncAPI / eventos publicados).
+  -->
+  <PropertyGroup>
+    <AssemblyName>ActivityManagement.Contracts</AssemblyName>
+    <RootNamespace>ActivityManagement.Contracts</RootNamespace>
+    <Description>DTOs de request/response e contratos de evento do módulo activity-management. Sem dependência de projetos internos (Clean Architecture, design §3).</Description>
+  </PropertyGroup>
+</Project>

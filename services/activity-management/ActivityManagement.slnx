@@ -1,0 +1,32 @@
+<Solution>
+  <!--
+    ActivityManagement.slnx — formato XML nativo .NET 10
+    Módulo: BC-04 Activity Management (Gestão de Atividades Comerciais — Supporting Subdomain)
+    Estrutura: 5 projetos de produção + 5 de teste (Clean Architecture + DDD).
+
+    Regra de dependência (validada por Architecture.Tests, design §3):
+      Api            -> Application, Infrastructure, Contracts
+      Application    -> Domain, Contracts (NUNCA Infrastructure)
+      Infrastructure -> Application, Domain, Contracts
+      Domain         -> (nenhum projeto interno)
+      Contracts      -> (nenhum projeto interno)
+
+    Decisões inline aplicáveis: DD-001..DD-009 (design.md §17).
+    ADRs aplicáveis: ADR-0001 (Multi-tenancy), ADR-0003 (auditoria imutável),
+                     ADR-0004 (outbox e idempotência), ADR-0006 (token de link).
+  -->
+  <Folder Name="/src/">
+    <Project Path="src/ActivityManagement.Contracts/ActivityManagement.Contracts.csproj" />
+    <Project Path="src/ActivityManagement.Domain/ActivityManagement.Domain.csproj" />
+    <Project Path="src/ActivityManagement.Application/ActivityManagement.Application.csproj" />
+    <Project Path="src/ActivityManagement.Infrastructure/ActivityManagement.Infrastructure.csproj" />
+    <Project Path="src/ActivityManagement.Api/ActivityManagement.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ActivityManagement.Domain.Tests/ActivityManagement.Domain.Tests.csproj" />
+    <Project Path="tests/ActivityManagement.Application.Tests/ActivityManagement.Application.Tests.csproj" />
+    <Project Path="tests/ActivityManagement.Infrastructure.Tests/ActivityManagement.Infrastructure.Tests.csproj" />
+    <Project Path="tests/ActivityManagement.Api.Tests/ActivityManagement.Api.Tests.csproj" />
+    <Project Path="tests/ActivityManagement.Architecture.Tests/ActivityManagement.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>
