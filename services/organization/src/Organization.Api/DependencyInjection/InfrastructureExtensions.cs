@@ -8,6 +8,7 @@ using Organization.Infrastructure.Messaging;
 using Organization.Infrastructure.Observability;
 using Organization.Infrastructure.Persistence;
 using Organization.Infrastructure.Repositories;
+using Organization.Infrastructure.Security;
 using StackExchange.Redis;
 
 namespace Organization.Api.DependencyInjection;
@@ -94,8 +95,12 @@ public static class InfrastructureExtensions
         // IClock
         services.AddSingleton<IClock, SystemClock>();
 
-        // ITokenHasher — substituído por HmacSha256TokenHasher na TASK-26 (Onda 6)
-        services.AddSingleton<ITokenHasher, Sha256TokenHasher>();
+        // ISecretProvider — lê de IConfiguration (variáveis de ambiente / appsettings)
+        // Em produção substituir por GcpSecretManagerProvider (Secret Manager)
+        services.AddSingleton<ISecretProvider, EnvironmentSecretProvider>();
+
+        // ITokenHasher — HmacSha256 com pepper via Secret Manager (TASK-26, DD-007, RNF 3)
+        services.AddSingleton<ITokenHasher, HmacSha256TokenHasher>();
 
         // ── Observabilidade ───────────────────────────────────────────────────
         services.AddSingleton<OrganizationMetrics>();
@@ -151,27 +156,5 @@ internal sealed class SystemClock : IClock
     public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
 }
 
-/// <summary>
-/// Implementação simples de <see cref="ITokenHasher"/> usando SHA-256 (MVP sem pepper).
-/// Substituir por HmacSha256 com pepper via Secret Manager na Onda 6 (TASK-26).
-/// </summary>
-internal sealed class Sha256TokenHasher : ITokenHasher
-{
-    /// <inheritdoc/>
-    public (string PlainToken, string Hash) GenerateToken()
-    {
-        var bytes = new byte[32];
-        System.Security.Cryptography.RandomNumberGenerator.Fill(bytes);
-        var plain = Convert.ToBase64String(bytes);
-        var hash = Hash(plain);
-        return (plain, hash);
-    }
-
-    /// <inheritdoc/>
-    public string Hash(string plainToken)
-    {
-        var bytes = System.Security.Cryptography.SHA256.HashData(
-            System.Text.Encoding.UTF8.GetBytes(plainToken));
-        return Convert.ToHexString(bytes).ToLowerInvariant();
-    }
-}
+// Sha256TokenHasher MVP removido na TASK-26.
+// ITokenHasher agora registrado como HmacSha256TokenHasher (HMAC-SHA256 com pepper).
