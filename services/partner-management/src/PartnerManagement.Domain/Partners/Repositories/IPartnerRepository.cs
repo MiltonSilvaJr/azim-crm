@@ -38,4 +38,20 @@ public interface IPartnerRepository
     /// <param name="cancellationToken">Token de cancelamento.</param>
     /// <returns>Lista de parceiros com nome similar (pode ser vazia).</returns>
     Task<IReadOnlyList<Partner>> FindByNameAsync(string name, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Lista parceiros do tenant com suporte a filtros e paginação.
+    /// </summary>
+    /// <param name="active">Filtro por status (<c>null</c> = todos).</param>
+    /// <param name="triagePending">Quando <c>true</c>, retorna apenas parceiros com percentuais em 0,00.</param>
+    /// <param name="page">Número da página (1-based).</param>
+    /// <param name="pageSize">Tamanho da página.</param>
+    /// <param name="cancellationToken">Token de cancelamento.</param>
+    /// <returns>Página de parceiros e total.</returns>
+    Task<(IReadOnlyList<Partner> Partners, int TotalCount)> ListAsync(
+        bool? active,
+        bool triagePending,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
 }
