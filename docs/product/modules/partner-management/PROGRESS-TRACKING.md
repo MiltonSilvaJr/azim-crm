@@ -17,8 +17,8 @@
 | 2 | Domain (PBTs) | TASK-03..08 | [X] (6 commits) — 128 Domain + PBT-02/03; Percentage decimal NBR-5891 |
 | 3 | Application (PBTs) | TASK-09..14 | [X] (6 commits) — 61 App + PBT-01/05; IPartnerCommissionReadPort |
 | 4 | Infrastructure (RLS, outbox) | TASK-15..21 | [X] (7 commits) — 60 Infra (RLS/PBT-04 Testcontainers, PartnerPiiMasker); EF 9.0.6 |
-| 5 | API + Contratos (Pact) | TASK-22..25 | [-] |
-| 6 | Hardening | TASK-26..29 | [ ] |
+| 5 | API + Contratos (Pact) | TASK-22..25 | [X] (4 commits) — 70 Api; RBAC/PM-ERR; commissions degradação |
+| 6 | Hardening | TASK-26..29 | [-] |
 
 ## Detalhe por onda
 
