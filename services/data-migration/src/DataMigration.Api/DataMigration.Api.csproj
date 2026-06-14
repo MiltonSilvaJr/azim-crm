@@ -20,4 +20,9 @@
     <ProjectReference Include="..\DataMigration.Infrastructure\DataMigration.Infrastructure.csproj" />
     <ProjectReference Include="..\DataMigration.Contracts\DataMigration.Contracts.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.1" />
+  </ItemGroup>
 </Project>
