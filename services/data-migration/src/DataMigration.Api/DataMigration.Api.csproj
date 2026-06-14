@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!--
+    DataMigration.Api
+    Papel: MigrationController com endpoints REST (design §8):
+           POST /upload, POST /dry-run, POST /execute, GET /status, GET /report,
+           endpoints de triagem (/owners, /stages, /partners, /dedupe, /ready).
+    Autenticação JWT + RBAC (Platform Operator / Tenant Admin — design §10).
+    Catálogo de erros MIG-ERR-001..010 exposto via ProblemDetails.
+    Regra de dependência: Api -> Application, Infrastructure, Contracts.
+    NUNCA referenciado por Domain, Application, Infrastructure ou Contracts.
+  -->
+  <PropertyGroup>
+    <AssemblyName>DataMigration.Api</AssemblyName>
+    <RootNamespace>DataMigration.Api</RootNamespace>
+    <Description>API REST do módulo data-migration. MigrationController, autenticação JWT, RBAC e catálogo de erros MIG-ERR-001..010 (design §3, §8, §10).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataMigration.Application\DataMigration.Application.csproj" />
+    <ProjectReference Include="..\DataMigration.Infrastructure\DataMigration.Infrastructure.csproj" />
+    <ProjectReference Include="..\DataMigration.Contracts\DataMigration.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.1" />
+  </ItemGroup>
+</Project>

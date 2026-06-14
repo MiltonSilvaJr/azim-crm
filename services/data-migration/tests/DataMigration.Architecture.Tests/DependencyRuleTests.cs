@@ -1,0 +1,388 @@
+using FluentAssertions;
+using NetArchTest.Rules;
+using Xunit;
+
+namespace DataMigration.Architecture.Tests;
+
+/// <summary>
+/// Testes de arquitetura que garantem as regras de dependência entre camadas
+/// conforme design §3 do módulo data-migration.
+///
+/// Executa em 100% dos PRs e falha o CI em caso de violação (TASK-02).
+///
+/// Regra de dependência (design §3):
+///   Api            -> Application, Infrastructure, Contracts (permitido)
+///   Application    -> Domain, Contracts (NUNCA Infrastructure)
+///   Infrastructure -> Application, Domain, Contracts (permitido)
+///   Domain         -> (nenhum projeto interno)
+///   Contracts      -> (nenhum projeto interno)
+///
+/// Direções proibidas validadas aqui:
+///   Domain         -x-> Application
+///   Domain         -x-> Infrastructure
+///   Domain         -x-> Api
+///   Application    -x-> Infrastructure
+///   Application    -x-> Api
+///   Contracts      -x-> Domain
+///   Contracts      -x-> Application
+///   Contracts      -x-> Infrastructure
+///   Contracts      -x-> Api
+///
+/// Proibição extra (ST-03):
+///   Domain         -x-> ClosedXML / DocumentFormat.OpenXml
+///   Application    -x-> ClosedXML / DocumentFormat.OpenXml
+///   Contracts      -x-> ClosedXML / DocumentFormat.OpenXml
+/// </summary>
+public sealed class DependencyRuleTests
+{
+    // =========================================================================
+    // Grupo A — Domain não referencia nenhum projeto interno (design §3)
+    // TASK-02 ST-01: testes que falhariam se as regras fossem violadas
+    // =========================================================================
+
+    /// <summary>
+    /// Regra A-1: tipos em Domain não referenciam Application.
+    ///
+    /// Domain é a camada mais interna e não pode conhecer casos de uso.
+    /// Mapeia: design §3, design §2 (P1 — Clean Architecture).
+    /// Rastreia: TASK-02 (ST-01).
+    /// </summary>
+    [Fact(DisplayName = "Domain não deve depender de Application (design §3)")]
+    public void Domain_ShouldNotDependOn_Application()
+    {
+        var result = Types.InAssembly(ArchitectureRules.DomainAssembly)
+            .Should()
+            .NotHaveDependencyOn(ArchitectureRules.ApplicationAssemblyName)
+            .GetResult();
+
+        result.IsSuccessful.Should().BeTrue(
+            because: "Domain não deve referenciar Application (design §3). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(result)}]");
+    }
+
+    /// <summary>
+    /// Regra A-2: tipos em Domain não referenciam Infrastructure.
+    ///
+    /// Domain não deve conhecer EF Core, ClosedXML, Npgsql ou qualquer adapter.
+    /// Mapeia: design §3, design §2 (P1 — Domain independente de infraestrutura).
+    /// Rastreia: TASK-01 (ST-01 — sanidade), TASK-02 (ST-01).
+    /// </summary>
+    [Fact(DisplayName = "Domain não deve depender de Infrastructure (design §3)")]
+    public void Domain_ShouldNotDependOn_Infrastructure()
+    {
+        var result = Types.InAssembly(ArchitectureRules.DomainAssembly)
+            .Should()
+            .NotHaveDependencyOn(ArchitectureRules.InfrastructureAssemblyName)
+            .GetResult();
+
+        result.IsSuccessful.Should().BeTrue(
+            because: "Domain não deve referenciar Infrastructure (design §3). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(result)}]");
+    }
+
+    /// <summary>
+    /// Regra A-3: tipos em Domain não referenciam Api.
+    ///
+    /// Dependência de Domain em Api criaria ciclo e acoplamento indevido ao web framework.
+    /// Mapeia: design §3.
+    /// Rastreia: TASK-02 (ST-01).
+    /// </summary>
+    [Fact(DisplayName = "Domain não deve depender de Api (design §3)")]
+    public void Domain_ShouldNotDependOn_Api()
+    {
+        var result = Types.InAssembly(ArchitectureRules.DomainAssembly)
+            .Should()
+            .NotHaveDependencyOn(ArchitectureRules.ApiAssemblyName)
+            .GetResult();
+
+        result.IsSuccessful.Should().BeTrue(
+            because: "Domain não deve referenciar Api (design §3). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(result)}]");
+    }
+
+    // =========================================================================
+    // Grupo B — Application não referencia Infrastructure nem Api (design §3)
+    // =========================================================================
+
+    /// <summary>
+    /// Regra B-1: tipos em Application não referenciam Infrastructure.
+    ///
+    /// Application define ports (interfaces); Infrastructure as implementa.
+    /// Violação indicaria dependência invertida — adapter vazando para a porta.
+    /// Mapeia: design §3, design §2 (P1).
+    /// Rastreia: TASK-02 (ST-01).
+    /// </summary>
+    [Fact(DisplayName = "Application não deve depender de Infrastructure (design §3)")]
+    public void Application_ShouldNotDependOn_Infrastructure()
+    {
+        var result = Types.InAssembly(ArchitectureRules.ApplicationAssembly)
+            .Should()
+            .NotHaveDependencyOn(ArchitectureRules.InfrastructureAssemblyName)
+            .GetResult();
+
+        result.IsSuccessful.Should().BeTrue(
+            because: "Application não deve referenciar Infrastructure (design §3). " +
+                     "Application define portas; Infrastructure as implementa. " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(result)}]");
+    }
+
+    /// <summary>
+    /// Regra B-2: tipos em Application não referenciam Api.
+    ///
+    /// Application não pode conhecer controllers ou o pipeline HTTP.
+    /// Mapeia: design §3.
+    /// Rastreia: TASK-02 (ST-01).
+    /// </summary>
+    [Fact(DisplayName = "Application não deve depender de Api (design §3)")]
+    public void Application_ShouldNotDependOn_Api()
+    {
+        var result = Types.InAssembly(ArchitectureRules.ApplicationAssembly)
+            .Should()
+            .NotHaveDependencyOn(ArchitectureRules.ApiAssemblyName)
+            .GetResult();
+
+        result.IsSuccessful.Should().BeTrue(
+            because: "Application não deve referenciar Api (design §3). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(result)}]");
+    }
+
+    // =========================================================================
+    // Grupo C — Contracts não referencia nenhum projeto interno (design §3)
+    // =========================================================================
+
+    /// <summary>
+    /// Regra C-1: tipos em Contracts não referenciam Domain.
+    ///
+    /// Contracts é a camada pública — sem dependências internas.
+    /// Mapeia: design §3.
+    /// Rastreia: TASK-02 (ST-01).
+    /// </summary>
+    [Fact(DisplayName = "Contracts não deve depender de Domain (design §3)")]
+    public void Contracts_ShouldNotDependOn_Domain()
+    {
+        var result = Types.InAssembly(ArchitectureRules.ContractsAssembly)
+            .Should()
+            .NotHaveDependencyOn(ArchitectureRules.DomainAssemblyName)
+            .GetResult();
+
+        result.IsSuccessful.Should().BeTrue(
+            because: "Contracts não deve referenciar Domain (design §3). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(result)}]");
+    }
+
+    /// <summary>
+    /// Regra C-2: tipos em Contracts não referenciam Application.
+    ///
+    /// Contracts é consumido por todos os módulos; não pode criar ciclo.
+    /// Mapeia: design §3.
+    /// Rastreia: TASK-02 (ST-01).
+    /// </summary>
+    [Fact(DisplayName = "Contracts não deve depender de Application (design §3)")]
+    public void Contracts_ShouldNotDependOn_Application()
+    {
+        var result = Types.InAssembly(ArchitectureRules.ContractsAssembly)
+            .Should()
+            .NotHaveDependencyOn(ArchitectureRules.ApplicationAssemblyName)
+            .GetResult();
+
+        result.IsSuccessful.Should().BeTrue(
+            because: "Contracts não deve referenciar Application (design §3). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(result)}]");
+    }
+
+    /// <summary>
+    /// Regra C-3: tipos em Contracts não referenciam Infrastructure.
+    ///
+    /// Nenhum adapter de banco, GCP ou mensageria pode aparecer em Contracts.
+    /// Mapeia: design §3.
+    /// Rastreia: TASK-02 (ST-01).
+    /// </summary>
+    [Fact(DisplayName = "Contracts não deve depender de Infrastructure (design §3)")]
+    public void Contracts_ShouldNotDependOn_Infrastructure()
+    {
+        var result = Types.InAssembly(ArchitectureRules.ContractsAssembly)
+            .Should()
+            .NotHaveDependencyOn(ArchitectureRules.InfrastructureAssemblyName)
+            .GetResult();
+
+        result.IsSuccessful.Should().BeTrue(
+            because: "Contracts não deve referenciar Infrastructure (design §3). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(result)}]");
+    }
+
+    /// <summary>
+    /// Regra C-4: tipos em Contracts não referenciam Api.
+    ///
+    /// Contratos públicos não podem depender do pipeline web.
+    /// Mapeia: design §3.
+    /// Rastreia: TASK-02 (ST-01).
+    /// </summary>
+    [Fact(DisplayName = "Contracts não deve depender de Api (design §3)")]
+    public void Contracts_ShouldNotDependOn_Api()
+    {
+        var result = Types.InAssembly(ArchitectureRules.ContractsAssembly)
+            .Should()
+            .NotHaveDependencyOn(ArchitectureRules.ApiAssemblyName)
+            .GetResult();
+
+        result.IsSuccessful.Should().BeTrue(
+            because: "Contracts não deve referenciar Api (design §3). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(result)}]");
+    }
+
+    // =========================================================================
+    // Grupo D — Domain não usa namespaces de infraestrutura (design §2, §3)
+    // Rastreia: TASK-01 (ST-01), TASK-02 (ST-01, ST-03)
+    // =========================================================================
+
+    /// <summary>
+    /// Regra D: Domain não referencia namespaces de EF Core, Npgsql, ClosedXML,
+    /// GCP SDKs, ASP.NET Core ou MediatR.
+    ///
+    /// Garante que o domínio permanece puro e testável sem dependência de framework.
+    /// Mapeia: design §2 (P1), design §3.
+    /// Rastreia: TASK-01 (ST-01 — sanidade Domain sem EF Core/ClosedXML),
+    ///           TASK-02 (ST-01, ST-03).
+    /// </summary>
+    [Fact(DisplayName = "Domain não deve conter namespaces de infraestrutura (design §2, §3)")]
+    public void Domain_ShouldNotContain_InfrastructureNamespaces()
+    {
+        var result = Types.InAssembly(ArchitectureRules.DomainAssembly)
+            .Should()
+            .NotHaveDependencyOnAny(ArchitectureRules.ForbiddenInfraNamespacesInDomain)
+            .GetResult();
+
+        result.IsSuccessful.Should().BeTrue(
+            because: "Domain não deve referenciar namespaces de infraestrutura " +
+                     $"({string.Join(", ", ArchitectureRules.ForbiddenInfraNamespacesInDomain)}) " +
+                     "— domínio deve ser puro e testável sem framework (design §2, §3). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(result)}]");
+    }
+
+    // =========================================================================
+    // Grupo E — ClosedXML confinado a Infrastructure (TASK-02, ST-03; DD-002)
+    // =========================================================================
+
+    /// <summary>
+    /// Regra E-1: Domain não referencia ClosedXML.
+    ///
+    /// ClosedXML é o adaptador de parsing .xlsx (DD-002) e deve ser confinado
+    /// exclusivamente a DataMigration.Infrastructure.
+    /// Mapeia: design §3, DD-002.
+    /// Rastreia: TASK-02 (ST-03).
+    /// </summary>
+    [Fact(DisplayName = "Domain não deve referenciar ClosedXML (DD-002, design §3)")]
+    public void Domain_ShouldNotReference_ClosedXml()
+    {
+        var result = Types.InAssembly(ArchitectureRules.DomainAssembly)
+            .Should()
+            .NotHaveDependencyOnAny(ArchitectureRules.ClosedXmlNamespaces)
+            .GetResult();
+
+        result.IsSuccessful.Should().BeTrue(
+            because: "ClosedXML deve ser confinado a Infrastructure (DD-002, design §3). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(result)}]");
+    }
+
+    /// <summary>
+    /// Regra E-2: Application não referencia ClosedXML.
+    ///
+    /// Application define a porta ISpreadsheetParser; a implementação ClosedXML
+    /// fica em Infrastructure. Violar esta regra quebraria a inversão de dependência.
+    /// Mapeia: design §3, DD-002, §6.4.
+    /// Rastreia: TASK-02 (ST-03).
+    /// </summary>
+    [Fact(DisplayName = "Application não deve referenciar ClosedXML (DD-002, design §3)")]
+    public void Application_ShouldNotReference_ClosedXml()
+    {
+        var result = Types.InAssembly(ArchitectureRules.ApplicationAssembly)
+            .Should()
+            .NotHaveDependencyOnAny(ArchitectureRules.ClosedXmlNamespaces)
+            .GetResult();
+
+        result.IsSuccessful.Should().BeTrue(
+            because: "ClosedXML não deve aparecer em Application (DD-002, design §3). " +
+                     "Application usa ISpreadsheetParser (porta); Infrastructure a implementa. " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(result)}]");
+    }
+
+    /// <summary>
+    /// Regra E-3: Contracts não referencia ClosedXML.
+    ///
+    /// Contratos públicos não podem depender de adaptador de infraestrutura.
+    /// Mapeia: design §3, DD-002.
+    /// Rastreia: TASK-02 (ST-03).
+    /// </summary>
+    [Fact(DisplayName = "Contracts não deve referenciar ClosedXML (DD-002, design §3)")]
+    public void Contracts_ShouldNotReference_ClosedXml()
+    {
+        var result = Types.InAssembly(ArchitectureRules.ContractsAssembly)
+            .Should()
+            .NotHaveDependencyOnAny(ArchitectureRules.ClosedXmlNamespaces)
+            .GetResult();
+
+        result.IsSuccessful.Should().BeTrue(
+            because: "ClosedXML não deve aparecer em Contracts (DD-002, design §3). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(result)}]");
+    }
+
+    // =========================================================================
+    // Grupo F — Ausência de dependências reversas (TASK-27, DD-009, Req 14)
+    // Garante que o módulo é removível sem deixar rastros nos módulos de domínio.
+    // =========================================================================
+
+    /// <summary>
+    /// Regra F-1: Domain não referencia Application nem Infrastructure do módulo.
+    ///
+    /// Confirma que a camada mais interna não possui acoplamento reverso,
+    /// tornando o módulo data-migration removível após a Fase 1 (Req 14.2, DD-009).
+    ///
+    /// Rastreia: TASK-27 (ST-01 — teste de arquitetura reverso), Req 14, DD-009, VAL-MIGR-01.
+    /// </summary>
+    [Fact(DisplayName = "Domain não cria dependência reversa sobre Application ou Infrastructure (Req 14, DD-009)")]
+    public void Domain_HasNoDependencyOn_ApplicationOrInfrastructure()
+    {
+        // Domain não deve referenciar nem Application nem Infrastructure.
+        // Isso garante que, ao remover os projetos DataMigration.Application e
+        // DataMigration.Infrastructure, o Domain (que seria dropado junto) não
+        // deixa rastros nos módulos de domínio de negócio.
+        var appResult = Types.InAssembly(ArchitectureRules.DomainAssembly)
+            .Should()
+            .NotHaveDependencyOn(ArchitectureRules.ApplicationAssemblyName)
+            .GetResult();
+
+        var infraResult = Types.InAssembly(ArchitectureRules.DomainAssembly)
+            .Should()
+            .NotHaveDependencyOn(ArchitectureRules.InfrastructureAssemblyName)
+            .GetResult();
+
+        appResult.IsSuccessful.Should().BeTrue(
+            because: "Domain não deve depender de Application — ciclo proibido e impede remoção do módulo (Req 14, DD-009). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(appResult)}]");
+
+        infraResult.IsSuccessful.Should().BeTrue(
+            because: "Domain não deve depender de Infrastructure — ciclo proibido e impede remoção do módulo (Req 14, DD-009). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(infraResult)}]");
+    }
+
+    /// <summary>
+    /// Regra F-2: Contracts não cria dependências internas.
+    ///
+    /// Contratos são estáveis por definição — sem acoplamento a nenhuma camada interna.
+    /// Permite remoção limpa do módulo sem deixar rastros em contratos externos (Req 14.2).
+    ///
+    /// Rastreia: TASK-27 (ST-01), Req 14, DD-009.
+    /// </summary>
+    [Fact(DisplayName = "Contracts não cria dependência sobre Domain, Application ou Infrastructure (Req 14)")]
+    public void Contracts_HasNoDependencyOn_InternalLayers()
+    {
+        var domainResult = Types.InAssembly(ArchitectureRules.ContractsAssembly)
+            .Should()
+            .NotHaveDependencyOn(ArchitectureRules.DomainAssemblyName)
+            .GetResult();
+
+        domainResult.IsSuccessful.Should().BeTrue(
+            because: "Contracts não deve depender de Domain — remoção do módulo deve ser limpa (Req 14, DD-009). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(domainResult)}]");
+    }
+}

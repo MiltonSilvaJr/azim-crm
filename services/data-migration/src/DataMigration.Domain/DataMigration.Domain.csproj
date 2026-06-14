@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    DataMigration.Domain
+    Papel: agregado MigrationJob (Aggregate Root) com entidade MigrationLogEntry,
+           objetos de valor (SourceRow, ColumnMapping, ExcelSerialDate, NormalizedName,
+           Money, OpportunityNumber, ForecastDivergence, TriageFlag), domain events
+           (DryRunCompleted, ImportCompleted, ImportRolledBack), domain service
+           OpportunityNumberAllocator, specifications (OwnerRequiredSpecification),
+           policies (AccountDedupePolicy, StageFallbackPolicy, PartnerPctPendingPolicy,
+           ForecastDivergencePolicy, OwnerTypoMappingPolicy) e exceções de domínio.
+    Regra de dependência: Domain -> (nenhum projeto interno).
+    Domain não referencia EF Core, ClosedXML, Npgsql, ASP.NET Core, MediatR ou
+    qualquer SDK de infraestrutura (validado por Architecture.Tests — design §3).
+  -->
+  <PropertyGroup>
+    <AssemblyName>DataMigration.Domain</AssemblyName>
+    <RootNamespace>DataMigration.Domain</RootNamespace>
+    <Description>Agregados, objetos de valor, eventos de domínio, policies e specifications do módulo data-migration. Sem dependência de infraestrutura (Clean Architecture, DDD — design §3, §4).</Description>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    DataMigration.Application.Tests
+    Foco: handlers (Upload, DryRun, ExecuteImport, Triage, Queries);
+          validações de borda; pipeline behaviors (idempotência, feature flag,
+          PII-safe, tenant context, autorização).
+    PBTs obrigatórios: PBT-01, PBT-02, PBT-04 (FsCheck).
+    Rastreabilidade: Req 1-6, 11, 12; design §5; tasks TASK-08..TASK-13.
+    Gate de coverage: Application >= 85%.
+  -->
+  <PropertyGroup>
+    <AssemblyName>DataMigration.Application.Tests</AssemblyName>
+    <RootNamespace>DataMigration.Application.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- NSubstitute: mocking de portas e IClock nos testes de Application -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DataMigration.Application\DataMigration.Application.csproj" />
+    <ProjectReference Include="..\..\src\DataMigration.Domain\DataMigration.Domain.csproj" />
+  </ItemGroup>
+</Project>

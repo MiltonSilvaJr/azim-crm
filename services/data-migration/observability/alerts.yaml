@@ -1,0 +1,91 @@
+# Alertas de observabilidade — módulo data-migration (BC-09)
+# Rastreia: design §11, RNF 6.1, RNF 6.3, TASK-25.
+#
+# Tier de serviço: Tier 3 (non-critical, uso único pontual).
+# Destinatário: Platform Operator (PlatOp) via log consolidado — sem paging (RNF 6.3).
+#
+# Formato compatível com Cloud Monitoring (Google Cloud) / Prometheus.
+# Os nomes de métricas seguem snake_case obrigatório do projeto.
+
+groups:
+  - name: data_migration_alerts
+    rules:
+
+      # Alerta: taxa de falha de linhas acima de 10% do total processado
+      - alert: MigrationRowFailureRateHigh
+        expr: |
+          rate(migration_rows_failed_total[5m])
+          /
+          (rate(migration_rows_processed_total[5m]) + rate(migration_rows_failed_total[5m]))
+          > 0.10
+        for: 1m
+        labels:
+          severity: warning
+          service: data-migration
+          tier: "3"
+        annotations:
+          summary: "Taxa de falha de linhas acima de 10% no import de migração"
+          description: >
+            A fração de linhas com falha no import de migração ultrapassou 10%.
+            Verificar migration_logs para detalhes por índice de linha (sem PII).
+            Job afetado: {{ $labels.migration_job_id }}.
+
+      # Alerta: duração do import acima do SLO de 5 minutos (RNF 1)
+      - alert: MigrationImportDurationExceedsSlo
+        expr: migration_duration_seconds > 300
+        for: 0m
+        labels:
+          severity: warning
+          service: data-migration
+          tier: "3"
+        annotations:
+          summary: "Import de migração excedeu SLO de 5 minutos (RNF 1)"
+          description: >
+            O import de migração registrou duração de {{ $value }}s,
+            superando o limite de 300s (5 min). Verificar performance do
+            pipeline e dimensionamento de transação Postgres.
+
+      # Alerta: divergências de forecast acima do esperado (> 5 em um job)
+      - alert: MigrationForecastDivergencesHigh
+        expr: increase(migration_forecast_divergences_total[30m]) > 5
+        for: 0m
+        labels:
+          severity: info
+          service: data-migration
+          tier: "3"
+        annotations:
+          summary: "Múltiplas divergências de forecast detectadas no dry-run"
+          description: >
+            Mais de 5 divergências de forecast (|Δ| > 1 centavo) foram detectadas.
+            Revisar colunas Valor Total e Probabilidade na planilha.
+            Calculado por round_half_even(valor_total × probabilidade / 100) — DD-005.
+
+      # Notificação informativa: import concluído com sucesso
+      - alert: MigrationImportCompleted
+        expr: increase(migration_jobs_state_total{state="completed"}[5m]) > 0
+        for: 0m
+        labels:
+          severity: info
+          service: data-migration
+          tier: "3"
+        annotations:
+          summary: "Import de migração concluído com sucesso"
+          description: >
+            Um import de migração foi concluído. Verificar ImportReport no endpoint
+            GET /api/v1/migrations/{jobId}/report para contagens por entidade.
+            Executar instrução de congelamento da planilha (Req 13, DD-010).
+
+      # Notificação informativa: import revertido (rolled_back)
+      - alert: MigrationImportRolledBack
+        expr: increase(migration_jobs_state_total{state="rolled_back"}[5m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+          service: data-migration
+          tier: "3"
+        annotations:
+          summary: "Import de migração revertido (rolled_back)"
+          description: >
+            Um import foi revertido com rollback total (nenhum dado persistido — PBT-01).
+            Verificar migration_logs pelo índice de linha com falha (sem PII).
+            O job pode ser reexecutado após correção da planilha (Req 12 — idempotência).

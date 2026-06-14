@@ -1,0 +1,31 @@
+<Solution>
+  <!--
+    DataMigration.slnx — formato XML nativo .NET 10
+    Módulo: BC-09 Data Migration (Migração de Planilha — Supporting Subdomain SD-11)
+    Estrutura: 5 projetos de produção + 5 de teste (Clean Architecture + DDD).
+
+    Regra de dependência (validada por Architecture.Tests, design §3):
+      Api            -> Application, Infrastructure, Contracts
+      Application    -> Domain, Contracts (NUNCA Infrastructure)
+      Infrastructure -> Application, Domain, Contracts
+      Domain         -> (nenhum projeto interno)
+      Contracts      -> (nenhum projeto interno)
+
+    ADRs aplicáveis: ADR-0001 (multi-tenant), ADR-0003 (opportunity_number por tenant).
+    Decisões inline: DD-001..DD-010 (design.md §17).
+  -->
+  <Folder Name="/src/">
+    <Project Path="src/DataMigration.Contracts/DataMigration.Contracts.csproj" />
+    <Project Path="src/DataMigration.Domain/DataMigration.Domain.csproj" />
+    <Project Path="src/DataMigration.Application/DataMigration.Application.csproj" />
+    <Project Path="src/DataMigration.Infrastructure/DataMigration.Infrastructure.csproj" />
+    <Project Path="src/DataMigration.Api/DataMigration.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DataMigration.Domain.Tests/DataMigration.Domain.Tests.csproj" />
+    <Project Path="tests/DataMigration.Application.Tests/DataMigration.Application.Tests.csproj" />
+    <Project Path="tests/DataMigration.Infrastructure.Tests/DataMigration.Infrastructure.Tests.csproj" />
+    <Project Path="tests/DataMigration.Api.Tests/DataMigration.Api.Tests.csproj" />
+    <Project Path="tests/DataMigration.Architecture.Tests/DataMigration.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>
