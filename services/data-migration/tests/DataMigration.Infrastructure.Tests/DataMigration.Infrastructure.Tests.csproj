@@ -29,5 +29,6 @@
     <PackageReference Include="ClosedXML" Version="0.105.0" />
     <!-- Override de segurança: System.IO.Packaging 8.0.1+ resolve CVEs -->
     <PackageReference Include="System.IO.Packaging" Version="8.0.1" />
+    <!-- FsCheck e FsCheck.Xunit já incluídos via Directory.Build.props para todos os projetos de teste -->
   </ItemGroup>
 </Project>
