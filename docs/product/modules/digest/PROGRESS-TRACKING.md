@@ -12,8 +12,8 @@
 
 | Onda | Foco | TASKs | Status |
 |------|------|-------|--------|
-| 1 | Bootstrap | TASK-01..02 | [ ] |
-| 2 | Domínio | TASK-03..08 | [ ] |
+| 1 | Bootstrap | TASK-01..02 | [X] (`fafa6bb`,`137f955`) — 9 Architecture; EF 9.0.6 + NodaTime |
+| 2 | Domínio | TASK-03..08 | [-] |
 | 3 | Application | TASK-09..13 | [ ] |
 | 4 | Infrastructure (RLS, outbox, template) | TASK-14..20 | [ ] |
 | 5 | Api + Contratos (OIDC/WIF, Pub/Sub) | TASK-21..23 | [ ] |
