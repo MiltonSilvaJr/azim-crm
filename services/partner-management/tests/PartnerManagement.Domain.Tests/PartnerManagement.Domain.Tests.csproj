@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    PartnerManagement.Domain.Tests
+    Foco: invariantes do agregado Partner, objetos de valor (PartnerName, PartnerRole,
+          Percentage, CommissionDefaults, PartnerContact, Email, Phone, PartnerStatus),
+          state machine, specifications.
+    PBTs: PBT-02 (idempotência inativação/reativação) e PBT-03 (round-trip de percentuais)
+          via FsCheck.Xunit (TASK-08).
+    Meta de cobertura: ≥ 95% (critério de fechamento da Onda 2).
+    Mapeia: Req 1, Req 3, Req 5, Req 6, Req 7, design §4, design §13.
+  -->
+  <PropertyGroup>
+    <AssemblyName>PartnerManagement.Domain.Tests</AssemblyName>
+    <RootNamespace>PartnerManagement.Domain.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PartnerManagement.Domain\PartnerManagement.Domain.csproj" />
+  </ItemGroup>
+</Project>

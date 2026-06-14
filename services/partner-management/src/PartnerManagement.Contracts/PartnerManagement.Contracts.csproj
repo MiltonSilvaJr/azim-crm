@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    PartnerManagement.Contracts
+    Papel: DTOs públicos de request/response (Partners, Commissions) e contratos de eventos
+           de integração (PartnerCreated.v1, PartnerCommissionPercentagesUpdated.v1,
+           PartnerDeactivated.v1, PartnerReactivated.v1).
+    Regra de dependência: Contracts -> (nenhum projeto interno).
+    Contracts é camada pública sem dependência de Domain, Application, Infrastructure ou Api.
+    Módulo: BC-03 Partner Management (Supporting Subdomain, design §3).
+  -->
+  <PropertyGroup>
+    <AssemblyName>PartnerManagement.Contracts</AssemblyName>
+    <RootNamespace>PartnerManagement.Contracts</RootNamespace>
+    <Description>DTOs de request/response e contratos de eventos de integração do módulo partner-management. Sem dependências internas (camada pública).</Description>
+  </PropertyGroup>
+</Project>

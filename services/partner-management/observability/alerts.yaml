@@ -1,0 +1,138 @@
+# alerts.yaml — partner-management
+# Alertas de observabilidade para o serviço partner-management.
+# Implementa os requisitos de alerting do design §11, RNF 5, TASK-26.
+# Formato compatível com Prometheus Alertmanager / Google Cloud Monitoring.
+# Métricas expostas em /metrics via prometheus-net.AspNetCore.
+
+groups:
+  - name: partner_management_alerts
+    interval: 30s
+    rules:
+
+      # -----------------------------------------------------------------------
+      # ALERT-PM-01: Taxa de erros de criação de parceiro elevada
+      # Dispara quando a fração de requisições POST /api/v1/partners com status
+      # 5xx ultrapassa 5% em janela de 5 minutos.
+      # Severidade: warning (não bloqueia operação; acionar Tier 2).
+      # -----------------------------------------------------------------------
+      - alert: PartnerCreationErrorRateHigh
+        expr: |
+          (
+            sum(rate(http_requests_received_total{
+              job="partner-management",
+              method="POST",
+              code=~"5.."
+            }[5m]))
+            /
+            sum(rate(http_requests_received_total{
+              job="partner-management",
+              method="POST"
+            }[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: partner-management
+          team: crm-backend
+        annotations:
+          summary: "Taxa de erro em criação de parceiro acima de 5%"
+          description: |
+            POST /api/v1/partners retornou >= 5% de 5xx nos últimos 5 minutos.
+            Verificar logs estruturados com correlation_id e tenant_id para diagnóstico.
+          runbook: docs/runbooks/partner-management/alert-creation-error-rate.md
+
+      # -----------------------------------------------------------------------
+      # ALERT-PM-02: Read port de comissão indisponível
+      # Dispara quando o health check partner_commission_read_port estiver Degraded
+      # ou Unhealthy por mais de 2 minutos.
+      # Impacto: seção de comissão retorna commissionUnavailable=true (RISK-PM-06).
+      # -----------------------------------------------------------------------
+      - alert: PartnerCommissionReadPortUnavailable
+        expr: |
+          health_check_status{
+            job="partner-management",
+            name="partner_commission_read_port"
+          } < 1
+        for: 2m
+        labels:
+          severity: warning
+          service: partner-management
+          team: crm-backend
+        annotations:
+          summary: "Read port de comissão do parceiro indisponível (degradação parcial)"
+          description: |
+            O health check partner_commission_read_port reporta Degraded ou Unhealthy há > 2 min.
+            Seção de comissão retorna commissionUnavailable=true — cadastro ainda funciona.
+            Verificar disponibilidade do opportunity-pipeline e circuit breaker Polly.
+          runbook: docs/runbooks/partner-management/alert-commission-read-port-unavailable.md
+
+      # -----------------------------------------------------------------------
+      # ALERT-PM-03: Latência da visão de comissão elevada
+      # Dispara quando o p95 da métrica partner_commission_view_duration_seconds
+      # ultrapassa 2 segundos em janela de 10 minutos.
+      # -----------------------------------------------------------------------
+      - alert: PartnerCommissionViewLatencyHigh
+        expr: |
+          histogram_quantile(0.95, sum(rate(
+            partner_commission_view_duration_seconds_bucket{
+              job="partner-management"
+            }[10m]
+          )) by (le)) > 2.0
+        for: 10m
+        labels:
+          severity: warning
+          service: partner-management
+          team: crm-backend
+        annotations:
+          summary: "Latência p95 da visão de comissão acima de 2s"
+          description: |
+            O percentil 95 de partner_commission_view_duration_seconds está acima de 2s.
+            Possível degradação do opportunity-pipeline ou lentidão no banco Cloud SQL.
+          runbook: docs/runbooks/partner-management/alert-commission-view-latency.md
+
+      # -----------------------------------------------------------------------
+      # ALERT-PM-04: Cloud SQL indisponível
+      # Dispara quando o health check partner_sql estiver Unhealthy por > 1 minuto.
+      # Impacto: todos os endpoints de escrita e leitura do cadastro falham.
+      # Severidade: critical.
+      # -----------------------------------------------------------------------
+      - alert: PartnerSqlUnavailable
+        expr: |
+          health_check_status{
+            job="partner-management",
+            name="partner_sql"
+          } == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: partner-management
+          team: crm-backend
+        annotations:
+          summary: "Cloud SQL do partner-management indisponível"
+          description: |
+            O health check partner_sql reporta Unhealthy há > 1 min.
+            Todos os endpoints de cadastro de parceiros estão falhando.
+            Verificar status do Cloud SQL, connection pool e secrets de autenticação.
+          runbook: docs/runbooks/partner-management/alert-sql-unavailable.md
+
+      # -----------------------------------------------------------------------
+      # ALERT-PM-05: Circuit breaker aberto (read port)
+      # Informativo — detecta que o Polly circuit breaker foi aberto.
+      # Indica que o read port atingiu o threshold de falhas configurado.
+      # -----------------------------------------------------------------------
+      - alert: PartnerCommissionCircuitBreakerOpen
+        expr: |
+          increase(partners_commission_read_failures_total{
+            job="partner-management"
+          }[5m]) > 10
+        for: 0m
+        labels:
+          severity: info
+          service: partner-management
+          team: crm-backend
+        annotations:
+          summary: "Possível circuit breaker aberto — read port de comissão"
+          description: |
+            Mais de 10 falhas no read port de comissão em 5 minutos.
+            Verificar se circuit breaker Polly foi aberto e estado de recovery.
+          runbook: docs/runbooks/partner-management/alert-circuit-breaker.md

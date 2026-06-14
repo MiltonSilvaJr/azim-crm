@@ -1,0 +1,25 @@
+# approvals.yaml — partner-management
+# Registra aprovações humanas (VAL-PARTNER-*) exigidas pelo processo de DoD.
+# Não editar o bloco `status` por automação; apenas o operador humano atualiza.
+# Mapeia: design §19, TASK-27, TASK-29, DD-008, RISK-PM-02.
+
+approvals:
+  - id: VAL-PARTNER-01
+    title: "Classificação de PII: partner.name como dado sensível"
+    description: |
+      Confirmar que partner.name (nome do parceiro pessoa física ou razão social) deve
+      ser tratado como PII/dado sensível, sujeito a mascaramento em logs, auditoria e
+      payloads de evento (Outbox). Impacta DD-008, PartnerPiiMasker e gate CI PiiScan.
+    status: pending
+    requested_by: system
+    requested_at: "2026-06-14"
+    approved_by: null
+    approved_at: null
+    notes: |
+      Enquanto pendente, o mascaramento está ativo por precaução (fail-safe).
+      Se a decisão for "não é PII", remover mascaramento de name e atualizar
+      PartnerPiiMasker.MaskedName, design §4 e DD-008.
+    references:
+      - docs/product/modules/partner-management/design.md#§11
+      - docs/product/modules/partner-management/tasks.md#TASK-27
+      - src/PartnerManagement.Infrastructure/Audit/PartnerPiiMasker.cs
