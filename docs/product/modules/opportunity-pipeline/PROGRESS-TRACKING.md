@@ -18,7 +18,10 @@
 | 3 | Application (PBT-09) | TASK-08..12 | [X] (5 commits) — 71 App + PBT-09; Win transação única + VAL-07; StagnationDetection idempotente |
 | 4 | Infrastructure (RLS, numeração atômica, outbox; PBT-01/07/11) | TASK-13..18 | [X] (6 commits) — 49 Infra (RLS 7 tabelas Testcontainers, numeração atômica PBT-01, trigger snapshot PBT-07); EF 9.0.6 |
 | 5 | API + Contracts | TASK-19..21 | [X] (3 commits) — 75 Api; RBAC papel×capacidade; OP-ERR-001..017; internal mTLS |
-| 6 | Hardening (PBT-10, carga Kanban) | TASK-22..24 | [-] |
+| 6 | Hardening (PBT-10, carga Kanban) | TASK-22..24 | [X] (3 commits) — cross-tenant PBT-10/carga Kanban/observ+PII/DoD |
+
+> **🎯 Módulo Core completo — 6/6 ondas, 24 TASKs, 417 testes verdes** (Domain 176 + Application 71 + Api 79 + Infrastructure 81 c/ Testcontainers RLS + Architecture 10). **11 PBTs**. EF 9.0.6. PR #16.
+> Comissões money-as-cents/NBR-5891, snapshot imutável (trigger DB), numeração atômica (PBT-01), VAL-07 (alerta não-bloqueante), RLS 7 tabelas. Pendências: SLO p95 Kanban (carga dedicada), métrica stale_scan_last_run, RedisIdempotencyStore em produção.
 
 ## Detalhe por onda
 
