@@ -29,5 +29,7 @@
     <PackageReference Include="MediatR" Version="12.4.1" />
     <!-- FluentValidation: ValidationBehavior (design §5.4) -->
     <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <!-- Microsoft.Extensions.Logging.Abstractions: LoggingBehavior (sem PII — RNF 3, DD-011) -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
   </ItemGroup>
 </Project>
