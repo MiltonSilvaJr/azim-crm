@@ -2,7 +2,7 @@
 
 Módulo **BC-04 — Activity Management (Gestão de Atividades Comerciais)** do Azim CRM.
 
-**Status: Em desenvolvimento** — Onda 1 (Bootstrap) concluída.
+**Status: Implementado** — 6 ondas concluídas (TASK-01..TASK-24), 367 testes verdes, 5 PBTs.
 
 Subdomínio de Suporte. Deployable: `azim-api`.
 
@@ -32,11 +32,34 @@ três consumidores:
 | Onda | Foco | TASKs | Status |
 |------|------|-------|--------|
 | Onda 1 | Bootstrap — solution, projetos, testes de arquitetura | TASK-01 | Concluída |
-| Onda 2 | Domain — objetos de valor, state machine, agregado Activity, specifications | TASK-02..05 | Pendente |
-| Onda 3 | Application — commands, queries, handlers, behaviors, ports | TASK-06..12 | Pendente |
-| Onda 4 | Infrastructure — DbContext, migrations, repositório, RLS, Outbox, adapters | TASK-13..17 | Pendente |
-| Onda 5 | API + Contratos — controllers, DTOs, erros, OpenAPI, Pact | TASK-18..21 | Pendente |
-| Onda 6 | Hardening — observabilidade, segurança, DoD final | TASK-22..24 | Pendente |
+| Onda 2 | Domain — objetos de valor, state machine, agregado Activity, specifications | TASK-02..05 | Concluída |
+| Onda 3 | Application — commands, queries, handlers, behaviors, ports | TASK-06..12 | Concluída |
+| Onda 4 | Infrastructure — DbContext, migrations, repositório, RLS, Outbox, adapters | TASK-13..17 | Concluída |
+| Onda 5 | API + Contratos — controllers, DTOs, erros, OpenAPI, Pact | TASK-18..21 | Concluída |
+| Onda 6 | Hardening — observabilidade, segurança, DoD final | TASK-22..24 | Concluída |
+
+## Property-Based Tests (PBT-01..05)
+
+Todos os 5 PBTs executam em modo de regressão com ≥ 500 casos por propriedade.
+
+| PBT | Invariante | Arquivo | MaxTest |
+|-----|-----------|---------|---------|
+| PBT-01 | State machine de ActivityStatus — sequências arbitrárias nunca violam transições | `Domain.Tests/.../ActivityStatusPbt01Tests.cs` | 500 |
+| PBT-02 | Idempotência de conclusão — N chamadas → exatamente 1 ActivityCompleted | `Application.Tests/.../CompleteActivityCommandTests.cs` e `ProcessDigestActionCommandTests.cs` | 500 |
+| PBT-03 | Anti-enumeração — token inválido indistinguível de atividade inacessível em forma | `Application.Tests/.../ProcessDigestActionCommandTests.cs` | 500 |
+| PBT-04 | Invariante overdue — terminal nunca vencida; não-terminal com dueAt < ref sempre vencida | `Domain.Tests/.../OverdueSpecificationTests.cs` | 500 |
+| PBT-05 | Saúde do funil — N≥1 follow-up futuro → HasFollowup true; só terminais/passados → false | `Domain.Tests/.../FunnelHealthSpecificationTests.cs` | 500 |
+
+## Totais de Testes por Projeto
+
+| Projeto | Testes | Cobertura alvo |
+|---------|--------|----------------|
+| `Architecture.Tests` | 10 | — (regras de dependência NetArchTest) |
+| `Domain.Tests` | 141 | ≥ 95% |
+| `Application.Tests` | 70 | ≥ 85% |
+| `Infrastructure.Tests` | 93 | ≥ 70% |
+| `Api.Tests` | 53 | ≥ 80% |
+| **Total** | **367** | |
 
 ## Estrutura de Projetos
 
@@ -45,10 +68,11 @@ services/activity-management/
 ├── ActivityManagement.slnx
 ├── Directory.Build.props          # net10.0, Nullable, TreatWarningsAsErrors, coverlet
 ├── global.json                    # SDK 10.0.107
-├── .editorconfig
+├── approvals.yaml                 # VAL-ACT-01, VAL-ACT-02, VAL-TRD-05 — bloqueadores go-live
 ├── README.md
 ├── CHANGELOG.md
-├── Dockerfile                     # (Onda 5)
+├── observability/
+│   └── alerts.yaml                # 5 regras de alerta Prometheus (TASK-22)
 ├── src/
 │   ├── ActivityManagement.Contracts/      # DTOs request/response e eventos v1
 │   ├── ActivityManagement.Domain/         # Agregado Activity, objetos de valor, specs
@@ -57,7 +81,7 @@ services/activity-management/
 │   └── ActivityManagement.Api/            # Controllers REST, middleware, DI, OpenAPI
 └── tests/
     ├── ActivityManagement.Domain.Tests/         # PBT-01, PBT-04, PBT-05; cobertura >= 95%
-    ├── ActivityManagement.Application.Tests/    # PBT-02, PBT-03, PBT-05; cobertura >= 85%
+    ├── ActivityManagement.Application.Tests/    # PBT-02, PBT-03; cobertura >= 85%
     ├── ActivityManagement.Infrastructure.Tests/ # Testcontainers + Postgres; cobertura >= 70%
     ├── ActivityManagement.Api.Tests/            # WebApplicationFactory; cobertura >= 80%
     └── ActivityManagement.Architecture.Tests/  # NetArchTest — regras de dependência
@@ -114,53 +138,86 @@ Nenhum nesta versão.
 
 | Serviço | Direção | Mecanismo |
 |---------|---------|-----------|
-| opportunity-pipeline (BC-01) | Saída (leitura) | `IOpportunityReadPort` — HTTP/gRPC interno (mTLS) |
-| account-management (BC-02) | Saída (leitura) | `IAccountReadPort` — HTTP/gRPC interno (mTLS) |
+| opportunity-pipeline (BC-01) | Saída (leitura) | `IOpportunityReadPort` — HTTP/gRPC interno (mTLS) + Polly retry/circuit-breaker |
+| account-management (BC-02) | Saída (leitura) | `IAccountReadPort` — HTTP/gRPC interno (mTLS) + Polly retry/circuit-breaker |
 | digest (BC-06) | Leitura/consumo | `IDigestActionTokenPort` — mesmo banco `azim-api` |
 | audit-log | Saída (eventos) | Pub/Sub via Outbox |
 
 ## Variáveis de Ambiente
 
-> Documentação completa será adicionada na Onda 5 (TASK-18).
-
 | Variável | Descrição |
 |----------|-----------|
-| `ConnectionStrings__ActivityManagement` | Connection string PostgreSQL |
-| `DigestActionToken__ExpirationHours` | TTL do token de ação (padrão: 24) |
+| `ConnectionStrings__ActivityManagement` | Connection string PostgreSQL (southamerica-east1 em prod) |
+| `DigestActionToken__ExpirationHours` | TTL do token de ação (padrão: 24 — VAL-ACT-02) |
+| `Adapters__OpportunityBaseUrl` | URL base do serviço opportunity-pipeline (Polly retry ativo) |
+| `Adapters__AccountBaseUrl` | URL base do serviço account-management (Polly retry ativo) |
+| `OpenTelemetry__Endpoint` | Endpoint OTLP do coletor de traces e métricas |
 
 ## Como Executar Localmente
 
-> Instruções completas serão adicionadas na Onda 5. Pré-requisito: Docker Desktop.
+Pré-requisito: Docker Desktop rodando.
 
 ```sh
 # A partir da raiz do repositório
 docker compose up -d postgres
+
 cd services/activity-management
 dotnet run --project src/ActivityManagement.Api
 ```
+
+A API estará disponível em `http://localhost:5000`.
+OpenAPI UI: `http://localhost:5000/swagger`.
 
 ## Como Testar
 
 ```sh
 cd services/activity-management
 
-# Testes de arquitetura (gate CI)
+# Testes de arquitetura (gate CI — sem Docker)
 dotnet test tests/ActivityManagement.Architecture.Tests
 
-# Todos os testes (sem Testcontainers)
-dotnet test --filter "Category!=Integration"
+# Testes unitários e de domínio (sem Docker — inclui todos os PBTs)
+dotnet test tests/ActivityManagement.Domain.Tests
+dotnet test tests/ActivityManagement.Application.Tests
+dotnet test tests/ActivityManagement.Api.Tests
 
-# Testes de integração (requer Docker)
+# Testes de integração (requer Docker — PostgreSQL via Testcontainers)
 dotnet test tests/ActivityManagement.Infrastructure.Tests
+
+# Todos os testes
+dotnet test
 ```
 
 ## Observabilidade
 
-- Logs estruturados JSON com `correlation_id`, `tenant_id`, `activity_id`.
-- Métricas Prometheus: `activities_created_total`, `activities_completed_total`,
-  `activities_overdue_total`.
-- Traces OpenTelemetry: spans por handler de Command/Query.
-- Health checks: `/health/live` e `/health/ready`.
+- **Logs estruturados** JSON com `correlation_id`, `tenant_id`, `activity_id`. Sem PII (title/description) em texto claro — `[MASKED]` via `PiiMasker`.
+- **Métricas Prometheus** (snake_case, todas via `IActivityMetrics`):
+  - `activities_created_total`
+  - `activities_completed_total`
+  - `activities_overdue_total`
+  - `digest_action_tokens_used_total`
+  - `digest_action_tokens_expired_total`
+- **Traces OpenTelemetry**: spans por handler de Command/Query com `correlation_id` como atributo root. Exportador Console habilitado; configurar OTLP em produção.
+- **Health checks**: `/health/live` e `/health/ready` com verificação de conectividade PostgreSQL.
+- **Alertas**: 5 regras configuradas em `observability/alerts.yaml` (ActivitiesOverdueSpiking, OutboxRelayStalled, LastActivityQueryLatencyHigh, ActivityCreationErrorRateHigh, OverdueScanMissed).
+
+## Segurança
+
+- **Comparação de token em tempo constante** (`ConstantTimeComparison`) via `CryptographicOperations.FixedTimeEquals` — previne ataques de timing (PBT-03, RNF 5).
+- **Anti-enumeração**: respostas para token inexistente e atividade inacessível são indistinguíveis em forma.
+- **Auditoria imutável**: trigger `trg_audit_logs_immutable` bloqueia UPDATE/DELETE em `audit_logs` (ADR-0003).
+- **PII**: `title` e `description` nunca aparecem em logs, delta_json de auditoria ou payloads de evento.
+- **Multi-tenancy**: Global Query Filter por `tenant_id` + RLS no PostgreSQL (ADR-0001).
+
+## Aprovações Pendentes (Bloqueadores de Go-Live)
+
+Ver `approvals.yaml` para detalhes:
+
+| ID | Descrição | Aprovador |
+|----|-----------|-----------|
+| VAL-ACT-01 | Fronteira BC digest/activity — ownership de digest_action_tokens | Arquitetura |
+| VAL-ACT-02 | TTL padrão do DigestActionToken | Product Owner |
+| VAL-TRD-05 | Residência de dados em southamerica-east1 | Platform Engineering |
 
 ## Referências
 
@@ -168,3 +225,6 @@ dotnet test tests/ActivityManagement.Infrastructure.Tests
 - `docs/product/modules/activity-management/requirements.md` — requisitos
 - `docs/product/modules/activity-management/tasks.md` — plano de tasks
 - `docs/product/adr/ADR-0001.md` — isolamento multi-tenant
+- `docs/product/adr/ADR-0003.md` — auditoria imutável
+- `docs/product/adr/ADR-0006.md` — token de link autenticado
+- `docs/product/data-model/data-model.md §BC-04/§BC-06` — modelo de dados

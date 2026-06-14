@@ -136,7 +136,7 @@ public sealed class CompleteActivityCommandTests
 
     // ── PBT-02: N chamadas → exatamente 1 ActivityCompleted acumulado ────────
 
-    [Property(MaxTest = 100)]
+    [Property(MaxTest = 500)]
     public Property PBT02_NCompletions_ExactlyOneActivityCompletedAccumulated(FsCheck.PositiveInt n)
     {
         // Arrange

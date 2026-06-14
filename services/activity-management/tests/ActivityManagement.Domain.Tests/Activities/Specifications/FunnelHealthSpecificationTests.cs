@@ -143,7 +143,7 @@ public sealed class FunnelHealthSpecificationPbt05Tests
     /// PBT-05a: após adicionar N≥1 atividades não terminais com dueAt futuro,
     /// HasFollowup retorna true — independente de quantas atividades passadas/terminais existem.
     /// </summary>
-    [Property(MaxTest = 200)]
+    [Property(MaxTest = 500)]
     public Property AfterAddingFutureFollowup_HasFollowupIsTrue(PositiveInt count, PositiveInt days)
     {
         var oppId      = Guid.NewGuid();
@@ -161,7 +161,7 @@ public sealed class FunnelHealthSpecificationPbt05Tests
     /// <summary>
     /// PBT-05b: lista composta apenas por terminais e/ou passadas → HasFollowup retorna false.
     /// </summary>
-    [Property(MaxTest = 200)]
+    [Property(MaxTest = 500)]
     public Property WithOnlyPastOrTerminalActivities_NoFollowup(PositiveInt count)
     {
         var oppId = Guid.NewGuid();

@@ -209,7 +209,7 @@ public sealed class ProcessDigestActionCommandTests
 
     // ── PBT-02 completo (via token): N cliques → exatamente 1 conclusão ──────
 
-    [Property(MaxTest = 100)]
+    [Property(MaxTest = 500)]
     public Property PBT02_NTokenClicks_ExactlyOneCompletion(FsCheck.PositiveInt n)
     {
         // Simula N cliques no mesmo token ao nível do Domain
@@ -237,7 +237,7 @@ public sealed class ProcessDigestActionCommandTests
 
     // ── PBT-03: inexistente/expirado/usado → InvalidDigestTokenException ou Expired ─
 
-    [Property(MaxTest = 50)]
+    [Property(MaxTest = 500)]
     public Property PBT03_InvalidTokenScenario_ThrowsInvalidOrExpiredException(
         FsCheck.NonEmptyString randomHash)
     {

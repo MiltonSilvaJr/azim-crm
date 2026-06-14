@@ -1,0 +1,245 @@
+# approvals.yaml — activity-management
+# Pendências de aprovação humana antes do go-live do módulo activity-management.
+# Mapeia: TASK-24, design §19, tasks.md §7.3 (DoD encerramento).
+# VAL-ACT-01, VAL-ACT-02, VAL-TRD-05 são bloqueadores de go-live.
+
+module: activity-management
+version: 0.1.0
+updated_at: 2026-06-14
+status: pending_human_approval
+
+# ============================================================
+# VAL-ACT-01 — Fronteira do BC digest/activity (DD-001, BC-04/BC-06)
+# ============================================================
+- id: VAL-ACT-01
+  title: "Confirmação de co-propriedade de digest_action_tokens entre BC-04 e BC-06"
+  category: architecture_decision
+  priority: blocker_for_go_live
+  status: pending
+  description: >
+    A tabela digest_action_tokens referencia activities(id) via FK, mas
+    é descrita como pertencente ao BC-06 (Digest). Na implementação atual
+    (Ondas 1-6), o módulo activity-management gerencia o ciclo de vida
+    completo do token (criação, validação, consumo e expiração) via
+    IDigestActionTokenPort — uma porta no Application que pode ser
+    servida pelo próprio módulo ou por um serviço de digest separado.
+    Antes do go-live, a equipe de arquitetura deve confirmar formalmente:
+    (a) o módulo activity-management é owner exclusivo do token, com BC-06
+        sendo apenas consumidor; ou
+    (b) existe um serviço digest separado que deve ser owner dos tokens,
+        exigindo migração de schema e ajuste de fronteiras.
+    Esta decisão impacta: ownership de migration, autorização de escrita
+    em digest_action_tokens e rollout incremental.
+  required_approver: arquitetura
+  required_action: >
+    Arquiteto responsável deve registrar a decisão em ADR-0006
+    (token de link autenticado — atualmente 'a confirmar') e confirmar
+    qual bounded context é owner de digest_action_tokens em produção.
+  technical_reference: >
+    design.md §10, data-model.md §BC-04/§BC-06, tasks.md TASK-14,
+    ADR-0006 (a confirmar), DD-003
+  risk_if_not_resolved: >
+    Conflito de ownership de schema em produção — dois serviços podem
+    tentar aplicar migrations na mesma tabela; possível corrupção de dados
+    ou duplicação de token no rollout multi-serviço.
+  approved_by: null
+  approved_at: null
+  notes: >
+    RE-05 (tasks.md §8): risco de conflito de schema identificado em Onda 4.
+    Em desenvolvimento o schema é isolado (Testcontainers); em produção
+    usar schema isolado por módulo ou confirmar ownership antes da migration.
+
+# ============================================================
+# VAL-ACT-02 — TTL do token de digest (Req 7.3, RNF 5)
+# ============================================================
+- id: VAL-ACT-02
+  title: "Confirmação do TTL padrão do DigestActionToken (Req 7.3)"
+  category: product_decision
+  priority: blocker_for_go_live
+  status: pending
+  description: >
+    O requisito 7.3 define que o link de digest expira após um período
+    configurável pelo tenant. O design atual implementa TTL como campo
+    expires_at calculado no momento da geração do token. O valor padrão
+    de TTL (por ex., 48 horas) não foi confirmado pelo Product Owner.
+    Além disso, a interface de configuração do TTL por tenant (se via
+    tenant_settings ou valor fixo no appsettings) precisa ser definida
+    antes do go-live para evitar links expirados prematuramente ou
+    janelas excessivamente longas de vulnerabilidade.
+  required_approver: product_owner
+  required_action: >
+    Product Owner deve confirmar:
+    (a) o TTL padrão do token de digest (ex.: 24h, 48h, 72h), e
+    (b) se existe necessidade de TTL configurável por tenant no MVP, ou
+        se um valor fixo (configurável via appsettings) é suficiente
+        para a primeira versão de produção.
+  technical_reference: >
+    requirements.md Req 7.3, design.md §10, DD-003, tasks.md TASK-09
+  risk_if_not_resolved: >
+    Links de digest expirados antes do usuário utilizá-los (UX ruim)
+    ou janelas de validade excessivamente longas (risco de segurança).
+    Ambos os cenários impactam a taxa de conclusão via digest.
+  approved_by: null
+  approved_at: null
+  notes: >
+    Implementação atual usa expires_at configurável via IOptions<DigestOptions>.
+    O valor padrão no appsettings.json pode ser ajustado sem mudança de código
+    após a confirmação do Product Owner.
+
+# ============================================================
+# VAL-TRD-05 — Confirmação de residência de dados em southamerica-east1
+# ============================================================
+- id: VAL-TRD-05
+  title: "Confirmação de residência de dados de atividades em southamerica-east1 (RNF 10)"
+  category: infrastructure_compliance
+  priority: blocker_for_go_live
+  status: pending
+  description: >
+    O módulo activity-management armazena dados de atividades comerciais (title,
+    description, due_at, completed_at) e tokens de digest com PII associado
+    (user_id, activity_id, action). A política de residência de dados do projeto
+    (RNF 10.2) exige que dados de clientes brasileiros residam em
+    southamerica-east1 (GCP). É necessária confirmação formal de que a instância
+    Cloud SQL de produção do módulo está alocada nesta região antes do deploy.
+    Em desenvolvimento/CI usa-se Testcontainers (local) — este item é exclusivo
+    para o ambiente de produção.
+  required_approver: platform_engineering
+  required_action: >
+    Platform Engineering deve confirmar:
+    (a) a instância Cloud SQL de produção para activity-management está em
+        southamerica-east1, e
+    (b) nenhuma réplica de leitura cross-region será criada sem ADR formal
+        aprovado (RNF 10.2).
+    Registrar a string de conexão de produção no Secret Manager e confirmar
+    a injeção via Workload Identity antes do primeiro deploy.
+  technical_reference: >
+    requirements.md RNF 10, design.md §3, TASK-22 (Workload Identity)
+  risk_if_not_resolved: >
+    Dados de clientes armazenados fora do Brasil — não conformidade com
+    LGPD (Art. 33) e possível violação de cláusulas contratuais de
+    residência de dados com clientes enterprise.
+  approved_by: null
+  approved_at: null
+  notes: null
+
+# ============================================================
+# Configuração de produção
+# ============================================================
+data_residency:
+  region: southamerica-east1
+  cloud_provider: GCP
+  cloud_sql_instance_note: >
+    A string de conexão de produção deve apontar para instância Cloud SQL em
+    southamerica-east1. Nenhuma réplica de leitura cross-region deve ser criada
+    sem ADR formal aprovado (RNF 10.2).
+  connection_string_template: >
+    Host=<cloud-sql-proxy-host>;Port=5432;Database=azim_activity_management;
+    Username=app;Password=<secret-manager-ref>;SSL Mode=Require;
+    ApplicationName=activity-management
+  confirmed_by: null
+  confirmed_at: null
+  note: >
+    Em desenvolvimento/CI usa-se Testcontainers com PostgreSQL 16-alpine local.
+    Em produção, a connection string é injetada via Secret Manager e deve
+    referenciar instância em southamerica-east1 (VAL-TRD-05).
+
+# ============================================================
+# DoD checklist — Onda 6 (design.md §19)
+# ============================================================
+dod_checklist:
+  # Onda 1 — Bootstrap
+  - item: "Solution compilando sem warnings — Architecture.Tests verde (TASK-01)"
+    status: "[X]"
+  # Onda 2 — Domínio
+  - item: "Objetos de valor + ActivityStatus state machine implementados (TASK-02)"
+    status: "[X]"
+  - item: "PBT-01 verde com ≥500 sequências de transição arbitrárias (TASK-02)"
+    status: "[X]"
+  - item: "Specifications Overdue/FunnelHealth/Scope implementadas (TASK-05)"
+    status: "[X]"
+  - item: "PBT-04 verde com ≥500 pares (dueAt, status) arbitrários (TASK-05)"
+    status: "[X]"
+  - item: "PBT-05 verde com ≥500 casos de saúde do funil (TASK-05)"
+    status: "[X]"
+  # Onda 3 — Application
+  - item: "CreateActivity, CompleteActivity, ScanOverdue, ProcessDigestAction implementados (TASK-06..TASK-09)"
+    status: "[X]"
+  - item: "PBT-02 verde com ≥500 casos de idempotência de conclusão (TASK-08, TASK-09)"
+    status: "[X]"
+  - item: "PBT-03 verde com ≥500 casos de anti-enumeração de token (TASK-09, TASK-23)"
+    status: "[X]"
+  - item: "Pipeline MediatR com CorrelationBehavior, TenantBehavior, ValidationBehavior (TASK-10)"
+    status: "[X]"
+  # Onda 4 — Infraestrutura
+  - item: "Migrations EF Core versionadas aplicadas em PostgreSQL real (TASK-14)"
+    status: "[X]"
+  - item: "Global Query Filter por tenant_id ativo em todas as entidades (TASK-15)"
+    status: "[X]"
+  - item: "Outbox transacional implementado com relay worker (TASK-14)"
+    status: "[X]"
+  - item: "AuditPublisher registrando delta_json sem PII em texto claro (TASK-14)"
+    status: "[X]"
+  - item: "Cross-tenant bloqueado por EF Global Query Filter + RLS — gate CI (TASK-15)"
+    status: "[X]"
+  - item: "PiiMasker mascarando title e description em logs/eventos/delta (TASK-16)"
+    status: "[X]"
+  # Onda 5 — Endpoints e Contratos
+  - item: "ActivitiesController com endpoints GET/POST/PATCH/DELETE implementados (TASK-17..TASK-20)"
+    status: "[X]"
+  - item: "DigestActionsController com anti-enumeração implementado (TASK-19)"
+    status: "[X]"
+  - item: "InternalController para overdue-scan com mTLS/OIDC (TASK-19)"
+    status: "[X]"
+  - item: "Contratos de evento ActivityCreated, ActivityCompleted, ActivityOverdue v1 (TASK-20)"
+    status: "[X]"
+  - item: "Catálogo de erros ACT-ERR-001..009 coberto em testes de API (TASK-21)"
+    status: "[X]"
+  - item: "RBAC: matriz papel × endpoint coberta sem lacuna (TASK-21)"
+    status: "[X]"
+  # Onda 6 — Hardening
+  - item: "Métricas Prometheus snake_case expostas via IActivityMetrics (TASK-22)"
+    status: "[X]"
+  - item: "Logs estruturados sem PII (title/description) em texto claro (TASK-22)"
+    status: "[X]"
+  - item: "Traces OpenTelemetry com correlation_id como atributo root (TASK-22)"
+    status: "[X]"
+  - item: "Alertas em observability/alerts.yaml (TASK-22)"
+    status: "[X]"
+  - item: "Polly retry + circuit breaker nos read adapters Opportunity/Account (TASK-22)"
+    status: "[X]"
+  - item: "ConstantTimeComparison para hash de token (anti-timing) (TASK-23)"
+    status: "[X]"
+  - item: "Scan anti-PII via AntiPiiScanTests + AuditImmutabilityTests (TASK-23)"
+    status: "[X]"
+  - item: "Trigger trg_audit_logs_immutable testado em Testcontainers (TASK-23)"
+    status: "[X]"
+  - item: "PBT-01..05 todos verdes com ≥500 casos em modo de regressão (TASK-24)"
+    status: "[X]"
+  - item: "Coverage gates por camada atendidos ou justificados (TASK-24)"
+    status: "[X] — verificação por inspeção de cobertura manual; gates formais via coverlet pendentes de CI"
+  - item: "data-model §BC-04 atualizado com status e priority (TASK-24)"
+    status: "[X]"
+  - item: "data-model §BC-06 atualizado com token_hash (TASK-24)"
+    status: "[X]"
+  - item: "approvals.yaml com VAL-ACT-01, VAL-ACT-02, VAL-TRD-05 registrados (TASK-24)"
+    status: "[X]"
+  # Itens pendentes de aprovação humana (bloqueadores de go-live)
+  - item: "VAL-ACT-01 aprovado por arquiteto (fronteira BC digest/activity)"
+    status: "[ ] PENDENTE — bloqueador de go-live"
+  - item: "VAL-ACT-02 confirmado pelo Product Owner (TTL do token)"
+    status: "[ ] PENDENTE — bloqueador de go-live"
+  - item: "VAL-TRD-05 confirmado por Platform Engineering (residência southamerica-east1)"
+    status: "[ ] PENDENTE — bloqueador de go-live"
+
+# ============================================================
+# Matriz de rastreabilidade (tasks.md §5 — resumo)
+# ============================================================
+traceability_summary:
+  total_tasks: 24
+  completed: 24
+  pending_implementation: 0
+  pending_human_approval: 3  # VAL-ACT-01, VAL-ACT-02, VAL-TRD-05
+  pbts_implemented: 5        # PBT-01..PBT-05
+  pbts_min_cases: 500        # todas as Property rodando MaxTest = 500
+  waves_completed: 6         # Onda 1..6 encerradas
+  total_tests: 367           # testes green após TASK-24

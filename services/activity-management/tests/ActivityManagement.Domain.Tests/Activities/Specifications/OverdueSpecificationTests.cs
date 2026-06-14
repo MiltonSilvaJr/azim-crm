@@ -141,7 +141,7 @@ public sealed class OverdueSpecificationPbt04Tests
     /// <summary>
     /// PBT-04a: atividade terminal com qualquer dueAt nunca é vencida.
     /// </summary>
-    [Property(MaxTest = 300)]
+    [Property(MaxTest = 500)]
     public Property Terminal_NeverOverdue(PositiveInt daysOffset, bool isPast)
     {
         var statusIdx  = daysOffset.Get % TerminalStatuses.Length;
@@ -158,7 +158,7 @@ public sealed class OverdueSpecificationPbt04Tests
     /// <summary>
     /// PBT-04b: atividade não terminal com dueAt estritamente anterior à referência é sempre vencida.
     /// </summary>
-    [Property(MaxTest = 300)]
+    [Property(MaxTest = 500)]
     public Property NonTerminal_DueAtPast_IsOverdue(PositiveInt daysOffset)
     {
         var statusIdx  = daysOffset.Get % NonTerminalStatuses.Length;
@@ -173,7 +173,7 @@ public sealed class OverdueSpecificationPbt04Tests
     /// <summary>
     /// PBT-04c: atividade não terminal com dueAt futuro nunca é vencida.
     /// </summary>
-    [Property(MaxTest = 300)]
+    [Property(MaxTest = 500)]
     public Property NonTerminal_DueAtFuture_NotOverdue(PositiveInt daysOffset)
     {
         var statusIdx  = daysOffset.Get % NonTerminalStatuses.Length;

@@ -197,15 +197,21 @@ activities (
   owner_id        UUID NOT NULL REFERENCES users(id),
   opportunity_id  UUID REFERENCES opportunities(id), -- nullable (pode ser apenas conta)
   account_id      UUID REFERENCES accounts(id),
-  activity_type   VARCHAR(20) NOT NULL,             -- call, meeting, email, task
+  activity_type   VARCHAR(20) NOT NULL,             -- call, meeting, email, task, follow_up
   title           TEXT NOT NULL,
   description     TEXT,
+  status          VARCHAR(20) NOT NULL DEFAULT 'pending', -- pending, in_progress, completed, cancelled (§BC-04, DD-001)
+  priority        VARCHAR(10) NOT NULL DEFAULT 'medium',  -- low, medium, high (§BC-04, Req 1)
   due_at          TIMESTAMPTZ NOT NULL,
   completed_at    TIMESTAMPTZ,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT chk_activities_status   CHECK (status IN ('pending', 'in_progress', 'completed', 'cancelled')),
+  CONSTRAINT chk_activities_priority CHECK (priority IN ('low', 'medium', 'high'))
 )
 ```
+
+> **Nota §BC-04** (atualizado TASK-24): colunas `status` e `priority` adicionadas conforme implementação do agregado `Activity` (design §4.3, DD-001). Índice recomendado: `(tenant_id, status, due_at)` para queries de overdue scan.
 
 ---
 
@@ -261,11 +267,15 @@ digest_action_tokens (
   user_id         UUID NOT NULL,
   activity_id     UUID REFERENCES activities(id),
   action          VARCHAR(20) NOT NULL,             -- complete, reschedule
+  token_hash      VARCHAR(64) NOT NULL,             -- SHA-256 hex do token opaco (§BC-06, DD-003, RNF 5)
   expires_at      TIMESTAMPTZ NOT NULL,
   used_at         TIMESTAMPTZ,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (token_hash)                               -- busca O(1) e unicidade garantida por índice
 )
 ```
+
+> **Nota §BC-06** (atualizado TASK-24): coluna `token_hash` adicionada conforme implementação do `DigestActionToken` (design §10, DD-003). O token opaco é gerado aleatoriamente e apenas seu hash SHA-256 é persistido. Busca por hash em tempo constante via `ConstantTimeComparison` (TASK-23, PBT-03). Índice único em `token_hash` garante anti-enumeração e idempotência de uso.
 
 ---
 

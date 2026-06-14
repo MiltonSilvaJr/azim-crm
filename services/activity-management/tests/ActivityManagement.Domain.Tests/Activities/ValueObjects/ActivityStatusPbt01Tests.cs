@@ -40,7 +40,7 @@ public sealed class ActivityStatusPbt01Tests
     /// PBT-01a: aplicar sequência de transições válidas jamais viola a state machine.
     /// O estado final só pode ser o resultado de transições permitidas.
     /// </summary>
-    [Property(MaxTest = 200, Arbitrary = [typeof(StatusArbitrary)])]
+    [Property(MaxTest = 500, Arbitrary = [typeof(StatusArbitrary)])]
     public Property ValidChain_NeverViolatesStateMachine(string[] sequence)
     {
         var current = ActivityStatus.Pending;
@@ -61,7 +61,7 @@ public sealed class ActivityStatusPbt01Tests
     /// PBT-01b: terminal não tem transição de saída — nenhuma transição de estado terminal
     /// é permitida, independente do alvo.
     /// </summary>
-    [Property(MaxTest = 200, Arbitrary = [typeof(StatusArbitrary)])]
+    [Property(MaxTest = 500, Arbitrary = [typeof(StatusArbitrary)])]
     public Property Terminal_HasNoOutgoingTransitions(string terminalValue, string targetValue)
     {
         if (!Terminals.Contains(terminalValue) || !AllValues.Contains(targetValue))
@@ -75,7 +75,7 @@ public sealed class ActivityStatusPbt01Tests
     /// <summary>
     /// PBT-01c: transição inválida retorna false e não altera o estado.
     /// </summary>
-    [Property(MaxTest = 200, Arbitrary = [typeof(StatusArbitrary)])]
+    [Property(MaxTest = 500, Arbitrary = [typeof(StatusArbitrary)])]
     public Property InvalidTransition_DoesNotChangeState(string fromValue, string toValue)
     {
         if (!AllValues.Contains(fromValue) || !AllValues.Contains(toValue))
