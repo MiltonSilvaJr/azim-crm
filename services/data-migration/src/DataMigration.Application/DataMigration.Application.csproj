@@ -21,6 +21,8 @@
     <PackageReference Include="MediatR" Version="12.4.1" />
     <!-- FluentValidation: validação sintática na borda (design §5.4, TASK-12) -->
     <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <!-- Microsoft.Extensions.Logging.Abstractions: ILogger para PiiSafeLogger e PiiSafeLoggingBehavior (TASK-24, RNF 3) -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.5" />
   </ItemGroup>
 
   <ItemGroup>
