@@ -5,7 +5,7 @@
            mapeamento de filtros, health checks, observabilidade.
     Regra de dependência (design §3): Api -> Application, Infrastructure, Contracts.
     NUNCA acessa Domain diretamente.
-    Mapeia: design §3, §8, ADR-0001, Req 7, RNF 5, RNF 6.
+    Mapeia: design §3, §8, ADR-0001, Req 7, RNF 5, RNF 6, TASK-21.
   -->
   <PropertyGroup>
     <AssemblyName>Reporting.Api</AssemblyName>
@@ -17,5 +17,10 @@
     <ProjectReference Include="..\Reporting.Application\Reporting.Application.csproj" />
     <ProjectReference Include="..\Reporting.Infrastructure\Reporting.Infrastructure.csproj" />
     <ProjectReference Include="..\Reporting.Contracts\Reporting.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- JWT Bearer para autenticação (design §8.1, ADR-0001) -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
   </ItemGroup>
 </Project>
