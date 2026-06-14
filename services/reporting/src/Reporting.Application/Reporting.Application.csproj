@@ -17,4 +17,11 @@
     <ProjectReference Include="..\Reporting.Domain\Reporting.Domain.csproj" />
     <ProjectReference Include="..\Reporting.Contracts\Reporting.Contracts.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- MediatR: mecanismo de despacho de queries e pipeline behaviors (design §5) -->
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <!-- FluentValidation: validação sintática de requests (design §5.5) -->
+    <PackageReference Include="FluentValidation" Version="11.12.0" />
+  </ItemGroup>
 </Project>
