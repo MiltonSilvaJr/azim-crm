@@ -105,6 +105,12 @@ public interface IUnitOfWork
     /// <summary>Eventos de domínio acumulados durante o handler (para dispatch via Outbox).</summary>
     IReadOnlyList<Domain.Opportunities.Events.DomainEvent> PendingDomainEvents { get; }
 
+    /// <summary>Acumula evento de domínio para dispatch no commit.</summary>
+    void AddDomainEvent(Domain.Opportunities.Events.DomainEvent domainEvent);
+
+    /// <summary>Acumula múltiplos eventos de domínio.</summary>
+    void AddDomainEvents(IEnumerable<Domain.Opportunities.Events.DomainEvent> domainEvents);
+
     /// <summary>Indica se há registro de auditoria pendente para persistir.</summary>
     bool HasPendingAudit { get; }
 
