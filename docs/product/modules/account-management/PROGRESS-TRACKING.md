@@ -16,8 +16,8 @@
 | 2 | Domain | TASK-02..03 | [X] (`b106295`,`4f973ca`) — 94 Domain + PBT-01/02/03 |
 | 3 | Application | TASK-04..07 | [X] (4 commits) — 55 App + PBT-05 (Account360 degradação) |
 | 4 | Infrastructure (PiiMasker, Outbox) | TASK-08..12 | [X] (6 commits) — 81 Infra (RLS/PBT-04 Testcontainers); +testes PiiMasker (`730f61d`, bug ReadPorts corrigido); EF 9.0.6 |
-| 5 | API + Contracts | TASK-13..15 | [-] |
-| 6 | Hardening (anti-PII, RBAC, DoD) | TASK-16..18 | [ ] |
+| 5 | API + Contracts | TASK-13..15 | [X] (3 commits) — 32 Api + PBT-03/05; ACC-ERR catálogo |
+| 6 | Hardening (anti-PII, RBAC, DoD) | TASK-16..18 | [-] |
 
 ## Detalhe por onda
 
