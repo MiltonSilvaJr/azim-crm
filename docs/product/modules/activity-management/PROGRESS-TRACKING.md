@@ -17,7 +17,10 @@
 | 3 | Application (PBT-02/03) | TASK-06..12 | [X] (7 commits) — 70 App + PBT-02/03; Reschedule corrigido (now via IClock); 7 ports |
 | 4 | Infrastructure (RLS) | TASK-13..17 | [X] (6 commits) — 55 Infra (RLS falha-fechada Testcontainers, coverage 85%); PiiMasker/token testados; EF 9.0.6 |
 | 5 | API + Contratos (Pact) | TASK-18..21 | [X] (4 commits) — 53 Api; RBAC/cross-tenant/ACT-ERR; digest anti-enum |
-| 6 | Hardening | TASK-22..24 | [-] |
+| 6 | Hardening | TASK-22..24 | [X] (3 commits) — observ+Polly/tempo-constante anti-PII/DoD PBT≥500 |
+
+> **🎯 Módulo completo — 6/6 ondas, 24 TASKs, 367 testes verdes** (Domain 141 + Application 70 + Api 53 + Infrastructure 93 c/ Testcontainers RLS falha-fechada + Architecture 10). 5 PBTs ≥500 casos. EF 9.0.6. PR #11.
+> Digest token uso único (tempo constante anti-enum); ScanOverdue cross-tenant (job sistema). Pendências: VAL-ACT-01/02 + VAL-TRD-05 (approvals.yaml); ADR-0006.
 
 ## Detalhe por onda
 
