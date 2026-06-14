@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    GoalForecast.Api.Tests
+    Foco: contratos HTTP, códigos de status, anti-enumeração, catálogo de erros (design §12),
+          testes de contrato (TASK-26) e segurança RBAC (TASK-27).
+    Usa WebApplicationFactory para testes de integração de API.
+    Mapeia: design §13, TASK-22..27.
+  -->
+  <PropertyGroup>
+    <AssemblyName>GoalForecast.Api.Tests</AssemblyName>
+    <RootNamespace>GoalForecast.Api.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\GoalForecast.Api\GoalForecast.Api.csproj" />
+    <ProjectReference Include="..\..\src\GoalForecast.Application\GoalForecast.Application.csproj" />
+    <ProjectReference Include="..\..\src\GoalForecast.Infrastructure\GoalForecast.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\GoalForecast.Contracts\GoalForecast.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WebApplicationFactory para testes de integração de API -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    GoalForecast.Application.Tests
+    Foco: handlers (CQRS), upsert idempotente, RBAC policy, degradação graciosa;
+          PBT-01 (upsert), PBT-03 (gap), PBT-04 (totalidade do painel).
+    Cobertura mínima: ≥ 85% da camada Application (tasks.md §1, TASK-09..14).
+    Mapeia: design §13, TASK-01.
+  -->
+  <PropertyGroup>
+    <AssemblyName>GoalForecast.Application.Tests</AssemblyName>
+    <RootNamespace>GoalForecast.Application.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\GoalForecast.Application\GoalForecast.Application.csproj" />
+    <ProjectReference Include="..\..\src\GoalForecast.Domain\GoalForecast.Domain.csproj" />
+    <ProjectReference Include="..\..\src\GoalForecast.Contracts\GoalForecast.Contracts.csproj" />
+  </ItemGroup>
+</Project>

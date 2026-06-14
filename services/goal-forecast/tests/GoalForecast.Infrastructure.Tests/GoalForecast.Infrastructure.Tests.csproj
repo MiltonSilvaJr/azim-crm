@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    GoalForecast.Infrastructure.Tests
+    Foco: GoalRepository, GoalForecastDbContext (Global Query Filter, mapeamentos),
+          PipelineForecastReader (circuit breaker, degradação), isolamento RLS (TASK-18).
+    Usa Testcontainers para banco Postgres real em testes de integração.
+    Mapeia: design §13, TASK-15..20.
+  -->
+  <PropertyGroup>
+    <AssemblyName>GoalForecast.Infrastructure.Tests</AssemblyName>
+    <RootNamespace>GoalForecast.Infrastructure.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\GoalForecast.Infrastructure\GoalForecast.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\GoalForecast.Application\GoalForecast.Application.csproj" />
+    <ProjectReference Include="..\..\src\GoalForecast.Domain\GoalForecast.Domain.csproj" />
+    <ProjectReference Include="..\..\src\GoalForecast.Contracts\GoalForecast.Contracts.csproj" />
+  </ItemGroup>
+</Project>
