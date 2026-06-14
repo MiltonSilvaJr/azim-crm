@@ -23,9 +23,20 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Copia o script SQL de RLS para o diretório de saída dos testes -->
+    <None Update="..\..\src\Digest.Infrastructure\Persistence\Scripts\apply-rls.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Scripts\apply-rls.sql</Link>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Testcontainers: Postgres real para testes de integração de RLS e repositórios -->
     <PackageReference Include="Testcontainers.PostgreSql" Version="4.4.0" />
     <!-- NSubstitute: stubs auxiliares -->
     <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <!-- FsCheck: property-based testing (PBT-05) -->
+    <PackageReference Include="FsCheck" Version="3.2.0" />
+    <PackageReference Include="FsCheck.Xunit" Version="3.2.0" />
   </ItemGroup>
 </Project>
