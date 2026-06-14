@@ -1,3 +1,7 @@
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("DataMigration.Infrastructure.Tests")]
+
 namespace DataMigration.Infrastructure;
 
 /// <summary>
