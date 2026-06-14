@@ -88,9 +88,9 @@ public sealed class PipelineBehaviorsTests
         // Act
         var act = () => behavior.Handle(command, next, CancellationToken.None);
 
-        // Assert
+        // Assert — autorização negada usa MIG-ERR-009 (403 Forbidden) conforme design §12
         var ex = await act.Should().ThrowAsync<MigrationDomainException>();
-        ex.Which.ErrorCode.Should().Be("MIG-ERR-005");
+        ex.Which.ErrorCode.Should().Be("MIG-ERR-009");
         await next.DidNotReceive().Invoke();
     }
 

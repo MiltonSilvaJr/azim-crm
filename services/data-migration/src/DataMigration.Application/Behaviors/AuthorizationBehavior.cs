@@ -1,6 +1,7 @@
 using DataMigration.Application.Commands.Import;
 using DataMigration.Application.Commands.Upload;
 using DataMigration.Application.Commands.DryRun;
+using DataMigration.Application.Commands.Triage;
 using DataMigration.Application.Exceptions;
 using DataMigration.Application.Ports;
 using MediatR;
@@ -13,7 +14,10 @@ namespace DataMigration.Application.Behaviors;
 /// Papéis (design §10):
 ///   - <b>PlatformOperator</b>: upload, dry-run, execute.
 ///   - <b>TenantAdmin</b>: triagem (owners, estágios, parceiros, dedupe, ready).
+///     PlatformOperator também pode realizar triagem.
 ///   - Ambos: queries de status/report.
+///
+/// Lança MIG-ERR-009 (403 Forbidden) quando o papel não tem permissão.
 ///
 /// Rastreia: design §5.4, §10, ADR-0001, TASK-12.
 /// </summary>
@@ -36,50 +40,62 @@ public sealed class AuthorizationBehavior<TRequest, TResponse>
         CancellationToken cancellationToken)
     {
         var role = _tenantContext.Role;
-        var requiredRole = GetRequiredRole(typeof(TRequest));
+        var policy = GetPolicy(typeof(TRequest));
 
-        if (requiredRole is not null && !IsAuthorized(role, requiredRole))
+        if (policy is not null && !policy.IsAuthorized(role))
         {
             throw new MigrationDomainException(
-                "MIG-ERR-005",
-                $"Autorização negada: papel '{role}' não tem permissão para '{typeof(TRequest).Name}'. " +
-                $"Papel mínimo requerido: '{requiredRole}'.");
+                "MIG-ERR-009",
+                $"Acesso negado: papel '{role ?? "(nenhum)"}' não tem permissão para " +
+                $"'{typeof(TRequest).Name}'. Papel mínimo: '{policy.MinimumRole}'.");
         }
 
         return await next();
     }
 
     /// <summary>
-    /// Define o papel mínimo requerido para cada tipo de command.
-    /// Retorna null para comandos sem restrição de papel.
+    /// Retorna a política de autorização para o tipo de request.
+    /// Retorna <c>null</c> para requests sem restrição de papel (queries públicas).
     /// </summary>
-    private static string? GetRequiredRole(Type requestType)
+    private static RbacPolicy? GetPolicy(Type requestType)
     {
+        // Operações exclusivas de PlatformOperator (design §10)
         if (requestType == typeof(UploadSpreadsheetCommand)
             || requestType == typeof(RunDryRunCommand)
             || requestType == typeof(ExecuteImportCommand))
         {
-            return "PlatformOperator";
+            return RbacPolicy.RequirePlatformOperator;
         }
 
-        // Triagem: TenantAdmin (também aceita PlatformOperator)
+        // Operações de triagem: TenantAdmin ou PlatformOperator (design §10)
+        if (requestType == typeof(AssignOwnerCommand)
+            || requestType == typeof(BulkAssignOwnerCommand)
+            || requestType == typeof(MarkReadyToImportCommand)
+            || requestType == typeof(ResolveDedupeCommand)
+            || requestType == typeof(ResolvePartnerPctCommand)
+            || requestType == typeof(ResolveStagePendingCommand)
+            || requestType == typeof(SaveTriageProgressCommand))
+        {
+            return RbacPolicy.RequireTenantAdminOrPlatformOperator;
+        }
+
+        // Queries sem restrição de papel (ambos os papéis podem consultar)
         return null;
     }
 
-    private static bool IsAuthorized(string? role, string requiredRole)
+    // =========================================================================
+    // Política de autorização interna
+    // =========================================================================
+
+    private sealed record RbacPolicy(string MinimumRole, Func<string?, bool> IsAuthorized)
     {
-        if (string.IsNullOrWhiteSpace(role))
-        {
-            return false;
-        }
+        public static readonly RbacPolicy RequirePlatformOperator = new(
+            "PlatformOperator",
+            role => string.Equals(role, "PlatformOperator", StringComparison.OrdinalIgnoreCase));
 
-        // PlatformOperator pode fazer tudo; TenantAdmin pode fazer apenas triagem
-        if (requiredRole == "PlatformOperator")
-        {
-            return string.Equals(role, "PlatformOperator", StringComparison.OrdinalIgnoreCase);
-        }
-
-        return string.Equals(role, requiredRole, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(role, "PlatformOperator", StringComparison.OrdinalIgnoreCase);
+        public static readonly RbacPolicy RequireTenantAdminOrPlatformOperator = new(
+            "TenantAdmin",
+            role => string.Equals(role, "TenantAdmin", StringComparison.OrdinalIgnoreCase)
+                 || string.Equals(role, "PlatformOperator", StringComparison.OrdinalIgnoreCase));
     }
 }
