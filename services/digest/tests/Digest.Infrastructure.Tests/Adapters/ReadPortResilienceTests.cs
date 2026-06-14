@@ -80,11 +80,11 @@ public sealed class ReadPortResilienceTests
     // ActivityReadAdapter — degradação graciosa
     // ---------------------------------------------------------------
 
-    [Fact(DisplayName = "ActivityReadAdapter: fonte indisponível (500) retorna lista vazia após retentativas")]
-    public async Task ActivityReadAdapter_SourceUnavailable_ReturnsEmptyList()
+    [Fact(DisplayName = "PendenciasReadAdapter: fonte indisponível (500) retorna lista vazia após retentativas")]
+    public async Task PendenciasReadAdapter_SourceUnavailable_ReturnsEmptyList()
     {
         using var client = CreateHttpClient(new AlwaysFailHandler());
-        var adapter = new ActivityReadAdapter(client, NullLogger<ActivityReadAdapter>.Instance);
+        var adapter = new PendenciasReadAdapter(client, NullLogger<PendenciasReadAdapter>.Instance);
 
         // Act — 3 tentativas com backoff, depois retorna vazio (degradação graciosa)
         var result = await adapter.GetOverdueActivitiesAsync(
@@ -94,11 +94,11 @@ public sealed class ReadPortResilienceTests
             "degradação graciosa: fonte indisponível retorna lista vazia (RNF 5.4)");
     }
 
-    [Fact(DisplayName = "ActivityReadAdapter: fonte disponível retorna lista (handler com 200 vazio)")]
-    public async Task ActivityReadAdapter_SourceAvailable_ReturnsEmptyListOnSuccess()
+    [Fact(DisplayName = "PendenciasReadAdapter: fonte disponível retorna lista (handler com 200 vazio)")]
+    public async Task PendenciasReadAdapter_SourceAvailable_ReturnsEmptyListOnSuccess()
     {
         using var client = CreateHttpClient(new AlwaysSucceedEmptyListHandler());
-        var adapter = new ActivityReadAdapter(client, NullLogger<ActivityReadAdapter>.Instance);
+        var adapter = new PendenciasReadAdapter(client, NullLogger<PendenciasReadAdapter>.Instance);
 
         var result = await adapter.GetOverdueActivitiesAsync(
             Guid.NewGuid(), Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow));
@@ -156,11 +156,11 @@ public sealed class ReadPortResilienceTests
     // OpportunityReadAdapter — degradação graciosa
     // ---------------------------------------------------------------
 
-    [Fact(DisplayName = "OpportunityReadAdapter: fonte indisponível retorna lista vazia")]
-    public async Task OpportunityReadAdapter_SourceUnavailable_ReturnsEmptyList()
+    [Fact(DisplayName = "PipelineReadAdapter: fonte indisponível retorna lista vazia")]
+    public async Task PipelineReadAdapter_SourceUnavailable_ReturnsEmptyList()
     {
         using var client = CreateHttpClient(new AlwaysFailHandler());
-        var adapter = new OpportunityReadAdapter(client, NullLogger<OpportunityReadAdapter>.Instance);
+        var adapter = new PipelineReadAdapter(client, NullLogger<PipelineReadAdapter>.Instance);
 
         var result = await adapter.GetStaleOpportunitiesAsync(Guid.NewGuid(), Guid.NewGuid());
 
@@ -172,11 +172,11 @@ public sealed class ReadPortResilienceTests
     // UserDigestPreferenceAdapter — padrão inclusivo (OptOut = false)
     // ---------------------------------------------------------------
 
-    [Fact(DisplayName = "UserDigestPreferenceAdapter: fonte indisponível retorna OptOut=false (padrão inclusivo)")]
-    public async Task UserDigestPreferenceAdapter_SourceUnavailable_ReturnsInclusiveDefault()
+    [Fact(DisplayName = "DigestPreferenceReadAdapter: fonte indisponível retorna OptOut=false (padrão inclusivo)")]
+    public async Task DigestPreferenceReadAdapter_SourceUnavailable_ReturnsInclusiveDefault()
     {
         using var client = CreateHttpClient(new AlwaysFailHandler());
-        var adapter = new UserDigestPreferenceAdapter(client, NullLogger<UserDigestPreferenceAdapter>.Instance);
+        var adapter = new DigestPreferenceReadAdapter(client, NullLogger<DigestPreferenceReadAdapter>.Instance);
 
         var result = await adapter.GetPreferenceAsync(Guid.NewGuid(), Guid.NewGuid());
 
@@ -186,14 +186,14 @@ public sealed class ReadPortResilienceTests
     }
 
     // ---------------------------------------------------------------
-    // UserDirectoryAdapter — degradação graciosa
+    // DirectoryReadAdapter — degradação graciosa
     // ---------------------------------------------------------------
 
-    [Fact(DisplayName = "UserDirectoryAdapter: fonte indisponível retorna lista de tenants vazia")]
-    public async Task UserDirectoryAdapter_SourceUnavailable_ReturnsEmptyTenantList()
+    [Fact(DisplayName = "DirectoryReadAdapter: fonte indisponível retorna lista de tenants vazia")]
+    public async Task DirectoryReadAdapter_SourceUnavailable_ReturnsEmptyTenantList()
     {
         using var client = CreateHttpClient(new AlwaysFailHandler());
-        var adapter = new UserDirectoryAdapter(client, NullLogger<UserDirectoryAdapter>.Instance);
+        var adapter = new DirectoryReadAdapter(client, NullLogger<DirectoryReadAdapter>.Instance);
 
         var result = await adapter.GetActiveTenantInfosAsync();
 

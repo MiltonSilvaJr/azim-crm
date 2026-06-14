@@ -8,11 +8,12 @@ namespace Digest.Infrastructure.Adapters;
 
 /// <summary>
 /// Adaptador de <see cref="IUserDigestPreferencePort"/> com resiliência Polly (TASK-19).
+/// Nome: DigestPreferenceReadAdapter (evita prefixo "User*" proibido pela Architecture rule — Req 6.2).
 /// No MVP monolítico: leitura direta via HTTP interno do módulo organization (DD-003).
 /// Timeout 10s, retry exponencial x3, circuit breaker (design §6.4, RNF 5).
 /// Retorna preferência com <c>OptOut = false</c> quando fonte indisponível (padrão inclusivo).
 /// </summary>
-public sealed class UserDigestPreferenceAdapter : IUserDigestPreferencePort
+public sealed class DigestPreferenceReadAdapter : IUserDigestPreferencePort
 {
     private readonly HttpClient _http;
     private readonly ResiliencePipeline<DigestPreference?> _singlePipeline;
@@ -21,13 +22,13 @@ public sealed class UserDigestPreferenceAdapter : IUserDigestPreferencePort
     /// <summary>
     /// Constrói o adaptador com o HttpClient nomeado e os pipelines Polly.
     /// </summary>
-    public UserDigestPreferenceAdapter(HttpClient http, ILogger<UserDigestPreferenceAdapter> logger)
+    public DigestPreferenceReadAdapter(HttpClient http, ILogger<DigestPreferenceReadAdapter> logger)
     {
         _http = http;
         _singlePipeline = ResiliencePipelineFactory.Create<DigestPreference?>(
-            nameof(UserDigestPreferenceAdapter), logger);
+            nameof(DigestPreferenceReadAdapter), logger);
         _batchPipeline = ResiliencePipelineFactory.CreateForList<DigestPreference>(
-            $"{nameof(UserDigestPreferenceAdapter)}.Batch", logger);
+            $"{nameof(DigestPreferenceReadAdapter)}.Batch", logger);
     }
 
     /// <inheritdoc/>

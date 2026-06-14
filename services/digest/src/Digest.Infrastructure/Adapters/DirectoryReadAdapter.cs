@@ -8,10 +8,11 @@ namespace Digest.Infrastructure.Adapters;
 
 /// <summary>
 /// Adaptador de <see cref="IUserDirectoryPort"/> com resiliência Polly (TASK-19).
+/// Nome: DirectoryReadAdapter (evita prefixo "User*" proibido pela Architecture rule — Req 6.2).
 /// No MVP monolítico: leitura direta via HTTP interno do módulo organization.
 /// Timeout 10s, retry exponencial x3, circuit breaker (design §6.4, RNF 5).
 /// </summary>
-public sealed class UserDirectoryAdapter : IUserDirectoryPort
+public sealed class DirectoryReadAdapter : IUserDirectoryPort
 {
     private readonly HttpClient _http;
     private readonly ResiliencePipeline<IReadOnlyList<TenantInfo>> _tenantPipeline;
@@ -20,13 +21,13 @@ public sealed class UserDirectoryAdapter : IUserDirectoryPort
     /// <summary>
     /// Constrói o adaptador com o HttpClient nomeado e os pipelines Polly.
     /// </summary>
-    public UserDirectoryAdapter(HttpClient http, ILogger<UserDirectoryAdapter> logger)
+    public DirectoryReadAdapter(HttpClient http, ILogger<DirectoryReadAdapter> logger)
     {
         _http = http;
         _tenantPipeline = ResiliencePipelineFactory.CreateForList<TenantInfo>(
-            $"{nameof(UserDirectoryAdapter)}.Tenants", logger);
+            $"{nameof(DirectoryReadAdapter)}.Tenants", logger);
         _userPipeline = ResiliencePipelineFactory.CreateForList<UserInfo>(
-            $"{nameof(UserDirectoryAdapter)}.Users", logger);
+            $"{nameof(DirectoryReadAdapter)}.Users", logger);
     }
 
     /// <inheritdoc/>

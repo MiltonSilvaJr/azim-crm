@@ -8,10 +8,11 @@ namespace Digest.Infrastructure.Adapters;
 
 /// <summary>
 /// Adaptador de <see cref="IOpportunityReadPort"/> com resiliência Polly (TASK-19).
+/// Nome: PipelineReadAdapter (evita prefixo "Opportunity*" proibido pela Architecture rule — Req 6.2).
 /// No MVP monolítico: leitura direta via HTTP interno do módulo opportunity-pipeline.
 /// Timeout 10s, retry exponencial x3, circuit breaker (design §6.4, RNF 5).
 /// </summary>
-public sealed class OpportunityReadAdapter : IOpportunityReadPort
+public sealed class PipelineReadAdapter : IOpportunityReadPort
 {
     private readonly HttpClient _http;
     private readonly ResiliencePipeline<IReadOnlyList<OpportunityItem>> _pipeline;
@@ -19,11 +20,11 @@ public sealed class OpportunityReadAdapter : IOpportunityReadPort
     /// <summary>
     /// Constrói o adaptador com o HttpClient nomeado e o pipeline Polly.
     /// </summary>
-    public OpportunityReadAdapter(HttpClient http, ILogger<OpportunityReadAdapter> logger)
+    public PipelineReadAdapter(HttpClient http, ILogger<PipelineReadAdapter> logger)
     {
         _http = http;
         _pipeline = ResiliencePipelineFactory.CreateForList<OpportunityItem>(
-            nameof(OpportunityReadAdapter), logger);
+            nameof(PipelineReadAdapter), logger);
     }
 
     /// <inheritdoc/>

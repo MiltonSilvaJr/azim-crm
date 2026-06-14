@@ -8,10 +8,11 @@ namespace Digest.Infrastructure.Adapters;
 
 /// <summary>
 /// Adaptador de <see cref="IActivityReadPort"/> com resiliência Polly (TASK-19).
+/// Nome: PendenciasReadAdapter (evita prefixo "Activity*" proibido pela Architecture rule — Req 6.2).
 /// No MVP monolítico: leitura direta via HTTP interno do módulo activity-management.
 /// Timeout 10s, retry exponencial x3, circuit breaker (design §6.4, RNF 5).
 /// </summary>
-public sealed class ActivityReadAdapter : IActivityReadPort
+public sealed class PendenciasReadAdapter : IActivityReadPort
 {
     private readonly HttpClient _http;
     private readonly ResiliencePipeline<IReadOnlyList<ActivityItem>> _pipeline;
@@ -19,11 +20,11 @@ public sealed class ActivityReadAdapter : IActivityReadPort
     /// <summary>
     /// Constrói o adaptador com o HttpClient nomeado (IHttpClientFactory) e o pipeline Polly.
     /// </summary>
-    public ActivityReadAdapter(HttpClient http, ILogger<ActivityReadAdapter> logger)
+    public PendenciasReadAdapter(HttpClient http, ILogger<PendenciasReadAdapter> logger)
     {
         _http = http;
         _pipeline = ResiliencePipelineFactory.CreateForList<ActivityItem>(
-            nameof(ActivityReadAdapter), logger);
+            nameof(PendenciasReadAdapter), logger);
     }
 
     /// <inheritdoc/>
