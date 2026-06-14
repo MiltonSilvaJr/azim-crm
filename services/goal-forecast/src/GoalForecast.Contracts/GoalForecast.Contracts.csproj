@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    GoalForecast.Contracts
+    Papel: DTOs de request/response e schema do evento goal.updated.v1.
+    Regra de dependência: Contracts -> ∅ (sem dependências de projetos internos).
+    Contratos são fonte da verdade para a API REST e para consumidores do evento.
+    Mapeia: DD-001, design §3, TASK-01.
+  -->
+  <PropertyGroup>
+    <AssemblyName>GoalForecast.Contracts</AssemblyName>
+    <RootNamespace>GoalForecast.Contracts</RootNamespace>
+    <Description>DTOs de request/response e schema do evento goal.updated.v1 do módulo goal-forecast. Sem dependência de projetos internos (Clean Architecture, design §3).</Description>
+  </PropertyGroup>
+</Project>

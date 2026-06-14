@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    GoalForecast.Infrastructure
+    Papel: adapters concretos — GoalForecastDbContext (EF Core / Npgsql),
+           GoalRepository, PipelineForecastReader (in-process + circuit breaker),
+           BuMembershipReader, OutboxDispatcher.
+    Regra de dependência: Infrastructure -> Application, Domain, Contracts.
+    Infrastructure é o único projeto autorizado a usar EF Core, Npgsql e Polly.
+    Mapeia: DD-001, design §3, §6, TASK-01.
+  -->
+  <PropertyGroup>
+    <AssemblyName>GoalForecast.Infrastructure</AssemblyName>
+    <RootNamespace>GoalForecast.Infrastructure</RootNamespace>
+    <Description>Adapters de infraestrutura do módulo goal-forecast: EF Core, RLS, Outbox, PipelineForecastReader com circuit breaker. Único projeto autorizado a usar drivers de persistência (design §3).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GoalForecast.Application\GoalForecast.Application.csproj" />
+    <ProjectReference Include="..\GoalForecast.Domain\GoalForecast.Domain.csproj" />
+    <ProjectReference Include="..\GoalForecast.Contracts\GoalForecast.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- EF Core 9.0.6 — versão alinhada com os demais módulos do repositório -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.6" />
+    <!-- Npgsql 9.0.4 — driver PostgreSQL alinhado com os demais módulos -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <!-- Resiliência: retry, circuit breaker, timeout (Polly) — RNF 6, DD-007 -->
+    <PackageReference Include="Polly" Version="8.5.2" />
+    <!-- Health checks -->
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.0" />
+    <!-- HTTP client para adapters externos -->
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+  </ItemGroup>
+</Project>

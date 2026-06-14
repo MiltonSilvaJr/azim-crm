@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!--
+    GoalForecast.Api
+    Papel: controllers REST (GoalsController, ForecastController, InternalGoalsController),
+           ponto de entrada HTTP do slice goal-forecast no monólito modular azim-api.
+    Regra de dependência: Api -> Application, Infrastructure, Contracts.
+    Api não referencia Domain diretamente (todo acesso ao domínio via Application).
+    Mapeia: DD-001, design §3, §8, TASK-01.
+  -->
+  <PropertyGroup>
+    <AssemblyName>GoalForecast.Api</AssemblyName>
+    <RootNamespace>GoalForecast.Api</RootNamespace>
+    <Description>Controllers REST do módulo goal-forecast: GoalsController, ForecastController, InternalGoalsController. Depende de Application, Infrastructure e Contracts (design §3).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GoalForecast.Application\GoalForecast.Application.csproj" />
+    <ProjectReference Include="..\GoalForecast.Infrastructure\GoalForecast.Infrastructure.csproj" />
+    <ProjectReference Include="..\GoalForecast.Contracts\GoalForecast.Contracts.csproj" />
+  </ItemGroup>
+</Project>

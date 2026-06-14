@@ -1,0 +1,30 @@
+<Solution>
+  <!--
+    GoalForecast.slnx — formato XML nativo .NET 10
+    Módulo: BC-05 Goal & Forecast (Metas e Forecast Comparativo)
+    Estrutura: 5 projetos de produção + 5 de teste (Clean Architecture + DDD).
+
+    Regra de dependência (validada por Architecture.Tests, DD-001, design §3):
+      Api            -> Application, Infrastructure, Contracts
+      Application    -> Domain, Contracts (NUNCA Infrastructure)
+      Infrastructure -> Application, Domain, Contracts
+      Domain         -> ∅ (nenhum projeto interno)
+      Contracts      -> ∅ (nenhum projeto interno)
+
+    ADRs aplicáveis: ADR-0001 (Multi-tenancy pooled DB + RLS)
+  -->
+  <Folder Name="/src/">
+    <Project Path="src/GoalForecast.Contracts/GoalForecast.Contracts.csproj" />
+    <Project Path="src/GoalForecast.Domain/GoalForecast.Domain.csproj" />
+    <Project Path="src/GoalForecast.Application/GoalForecast.Application.csproj" />
+    <Project Path="src/GoalForecast.Infrastructure/GoalForecast.Infrastructure.csproj" />
+    <Project Path="src/GoalForecast.Api/GoalForecast.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GoalForecast.Domain.Tests/GoalForecast.Domain.Tests.csproj" />
+    <Project Path="tests/GoalForecast.Application.Tests/GoalForecast.Application.Tests.csproj" />
+    <Project Path="tests/GoalForecast.Infrastructure.Tests/GoalForecast.Infrastructure.Tests.csproj" />
+    <Project Path="tests/GoalForecast.Api.Tests/GoalForecast.Api.Tests.csproj" />
+    <Project Path="tests/GoalForecast.Architecture.Tests/GoalForecast.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>

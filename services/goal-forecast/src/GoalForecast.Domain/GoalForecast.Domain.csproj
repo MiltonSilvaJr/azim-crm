@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    GoalForecast.Domain
+    Papel: Aggregate Root Goal, objetos de valor (Money, GoalPeriod, GoalScope),
+           domain event GoalUpdated, policies (GoalAuthorizationPolicy,
+           BuMembershipSpecification) e serviço de domínio puro GoalAggregation.
+    Regra de dependência: Domain -> ∅ (sem dependências de projetos internos).
+    Domain não referencia EF Core, ASP.NET Core, web framework, mensageria ou GCP.
+    Mapeia: DD-001, design §3, §4, TASK-01.
+  -->
+  <PropertyGroup>
+    <AssemblyName>GoalForecast.Domain</AssemblyName>
+    <RootNamespace>GoalForecast.Domain</RootNamespace>
+    <Description>Agregados, objetos de valor, eventos de domínio, policies e specifications do módulo goal-forecast. Sem dependência de infraestrutura (Clean Architecture, DDD, design §3).</Description>
+  </PropertyGroup>
+</Project>
