@@ -325,4 +325,64 @@ public sealed class DependencyRuleTests
             because: "ClosedXML não deve aparecer em Contracts (DD-002, design §3). " +
                      $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(result)}]");
     }
+
+    // =========================================================================
+    // Grupo F — Ausência de dependências reversas (TASK-27, DD-009, Req 14)
+    // Garante que o módulo é removível sem deixar rastros nos módulos de domínio.
+    // =========================================================================
+
+    /// <summary>
+    /// Regra F-1: Domain não referencia Application nem Infrastructure do módulo.
+    ///
+    /// Confirma que a camada mais interna não possui acoplamento reverso,
+    /// tornando o módulo data-migration removível após a Fase 1 (Req 14.2, DD-009).
+    ///
+    /// Rastreia: TASK-27 (ST-01 — teste de arquitetura reverso), Req 14, DD-009, VAL-MIGR-01.
+    /// </summary>
+    [Fact(DisplayName = "Domain não cria dependência reversa sobre Application ou Infrastructure (Req 14, DD-009)")]
+    public void Domain_HasNoDependencyOn_ApplicationOrInfrastructure()
+    {
+        // Domain não deve referenciar nem Application nem Infrastructure.
+        // Isso garante que, ao remover os projetos DataMigration.Application e
+        // DataMigration.Infrastructure, o Domain (que seria dropado junto) não
+        // deixa rastros nos módulos de domínio de negócio.
+        var appResult = Types.InAssembly(ArchitectureRules.DomainAssembly)
+            .Should()
+            .NotHaveDependencyOn(ArchitectureRules.ApplicationAssemblyName)
+            .GetResult();
+
+        var infraResult = Types.InAssembly(ArchitectureRules.DomainAssembly)
+            .Should()
+            .NotHaveDependencyOn(ArchitectureRules.InfrastructureAssemblyName)
+            .GetResult();
+
+        appResult.IsSuccessful.Should().BeTrue(
+            because: "Domain não deve depender de Application — ciclo proibido e impede remoção do módulo (Req 14, DD-009). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(appResult)}]");
+
+        infraResult.IsSuccessful.Should().BeTrue(
+            because: "Domain não deve depender de Infrastructure — ciclo proibido e impede remoção do módulo (Req 14, DD-009). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(infraResult)}]");
+    }
+
+    /// <summary>
+    /// Regra F-2: Contracts não cria dependências internas.
+    ///
+    /// Contratos são estáveis por definição — sem acoplamento a nenhuma camada interna.
+    /// Permite remoção limpa do módulo sem deixar rastros em contratos externos (Req 14.2).
+    ///
+    /// Rastreia: TASK-27 (ST-01), Req 14, DD-009.
+    /// </summary>
+    [Fact(DisplayName = "Contracts não cria dependência sobre Domain, Application ou Infrastructure (Req 14)")]
+    public void Contracts_HasNoDependencyOn_InternalLayers()
+    {
+        var domainResult = Types.InAssembly(ArchitectureRules.ContractsAssembly)
+            .Should()
+            .NotHaveDependencyOn(ArchitectureRules.DomainAssemblyName)
+            .GetResult();
+
+        domainResult.IsSuccessful.Should().BeTrue(
+            because: "Contracts não deve depender de Domain — remoção do módulo deve ser limpa (Req 14, DD-009). " +
+                     $"Tipos em violação: [{ArchitectureRules.FormatFailingTypes(domainResult)}]");
+    }
 }
