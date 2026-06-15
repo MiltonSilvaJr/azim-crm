@@ -186,7 +186,8 @@ public sealed class GoalsController : ControllerBase
             OwnerId = request.OwnerId,
             Year = request.Year,
             Month = request.Month,
-            ValorMeta = request.ValorMeta
+            ValorMeta = request.ValorMeta,
+            Currency = request.Currency
         };
 
     private static ContractsGoalDto MapToContractDto(Application.Common.GoalDto dto) =>
@@ -198,6 +199,7 @@ public sealed class GoalsController : ControllerBase
             Year: dto.Year,
             Month: dto.Month,
             ValorMeta: dto.ValorMeta,
+            Currency: dto.Currency,
             CreatedAt: dto.CreatedAt,
             UpdatedAt: dto.UpdatedAt);
 }

@@ -29,6 +29,9 @@ public sealed record GoalDto(
     /// <summary>Valor da meta em centavos inteiros (RNF 4).</summary>
     long ValorMeta,
 
+    /// <summary>Código ISO-4217 da moeda da meta (ADR-0008): BRL, USD ou EUR.</summary>
+    string Currency,
+
     /// <summary>Timestamp de criação.</summary>
     DateTimeOffset CreatedAt,
 

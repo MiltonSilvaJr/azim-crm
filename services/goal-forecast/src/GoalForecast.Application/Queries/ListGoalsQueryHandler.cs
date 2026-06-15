@@ -100,6 +100,7 @@ public sealed class ListGoalsQueryHandler
             Year: goal.Period.Year,
             Month: goal.Period.Month,
             ValorMeta: goal.ValorMeta.Cents,
+            Currency: goal.ValorMeta.Currency,
             CreatedAt: goal.CreatedAt,
             UpdatedAt: goal.UpdatedAt);
 }

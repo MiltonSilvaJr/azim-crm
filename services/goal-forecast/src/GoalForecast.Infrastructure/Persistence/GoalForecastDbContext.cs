@@ -38,12 +38,6 @@ public sealed class GoalForecastDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // ── Conversor: Money ↔ long (BIGINT) ─────────────────────────────────
-        // Nunca passa por double/float. Centavos inteiros preservados exatamente (PBT-05).
-        var moneyConverter = new ValueConverter<Money, long>(
-            money => money.Cents,
-            cents => Money.Of(cents));
-
         // ── Conversor: GoalPeriod.Year ↔ short (SMALLINT) ────────────────────
         var yearConverter = new ValueConverter<int, short>(
             year => (short)year,
@@ -69,11 +63,24 @@ public sealed class GoalForecastDbContext : DbContext
                 .HasColumnName("tenant_id")
                 .IsRequired();
 
-            // valor_meta BIGINT NOT NULL CHECK (valor_meta >= 0) — RNF 4, DEC-011
-            entity.Property(g => g.ValorMeta)
-                .HasColumnName("valor_meta")
-                .HasConversion(moneyConverter)
-                .IsRequired();
+            // ValorMeta mapeado como owned type: valor_meta BIGINT + currency CHAR(3)
+            // Nunca passa por double/float. Centavos inteiros preservados exatamente (RNF 4, DEC-011).
+            // Currency ISO-4217 explícita por coluna separada (ADR-0008).
+            entity.OwnsOne(g => g.ValorMeta, vm =>
+            {
+                vm.Property(m => m.Cents)
+                    .HasColumnName("valor_meta")
+                    .IsRequired();
+
+                vm.Property(m => m.Currency)
+                    .HasColumnName("currency")
+                    .IsRequired()
+                    .HasMaxLength(3)
+                    .HasDefaultValue("BRL");
+            });
+
+            // Currency é derivada de ValorMeta.Currency — não é coluna própria do aggregate.
+            entity.Ignore(g => g.Currency);
 
             // Timestamps de auditoria técnica
             entity.Property(g => g.CreatedAt)

@@ -406,6 +406,7 @@ public sealed class SecurityTests : IClassFixture<GoalForecastWebFactory>
             Year: 2026,
             Month: 6,
             ValorMeta: 1_000_00L,
+            Currency: "BRL",
             CreatedAt: DateTimeOffset.UtcNow,
             UpdatedAt: DateTimeOffset.UtcNow);
 

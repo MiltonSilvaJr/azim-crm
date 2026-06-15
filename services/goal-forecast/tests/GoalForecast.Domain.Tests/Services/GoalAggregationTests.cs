@@ -3,6 +3,7 @@ using FsCheck;
 using FsCheck.Fluent;
 using FsCheck.Xunit;
 using GoalForecast.Domain.Aggregates;
+using GoalForecast.Domain.Exceptions;
 using GoalForecast.Domain.Services;
 using GoalForecast.Domain.ValueObjects;
 using Xunit;
@@ -187,6 +188,58 @@ public sealed class GoalAggregationTests
         var result = GoalAggregation.SumByYear(Array.Empty<Goal>(), 2026);
 
         result.Should().Be(Money.Zero);
+    }
+
+    // =========================================================================
+    // ADR-0008: Multimoeda — proibição de mix de moedas
+    // =========================================================================
+
+    [Fact(DisplayName = "ADR-0008: SumByQuarter com goals de moedas mistas lança DomainException")]
+    public void SumByQuarter_MixedCurrencies_ThrowsDomainException()
+    {
+        var goals = new[]
+        {
+            Goal.Create(TenantId, ScopeBu, new GoalPeriod(2026, 1), Money.Of(1000L, "BRL")),
+            Goal.Create(TenantId, ScopeBu, new GoalPeriod(2026, 2), Money.Of(1000L, "USD"))
+        };
+        var period = new GoalPeriod(2026, 1); // Q1
+
+        // currency esperada = "BRL", mas existe um goal em "USD" → mismatch
+        var act = () => GoalAggregation.SumByQuarter(goals, period, "BRL");
+
+        act.Should().Throw<DomainException>()
+            .Which.ErrorCode.Should().Be("GF-ERR-001");
+    }
+
+    [Fact(DisplayName = "ADR-0008: SumByYear com goals de moedas mistas lança DomainException")]
+    public void SumByYear_MixedCurrencies_ThrowsDomainException()
+    {
+        var goals = new[]
+        {
+            Goal.Create(TenantId, ScopeBu, new GoalPeriod(2026, 1), Money.Of(1000L, "BRL")),
+            Goal.Create(TenantId, ScopeBu, new GoalPeriod(2026, 6), Money.Of(1000L, "EUR"))
+        };
+
+        var act = () => GoalAggregation.SumByYear(goals, 2026, "BRL");
+
+        act.Should().Throw<DomainException>()
+            .Which.ErrorCode.Should().Be("GF-ERR-001");
+    }
+
+    [Fact(DisplayName = "ADR-0008: SumByQuarter com goals em USD retorna soma em USD")]
+    public void SumByQuarter_UsdGoals_ReturnsSumInUsd()
+    {
+        var goals = new[]
+        {
+            Goal.Create(TenantId, ScopeBu, new GoalPeriod(2026, 1), Money.Of(1000L, "USD")),
+            Goal.Create(TenantId, ScopeBu, new GoalPeriod(2026, 2), Money.Of(2000L, "USD"))
+        };
+        var period = new GoalPeriod(2026, 1);
+
+        var result = GoalAggregation.SumByQuarter(goals, period, "USD");
+
+        result.Cents.Should().Be(3000L);
+        result.Currency.Should().Be("USD");
     }
 
     // =========================================================================

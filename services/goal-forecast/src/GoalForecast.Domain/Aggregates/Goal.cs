@@ -38,6 +38,12 @@ public sealed class Goal
     /// <summary>Valor da meta em centavos inteiros. Não-negativo (INV-1).</summary>
     public Money ValorMeta { get; private set; }
 
+    /// <summary>
+    /// Código ISO-4217 da moeda da meta. Derivado de <see cref="ValorMeta"/> (ADR-0008).
+    /// Imutável após criação: ChangeValorMeta não permite trocar de moeda.
+    /// </summary>
+    public string Currency => ValorMeta.Currency;
+
     /// <summary>Momento de criação do registro (UTC).</summary>
     public DateTimeOffset CreatedAt { get; }
 

@@ -33,6 +33,7 @@ public sealed class GoalsWriteEndpointsTests : IClassFixture<GoalForecastWebFact
         Year: 2026,
         Month: 6,
         ValorMeta: 50_000_000L,
+        Currency: "BRL",
         CreatedAt: DateTimeOffset.UtcNow,
         UpdatedAt: DateTimeOffset.UtcNow);
 

@@ -45,6 +45,7 @@ public sealed class GoalsReadEndpointsTests : IClassFixture<GoalForecastWebFacto
             Year: year,
             Month: month,
             ValorMeta: valorMeta,
+            Currency: "BRL",
             CreatedAt: DateTimeOffset.UtcNow,
             UpdatedAt: DateTimeOffset.UtcNow);
 

@@ -35,6 +35,10 @@ public sealed class GetGoalAggregateQueryHandler
         var goals = await _repository.ListByYear(
             tenantId, query.BuId, query.OwnerId, query.Year, cancellationToken);
 
+        // Deriva a moeda das metas carregadas (ADR-0008: mesma moeda dentro do scope/ano).
+        // Se não há metas, padrão BRL.
+        var currency = goals.FirstOrDefault()?.ValorMeta.Currency ?? "BRL";
+
         Money total;
         int? quarter = null;
 
@@ -49,11 +53,11 @@ public sealed class GetGoalAggregateQueryHandler
                 // Usa o primeiro mês do trimestre como referência de período.
                 var firstMonth = (quarter.Value - 1) * 3 + 1;
                 var period = new GoalPeriod(query.Year, firstMonth);
-                total = GoalAggregation.SumByQuarter(goals, period);
+                total = GoalAggregation.SumByQuarter(goals, period, currency);
                 break;
 
             case AggregateGranularity.Year:
-                total = GoalAggregation.SumByYear(goals, query.Year);
+                total = GoalAggregation.SumByYear(goals, query.Year, currency);
                 break;
 
             default:
@@ -65,6 +69,7 @@ public sealed class GetGoalAggregateQueryHandler
             Granularity: query.Granularity.ToString().ToLowerInvariant(),
             Year: query.Year,
             Quarter: quarter,
-            ValorMetaAgregado: total.Cents);
+            ValorMetaAgregado: total.Cents,
+            Currency: total.Currency);
     }
 }

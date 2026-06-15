@@ -21,4 +21,10 @@ public sealed record ForecastAggregateResponse(
     /// Soma derivada das metas em centavos inteiros.
     /// Meses ausentes contribuem com zero (RN-027, PBT-02).
     /// </summary>
-    long ValorMetaAgregado);
+    long ValorMetaAgregado,
+
+    /// <summary>
+    /// Código ISO-4217 da moeda da soma (ADR-0008).
+    /// Reflete a moeda das metas do escopo consultado.
+    /// </summary>
+    string Currency = "BRL");

@@ -35,4 +35,10 @@ public sealed record CreateOrUpdateGoalRequest
     /// Nunca double, nunca decimal.
     /// </summary>
     public required long ValorMeta { get; init; }
+
+    /// <summary>
+    /// Código ISO-4217 da moeda da meta (ADR-0008).
+    /// Valores aceitos: BRL, USD, EUR. Padrão: BRL.
+    /// </summary>
+    public string Currency { get; init; } = "BRL";
 }

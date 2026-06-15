@@ -66,7 +66,7 @@ public sealed class CreateOrUpdateGoalCommandHandler
 
         // Passo 4: find-by-key (upsert).
         var period = new GoalPeriod(command.Year, command.Month);
-        var valorMeta = Money.Of(command.ValorMeta);
+        var valorMeta = Money.Of(command.ValorMeta, command.Currency);
 
         var existing = await _repository.FindByKey(
             tenantId, scope.BuId, scope.OwnerId, period.Year, period.Month, cancellationToken);
@@ -146,6 +146,7 @@ public sealed class CreateOrUpdateGoalCommandHandler
             Year: goal.Period.Year,
             Month: goal.Period.Month,
             ValorMeta: goal.ValorMeta.Cents,
+            Currency: goal.ValorMeta.Currency,
             CreatedAt: goal.CreatedAt,
             UpdatedAt: goal.UpdatedAt);
 }

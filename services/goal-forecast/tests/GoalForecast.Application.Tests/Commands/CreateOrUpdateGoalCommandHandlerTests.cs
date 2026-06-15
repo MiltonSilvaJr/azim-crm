@@ -246,7 +246,8 @@ public sealed class CreateOrUpdateGoalCommandHandlerTests
         int year,
         int month,
         long valorMeta,
-        Guid? buIdOverride = null) =>
+        Guid? buIdOverride = null,
+        string currency = "BRL") =>
         new()
         {
             Principal = principal,
@@ -255,7 +256,8 @@ public sealed class CreateOrUpdateGoalCommandHandlerTests
             OwnerId = ownerId,
             Year = year,
             Month = month,
-            ValorMeta = valorMeta
+            ValorMeta = valorMeta,
+            Currency = currency
         };
 }
 

@@ -27,6 +27,7 @@ public partial class InitialGoals : Migration
                 year        SMALLINT    NOT NULL,
                 month       SMALLINT    NOT NULL CHECK (month BETWEEN 1 AND 12),
                 valor_meta  BIGINT      NOT NULL CHECK (valor_meta >= 0),
+                currency    VARCHAR(3)  NOT NULL DEFAULT 'BRL' CHECK (currency IN ('BRL','USD','EUR')),
                 created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
                 updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
                 CONSTRAINT pk_goals PRIMARY KEY (id)

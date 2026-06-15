@@ -247,4 +247,48 @@ public sealed class GoalTests
         var evt = (GoalUpdated)goal.DomainEvents[0];
         evt.OwnerId.Should().BeNull();
     }
+
+    // =========================================================================
+    // ADR-0008: Multimoeda — Currency derivada de ValorMeta
+    // =========================================================================
+
+    [Fact(DisplayName = "ADR-0008: Goal.Currency reflete moeda do ValorMeta")]
+    public void Currency_ReflectsValorMetaCurrency()
+    {
+        var valorBrl = Money.Of(1000L, "BRL");
+        var goal = Goal.Create(TenantId, ScopeBu, Period, valorBrl);
+
+        goal.Currency.Should().Be("BRL");
+    }
+
+    [Fact(DisplayName = "ADR-0008: Goal com ValorMeta em USD tem Currency='USD'")]
+    public void Currency_WithUsd_IsUsd()
+    {
+        var valorUsd = Money.Of(2000L, "USD");
+        var goal = Goal.Create(TenantId, ScopeBu, Period, valorUsd);
+
+        goal.Currency.Should().Be("USD");
+    }
+
+    [Fact(DisplayName = "ADR-0008: Goal com ValorMeta em EUR tem Currency='EUR'")]
+    public void Currency_WithEur_IsEur()
+    {
+        var valorEur = Money.Of(3000L, "EUR");
+        var goal = Goal.Create(TenantId, ScopeBu, Period, valorEur);
+
+        goal.Currency.Should().Be("EUR");
+    }
+
+    [Fact(DisplayName = "ADR-0008: ChangeValorMeta com mesma moeda funciona")]
+    public void ChangeValorMeta_SameCurrency_Succeeds()
+    {
+        var goal = Goal.Create(TenantId, ScopeBu, Period, Money.Of(1000L, "USD"));
+        goal.ClearDomainEvents();
+
+        var act = () => goal.ChangeValorMeta(Money.Of(2000L, "USD"));
+
+        act.Should().NotThrow();
+        goal.ValorMeta.Cents.Should().Be(2000L);
+        goal.Currency.Should().Be("USD");
+    }
 }

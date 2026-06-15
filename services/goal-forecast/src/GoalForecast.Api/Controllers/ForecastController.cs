@@ -118,7 +118,8 @@ public sealed class ForecastController : ControllerBase
             result.Granularity,
             result.Year,
             result.Quarter,
-            result.ValorMetaAgregado));
+            result.ValorMetaAgregado,
+            result.Currency));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
