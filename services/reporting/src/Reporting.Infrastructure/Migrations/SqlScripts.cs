@@ -44,8 +44,10 @@ public static class SqlScripts
             stage_category      TEXT        NOT NULL DEFAULT 'open',
             valor_total         BIGINT      NOT NULL DEFAULT 0,
             forecast_ponderado  BIGINT      NOT NULL DEFAULT 0,
+            currency            CHAR(3)     NOT NULL DEFAULT 'BRL',
             created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            closed_at           TIMESTAMPTZ
+            closed_at           TIMESTAMPTZ,
+            CONSTRAINT chk_opportunities_currency CHECK (currency IN ('BRL','USD','EUR'))
         );
 
         ALTER TABLE opportunities ENABLE ROW LEVEL SECURITY;
@@ -136,7 +138,8 @@ public static class SqlScripts
             s.category      AS stage_category,
             o.created_at,
             o.valor_total          AS total_cents,
-            o.forecast_ponderado   AS weighted_forecast_cents
+            o.forecast_ponderado   AS weighted_forecast_cents,
+            o.currency
         FROM opportunities o
         JOIN stages s ON s.id = o.stage_id;
         """;
@@ -156,7 +159,8 @@ public static class SqlScripts
                  THEN o.valor_total
                  ELSE 0
             END                                   AS realized_cents,
-            g.goal_cents
+            g.goal_cents,
+            o.currency
         FROM opportunities o
         LEFT JOIN goals g
             ON  g.tenant_id = o.tenant_id
@@ -177,7 +181,8 @@ public static class SqlScripts
             o.created_at,
             o.stage_category,
             o.valor_total          AS total_cents,
-            o.forecast_ponderado   AS weighted_forecast_cents
+            o.forecast_ponderado   AS weighted_forecast_cents,
+            o.currency
         FROM opportunities o
         LEFT JOIN users u ON u.id = o.owner_id;
         """;
@@ -193,7 +198,8 @@ public static class SqlScripts
             o.origin_channel_id    AS channel_id,
             oc.name                AS channel_name,
             o.created_at,
-            o.valor_total          AS total_cents
+            o.valor_total          AS total_cents,
+            o.currency
         FROM opportunities o
         LEFT JOIN origin_channels oc ON oc.id = o.origin_channel_id;
         """;
@@ -211,7 +217,8 @@ public static class SqlScripts
             o.created_at,
             o.stage_category,
             c.comissao_calculada AS commission_cents,
-            c.is_snapshot
+            c.is_snapshot,
+            o.currency
         FROM opportunity_partner_commissions c
         JOIN opportunities o ON o.id = c.opportunity_id
         JOIN partners p      ON p.id = c.partner_id;
