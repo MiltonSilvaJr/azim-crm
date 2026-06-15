@@ -9,6 +9,7 @@ using AccountManagement.Infrastructure.Repositories;
 using AccountManagement.Infrastructure.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace AccountManagement.Infrastructure.DependencyInjection;
 
@@ -36,14 +37,21 @@ public static class InfrastructureServiceExtensions
         string activityBaseUrl = "http://activity-management")
     {
         // =====================================================================
-        // Persistência — DbContext + TenantContext
+        // Persistência — DbContext + TenantContext + BuScopeContext
         // =====================================================================
         services.AddScoped<InfrastructureTenantContext>();
+        services.AddScoped<InfrastructureBuScopeContext>();
+
+        // Interceptor de conexão: seta app.current_tenant, app.current_bu_scope
+        // e app.bu_tenant_wide via SET LOCAL no PostgreSQL (ADR-0001, ADR-0009).
+        services.AddScoped<TenantBuScopeConnectionInterceptor>();
 
         services.AddDbContext<AccountManagementDbContext>((sp, options) =>
         {
+            var interceptor = sp.GetRequiredService<TenantBuScopeConnectionInterceptor>();
             options.UseNpgsql(connectionString,
-                npgsql => npgsql.MigrationsHistoryTable("__ef_migrations_history"));
+                npgsql => npgsql.MigrationsHistoryTable("__ef_migrations_history"))
+                .AddInterceptors(interceptor);
         });
 
         // =====================================================================

@@ -10,10 +10,11 @@ namespace AccountManagement.Infrastructure.Persistence.Configurations;
 /// Configuração EF Core para o agregado <see cref="Account"/> (tabela <c>accounts</c>).
 ///
 /// Convenções de nomenclatura física: snake_case (rule database-naming.md).
-/// Sem <c>bu_id</c> — conta é compartilhada por todo o tenant (Req 2.3).
+/// Coluna <c>bu_id</c> NOT NULL — conta pertence a exatamente uma BU (ADR-0009, Req 2.3 revisado).
 /// Índice <c>idx_accounts_tenant_normalized_name</c> não-unique (DD-006).
+/// Índice <c>idx_accounts_tenant_bu</c> para queries por tenant + BU (ADR-0009).
 ///
-/// Mapeia: design §7, DD-002, DD-006, RNF 7.1, TASK-08.
+/// Mapeia: design §7, DD-002, DD-006, ADR-0009, RNF 7.1, TASK-08.
 /// </summary>
 internal sealed class AccountEntityTypeConfiguration : IEntityTypeConfiguration<Account>
 {
@@ -33,6 +34,10 @@ internal sealed class AccountEntityTypeConfiguration : IEntityTypeConfiguration<
 
         builder.Property(a => a.TenantId)
             .HasColumnName("tenant_id")
+            .IsRequired();
+
+        builder.Property(a => a.BuId)
+            .HasColumnName("bu_id")
             .IsRequired();
 
         // AccountName — value object: persistido como string
@@ -79,6 +84,11 @@ internal sealed class AccountEntityTypeConfiguration : IEntityTypeConfiguration<
         // Índice de dedupe/busca por nome normalizado — NÃO unique (DD-006, RNF 7.1)
         builder.HasIndex(a => new { a.TenantId, a.NormalizedName })
             .HasDatabaseName("idx_accounts_tenant_normalized_name")
+            .IsUnique(false);
+
+        // Índice de busca por tenant + BU (ADR-0009 — queries de escopo de BU)
+        builder.HasIndex(a => new { a.TenantId, a.BuId })
+            .HasDatabaseName("idx_accounts_tenant_bu")
             .IsUnique(false);
 
         // Ignorar coleção de domain events — não persistida no EF Core
