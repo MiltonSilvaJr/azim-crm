@@ -49,7 +49,7 @@ internal sealed class PartnerConfiguration : IEntityTypeConfiguration<Partner>
             .HasColumnName(ColTenantId)
             .IsRequired();
 
-        // PartnerName (possível PII — DD-008)
+        // PartnerName — não é PII por VAL-PARTNER-01 (2026-06-15)
         builder.Property(p => p.Name)
             .HasColumnName(ColName)
             .IsRequired()

@@ -9,7 +9,8 @@ namespace PartnerManagement.Api.Middleware;
 /// Middleware centralizado de tratamento de exceções.
 /// Converte exceções de domínio e de aplicação em respostas HTTP padronizadas
 /// no formato <c>{ "error", "code", "correlationId" }</c> (design §8, design §12).
-/// Nunca expõe PII (<c>name</c>/<c>contact</c>) nas mensagens de erro (RNF 4).
+/// Nunca expõe dados de contato (<c>contact_email</c>/<c>contact_phone</c>) nas mensagens de erro (RNF 4).
+/// <c>partner.name</c> não é PII por VAL-PARTNER-01 (2026-06-15).
 /// Mapeia: TASK-23, design §12, catálogo PM-ERR-001..011.
 /// </summary>
 public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)

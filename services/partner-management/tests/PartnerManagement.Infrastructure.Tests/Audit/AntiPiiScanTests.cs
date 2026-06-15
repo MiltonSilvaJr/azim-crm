@@ -6,12 +6,14 @@ namespace PartnerManagement.Infrastructure.Tests.Audit;
 
 /// <summary>
 /// Scan anti-PII — gate CI obrigatório (categoria <c>PiiScan</c>).
-/// Verifica que <see cref="PartnerPiiMasker"/> remove corretamente PII de payloads JSON
-/// e que <see cref="PartnerPiiMasker.ContainsPii"/> detecta vazamentos.
+/// Verifica que <see cref="PartnerPiiMasker"/> remove corretamente PII de contato de payloads JSON
+/// e que <see cref="PartnerPiiMasker.ContainsPii"/> detecta vazamentos de e-mail/telefone.
+/// <c>partner.name</c> <strong>não é PII</strong> por decisão VAL-PARTNER-01 (2026-06-15):
+/// pode aparecer em claro e não é detectado como violação.
 /// O teste de log do handler (criação de parceiro) vive em
 /// <c>PartnerManagement.Application.Tests</c>, pois <c>CreatePartnerHandler</c> é internal.
 ///
-/// Mapeia: TASK-27, RNF 4, DD-008, design §11, RISK-PM-02.
+/// Mapeia: TASK-27, RNF 4, design §11, RISK-PM-02.
 /// </summary>
 [Trait("Category", "PiiScan")]
 public sealed class AntiPiiScanTests
@@ -24,13 +26,13 @@ public sealed class AntiPiiScanTests
     private static readonly PartnerPiiMasker Masker = new();
 
     // =========================================================================
-    // TASK-27: PartnerPiiMasker.MaskJson garante ausência de PII após mascaramento
+    // TASK-27: PartnerPiiMasker.MaskJson garante ausência de PII de contato após mascaramento
     // =========================================================================
 
-    [Fact(DisplayName = "TASK-27: MaskJson aplicado ao delta_json remove toda PII")]
-    public void MaskJson_Applied_ToFullDeltaPayload_RemovesAllPii()
+    [Fact(DisplayName = "TASK-27: MaskJson aplicado ao delta_json remove PII de contato (name permanece em claro)")]
+    public void MaskJson_Applied_ToFullDeltaPayload_RemovesContactPii()
     {
-        // Arrange — payload típico de auditoria com todos os campos PII
+        // Arrange — payload típico de auditoria com todos os campos
         string deltaJson = $$$"""
             {
                 "name": "{{{KnownName}}}",
@@ -46,24 +48,26 @@ public sealed class AntiPiiScanTests
         // Act
         string masked = Masker.MaskJson(deltaJson);
 
-        // Assert
-        bool containsPii = Masker.ContainsPii(masked, KnownName, KnownEmail, KnownPhone);
-        containsPii.Should().BeFalse(
-            "após MaskJson, nenhuma PII deve estar em texto claro no delta_json de auditoria");
-        masked.Should().Contain(PartnerPiiMasker.MaskedName, "name deve estar mascarado");
+        // Assert — PII de contato mascarada; name permanece em claro (VAL-PARTNER-01)
+        bool containsContactPii = Masker.ContainsPii(masked, KnownEmail, KnownPhone);
+        containsContactPii.Should().BeFalse(
+            "após MaskJson, nenhuma PII de contato deve estar em texto claro no delta_json de auditoria");
         masked.Should().Contain(PartnerPiiMasker.MaskedEmail, "contact_email deve estar mascarado");
-        masked.Should().NotContain(KnownName, "nome original não pode estar no output");
         masked.Should().NotContain(KnownEmail, "e-mail original não pode estar no output");
+        masked.Should().NotContain(KnownPhone, "telefone original não pode estar no output");
+
+        // name aparece em claro — comportamento esperado por VAL-PARTNER-01
+        masked.Should().Contain(KnownName, "name não é PII e deve permanecer em claro (VAL-PARTNER-01)");
     }
 
     // =========================================================================
-    // TASK-27: Outbox payload de evento não contém PII
+    // TASK-27: Outbox payload de evento não contém PII de contato
     // =========================================================================
 
-    [Fact(DisplayName = "TASK-27: Payload de evento de auditoria não contém PII após mascaramento")]
-    public void AuditPayload_AfterMasking_ContainsNoPii()
+    [Fact(DisplayName = "TASK-27: Payload de evento de auditoria não contém PII de contato após mascaramento")]
+    public void AuditPayload_AfterMasking_ContainsNoContactPii()
     {
-        // Arrange — simular um payload de evento que inclui nome (erro de implementação)
+        // Arrange — simular um payload de evento que inclui contato (erro de implementação)
         string originalPayload = $$$"""
             {
                 "entityType": "Partner",
@@ -82,8 +86,8 @@ public sealed class AntiPiiScanTests
         string maskedPayload = Masker.MaskJson(originalPayload);
 
         // Assert
-        Masker.ContainsPii(maskedPayload, KnownName, KnownEmail).Should().BeFalse(
-            "payload de evento de auditoria não pode conter PII em texto claro");
+        Masker.ContainsPii(maskedPayload, KnownEmail).Should().BeFalse(
+            "payload de evento de auditoria não pode conter PII de contato em texto claro");
     }
 
     // =========================================================================
@@ -100,13 +104,23 @@ public sealed class AntiPiiScanTests
             "ContainsPii deve detectar e-mail em texto livre para que o gate funcione");
     }
 
+    [Fact(DisplayName = "TASK-27: Texto com name em claro não aciona o gate (VAL-PARTNER-01)")]
+    public void ContainsPii_TextWithNameOnly_DoesNotTrigger()
+    {
+        // name em claro é permitido por VAL-PARTNER-01
+        string logMessage = $"Parceiro {KnownName} criado no tenant {Guid.NewGuid()}";
+
+        Masker.ContainsPii(logMessage, KnownEmail, KnownPhone).Should().BeFalse(
+            "name em claro não é PII por VAL-PARTNER-01");
+    }
+
     [Fact(DisplayName = "TASK-27: Texto sem PII não aciona o gate")]
     public void ContainsPii_CleanText_DoesNotTrigger()
     {
         // Simula log seguro (apenas IDs e categorias)
         string logMessage = $"Parceiro {Guid.NewGuid()} criado no tenant {Guid.NewGuid()}";
 
-        Masker.ContainsPii(logMessage, KnownName, KnownEmail, KnownPhone).Should().BeFalse(
+        Masker.ContainsPii(logMessage, KnownEmail, KnownPhone).Should().BeFalse(
             "texto com IDs não contém PII");
     }
 

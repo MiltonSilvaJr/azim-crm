@@ -13,26 +13,27 @@ namespace PartnerManagement.Application.Tests.Partners.Commands;
 /// <summary>
 /// Scan anti-PII para handlers — gate CI obrigatório (categoria <c>PiiScan</c>).
 /// Executa o fluxo de criação de parceiro e verifica que nenhum log emitido pelo handler
-/// contém <c>partner.name</c>, <c>contact_email</c> nem <c>contact_phone</c> em texto claro.
+/// contém <c>contact_email</c> nem <c>contact_phone</c> em texto claro.
+/// <c>partner.name</c> <strong>não é PII</strong> por decisão VAL-PARTNER-01 (2026-06-15):
+/// sua presença em logs não é violação e não é verificada aqui.
 /// Usa <see cref="CaptureLogger{T}"/> para capturar mensagens do <see cref="ILogger{TCategoryName}"/>.
 /// Verificação direta por substring (sem depender de PartnerPiiMasker da camada Infrastructure).
 ///
-/// Mapeia: TASK-27, RNF 4.1, DD-008, design §11, RISK-PM-02.
+/// Mapeia: TASK-27, RNF 4.1, design §11, RISK-PM-02.
 /// </summary>
 [Trait("Category", "PiiScan")]
 public sealed class AntiPiiHandlerScanTests
 {
     // PII de teste com valores realistas
-    private const string KnownName = "Maria Aparecida da Silva";
     private const string KnownEmail = "maria.aparecida@empresa.com.br";
     private const string KnownPhone = "11988887777";
 
     // =========================================================================
-    // TASK-27: CreatePartnerHandler não loga PII em claro
+    // TASK-27: CreatePartnerHandler não loga PII de contato em claro
     // =========================================================================
 
-    [Fact(DisplayName = "TASK-27: CreatePartnerHandler não emite PII em logs")]
-    public async Task CreatePartner_DoesNotEmitPiiInLogs()
+    [Fact(DisplayName = "TASK-27: CreatePartnerHandler não emite PII de contato em logs")]
+    public async Task CreatePartner_DoesNotEmitContactPiiInLogs()
     {
         // Arrange
         CaptureLogger<CreatePartnerHandler> captureLogger = new();
@@ -48,7 +49,7 @@ public sealed class AntiPiiHandlerScanTests
 
         CreatePartnerCommand command = new(
             TenantId: Guid.NewGuid(),
-            Name: KnownName,
+            Name: "Maria Aparecida da Silva",
             Role: "Indicador",
             CommissionDefaults: CommissionDefaults.Create(
                 Percentage.Create(10.00m),
@@ -62,11 +63,10 @@ public sealed class AntiPiiHandlerScanTests
         // Act
         await handler.Handle(command, CancellationToken.None);
 
-        // Assert — nenhum log deve conter PII em claro
+        // Assert — nenhum log deve conter PII de contato em claro
+        // (name não é PII por VAL-PARTNER-01 e não é verificado)
         foreach (string message in captureLogger.Messages)
         {
-            message.Should().NotContain(KnownName,
-                $"log '{Truncate(message, 120)}' contém nome em claro — violação de RNF 4.1");
             message.Should().NotContain(KnownEmail,
                 $"log '{Truncate(message, 120)}' contém e-mail em claro — violação de RNF 4.1");
             message.Should().NotContain(KnownPhone,

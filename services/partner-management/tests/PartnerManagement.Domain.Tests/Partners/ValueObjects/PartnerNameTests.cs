@@ -62,13 +62,16 @@ public sealed class PartnerNameTests
         a.Should().NotBe(b);
     }
 
-    [Fact(DisplayName = "PartnerName — ToString não expõe PII (retorna valor mascarado)")]
-    public void ToString_DoesNotExposePii()
+    [Fact(DisplayName = "PartnerName — ToString retorna representação neutra (design defensivo de VO)")]
+    public void ToString_ReturnsNeutralRepresentation()
     {
-        // Conforme DD-008: name é tratado como possível PII.
-        // ToString não deve retornar o valor em claro.
-        PartnerName name = PartnerName.Create("Informação Sensível");
+        // ToString retorna representação neutra por design defensivo do objeto de valor,
+        // evitando vazamento acidental em interpolações de string e logs não estruturados.
+        // Nota: name não é PII por VAL-PARTNER-01 (2026-06-15); o comportamento defensivo
+        // do ToString é mantido por boa prática de VO, não por obrigação de mascaramento.
+        // Use PartnerName.Value em contextos que precisem do valor em claro.
+        PartnerName name = PartnerName.Create("Informação Qualquer");
         string str = name.ToString();
-        str.Should().NotContain("Informação Sensível");
+        str.Should().Be("[PartnerName]");
     }
 }

@@ -3,7 +3,8 @@ namespace PartnerManagement.Domain.Partners.Events;
 /// <summary>
 /// Evento de domínio: percentuais padrão de comissão do parceiro foram alterados.
 /// Disparado quando <c>pct_setup</c> e/ou <c>pct_recorrente</c> são modificados.
-/// Carga sem PII: sem <c>name</c> nem contato (RNF 4, design §4.4).
+/// Carga sem contato em claro: sem <c>contact_email</c> nem <c>contact_phone</c> (RNF 4, design §4.4).
+/// <c>name</c> não é incluído por design do contrato do evento (não por PII — VAL-PARTNER-01).
 /// Mapeia: Req 2.5, design §4.4.
 /// </summary>
 /// <param name="PartnerId">Identificador do parceiro.</param>

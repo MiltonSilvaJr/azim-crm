@@ -190,7 +190,7 @@ public sealed class OutboxAtomicityTests : IAsyncLifetime
     /// <summary>
     /// TASK-18: AuditPublisher mascara PII (email, phone) no payload da outbox_message.
     /// </summary>
-    [Fact(DisplayName = "TASK-18: AuditPublisher mascara PII no payload da outbox")]
+    [Fact(DisplayName = "TASK-18: AuditPublisher mascara PII de contato no payload da outbox (name permanece em claro — VAL-PARTNER-01)")]
     public async Task AuditPublisher_MasksContactPii_InOutboxPayload()
     {
         // Arrange
@@ -221,6 +221,7 @@ public sealed class OutboxAtomicityTests : IAsyncLifetime
         await ctx.SaveChangesAsync();
 
         // Assert — payload gravado no banco não deve conter email/phone em claro
+        // (name pode aparecer em claro pois não é PII por VAL-PARTNER-01)
         await using PartnerManagementDbContext ctxRead = CreateDbContext(tenantId);
         OutboxMessage? saved = await ctxRead.GetOutboxMessages()
             .OrderByDescending(o => o.OccurredAt)
