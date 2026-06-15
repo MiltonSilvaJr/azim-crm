@@ -39,6 +39,12 @@ public sealed class OpportunityPartnerCommission
     public DateTimeOffset CreatedAt { get; }
 
     /// <summary>
+    /// Moeda da comissão (ISO-4217: BRL, USD, EUR). Herdada da oportunidade (ADR-0008).
+    /// Mapeada como coluna pelo EF Core. Imutável após criação.
+    /// </summary>
+    public string Currency { get; private set; } = "BRL";
+
+    /// <summary>
     /// Construtor privado sem parâmetros para uso exclusivo do EF Core durante materialização.
     /// EF Core popula as propriedades (incluindo owned types) após a construção.
     /// Nunca deve ser chamado diretamente pelo domínio.
@@ -47,14 +53,18 @@ public sealed class OpportunityPartnerCommission
     private OpportunityPartnerCommission() { }
 #pragma warning restore CS8618
 
-    /// <summary>Inicializa como entidade projetada (is_snapshot = false).</summary>
+    /// <summary>
+    /// Inicializa como entidade projetada (is_snapshot = false).
+    /// A currency é herdada da oportunidade (ADR-0008) e deve ser passada explicitamente.
+    /// </summary>
     public OpportunityPartnerCommission(
         Guid id,
         Guid tenantId,
         Guid opportunityId,
         Guid partnerId,
         CommissionTerms terms,
-        CommissionCalculation calculation)
+        CommissionCalculation calculation,
+        string currency = "BRL")
     {
         ArgumentNullException.ThrowIfNull(terms);
         ArgumentNullException.ThrowIfNull(calculation);
@@ -65,6 +75,7 @@ public sealed class OpportunityPartnerCommission
         PartnerId = partnerId;
         Terms = terms;
         Calculation = calculation;
+        Currency = currency;
         IsSnapshot = false;
         SnapshotAt = null;
         CreatedAt = DateTimeOffset.UtcNow;
@@ -80,7 +91,8 @@ public sealed class OpportunityPartnerCommission
         CommissionCalculation calculation,
         bool isSnapshot,
         DateTimeOffset? snapshotAt,
-        DateTimeOffset createdAt)
+        DateTimeOffset createdAt,
+        string currency = "BRL")
     {
         Id = id;
         TenantId = tenantId;
@@ -88,9 +100,21 @@ public sealed class OpportunityPartnerCommission
         PartnerId = partnerId;
         Terms = terms;
         Calculation = calculation;
+        Currency = currency;
         IsSnapshot = isSnapshot;
         SnapshotAt = snapshotAt;
         CreatedAt = createdAt;
+    }
+
+    /// <summary>
+    /// Corrige a currency dos objetos Money internos após materialização pelo EF Core.
+    /// Chamado exclusivamente pelo <c>CommissionCurrencyMaterializationInterceptor</c> (Infrastructure).
+    /// Não deve ser chamado pelo domínio — uso exclusivo de infraestrutura de persistência (ADR-0008).
+    /// </summary>
+    public void ApplyCurrencyFix(CommissionCalculation calculation, CommissionTerms terms)
+    {
+        Calculation = calculation;
+        Terms = terms;
     }
 
     /// <summary>
@@ -114,7 +138,8 @@ public sealed class OpportunityPartnerCommission
             calculation: Calculation,
             isSnapshot: true,
             snapshotAt: snapshotAt,
-            createdAt: snapshotAt);
+            createdAt: snapshotAt,
+            currency: Currency);
     }
 
     /// <summary>

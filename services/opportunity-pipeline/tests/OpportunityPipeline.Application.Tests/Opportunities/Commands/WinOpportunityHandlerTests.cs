@@ -50,7 +50,7 @@ public sealed class WinOpportunityHandlerTests
         return Opportunity.Create(
             tenantId, buId, Guid.NewGuid(), actorId, null,
             stage, channel, "Teste Win",
-            new ContractValue(new Money(10000), new Money(0), 0),
+            new ContractValue(new Money(10000, "BRL"), new Money(0, "BRL"), 0),
             new Probability(80), null, null,
             new OpportunityNumber("AZ-0001"), actorId, DateTimeOffset.UtcNow);
     }
@@ -190,7 +190,7 @@ public sealed class WinOpportunityHandlerTests
         var opp = Opportunity.Create(
             _tenantId, _buId, Guid.NewGuid(), _actorId, partnerId,
             stage, partnerChannel, "Opp com Parceiro",
-            new ContractValue(new Money(5000), new Money(0), 0),
+            new ContractValue(new Money(5000, "BRL"), new Money(0, "BRL"), 0),
             new Probability(70), null, null,
             new OpportunityNumber("AZ-0002"), _actorId, DateTimeOffset.UtcNow);
         opp.ClearDomainEvents();
@@ -219,7 +219,7 @@ public sealed class WinOpportunityHandlerTests
         var opp = Opportunity.Create(
             _tenantId, _buId, Guid.NewGuid(), _actorId, partnerId,
             stage, partnerChannel, "Opp com Comissão",
-            new ContractValue(new Money(100000), new Money(0), 0),
+            new ContractValue(new Money(100000, "BRL"), new Money(0, "BRL"), 0),
             new Probability(80), null, null,
             new OpportunityNumber("AZ-0003"), _actorId, DateTimeOffset.UtcNow);
 

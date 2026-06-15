@@ -89,20 +89,37 @@ internal sealed class OpportunityConfiguration : IEntityTypeConfiguration<Opport
             lr.Property(r => r.Name).HasColumnName("loss_reason_name").HasMaxLength(200);
         });
 
-        // ContractValue — owned type (valor_setup, valor_mensal, duracao_meses em BigInt)
+        // ContractValue — owned type com moeda explícita (ADR-0008)
+        // EF Core mapeia backing fields _setupCents/_mensalCents diretamente
+        // porque SetupCents/MensalCents são internal (não acessíveis entre assemblies).
+        // DuracaoMeses e Currency são propriedades públicas mapeadas normalmente.
+        // As propriedades computadas Setup e Mensal são ignoradas pelo EF.
         builder.OwnsOne(o => o.ContractValue, cv =>
         {
-            cv.Property(c => c.Setup)
+            cv.Property<long>("_setupCents")
                 .HasColumnName("valor_setup")
                 .IsRequired()
-                .HasConversion(v => v.AmountInCents, v => new Money(v));
-            cv.Property(c => c.Mensal)
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            cv.Property<long>("_mensalCents")
                 .HasColumnName("valor_mensal")
                 .IsRequired()
-                .HasConversion(v => v.AmountInCents, v => new Money(v));
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
+
             cv.Property(c => c.DuracaoMeses)
                 .HasColumnName("duracao_meses")
                 .IsRequired();
+
+            // Coluna currency para multimoeda (ADR-0008)
+            cv.Property(c => c.Currency)
+                .HasColumnName("currency")
+                .IsRequired()
+                .HasMaxLength(3)
+                .HasDefaultValue("BRL");
+
+            // Propriedades computadas Setup e Mensal não são colunas
+            cv.Ignore(c => c.Setup);
+            cv.Ignore(c => c.Mensal);
         });
 
         // Probability — owned type (smallint)
@@ -135,6 +152,9 @@ internal sealed class OpportunityConfiguration : IEntityTypeConfiguration<Opport
         // DomainEvents: coleção em memória de eventos de domínio — não mapeada para o banco.
         // Ignorar explicitamente para que o EF Core não tente mapear DomainEvent como entidade.
         builder.Ignore(o => o.DomainEvents);
+
+        // Currency é derivada de ContractValue.Currency — não tem coluna própria no aggregate.
+        builder.Ignore(o => o.Currency);
 
         // Navegações — coleções de entidades internas (owned via shadow FK)
         builder.HasMany(o => o.Transitions)

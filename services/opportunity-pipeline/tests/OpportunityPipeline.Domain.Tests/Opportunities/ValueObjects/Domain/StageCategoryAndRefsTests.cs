@@ -85,9 +85,9 @@ public sealed class StageCategoryAndRefsTests
     public void CommissionCalculation_IsImmutable()
     {
         var calc = new CommissionCalculation(
-            ComissaoSetup: new Money(10000L),
-            ComissaoRecorrente: new Money(5000L),
-            ComissaoTotal: new Money(15000L));
+            ComissaoSetup: new Money(10000L, "BRL"),
+            ComissaoRecorrente: new Money(5000L, "BRL"),
+            ComissaoTotal: new Money(15000L, "BRL"));
 
         calc.ComissaoSetup.AmountInCents.Should().Be(10000L);
         calc.ComissaoRecorrente.AmountInCents.Should().Be(5000L);

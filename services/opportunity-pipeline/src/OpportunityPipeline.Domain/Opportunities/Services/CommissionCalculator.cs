@@ -25,12 +25,15 @@ public static class CommissionCalculator
         ArgumentNullException.ThrowIfNull(contractValue);
         ArgumentNullException.ThrowIfNull(terms);
 
+        // Moeda herdada do contrato (ADR-0008)
+        var currency = contractValue.Currency;
+
         // Quando valor_fixo definido e positivo, ignora percentuais
         if (terms.ValorFixo is not null && terms.ValorFixo.AmountInCents > 0)
         {
             return new CommissionCalculation(
-                ComissaoSetup: Money.Zero,
-                ComissaoRecorrente: Money.Zero,
+                ComissaoSetup: Money.Zero(currency),
+                ComissaoRecorrente: Money.Zero(currency),
                 ComissaoTotal: terms.ValorFixo);
         }
 
@@ -48,8 +51,8 @@ public static class CommissionCalculator
         var comissaoTotalCents = comissaoSetupCents + comissaoRecorrenteCents;
 
         return new CommissionCalculation(
-            ComissaoSetup: new Money(comissaoSetupCents),
-            ComissaoRecorrente: new Money(comissaoRecorrenteCents),
-            ComissaoTotal: new Money(comissaoTotalCents));
+            ComissaoSetup: new Money(comissaoSetupCents, currency),
+            ComissaoRecorrente: new Money(comissaoRecorrenteCents, currency),
+            ComissaoTotal: new Money(comissaoTotalCents, currency));
     }
 }

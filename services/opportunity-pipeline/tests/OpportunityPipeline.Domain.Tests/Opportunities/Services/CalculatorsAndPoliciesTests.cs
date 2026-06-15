@@ -6,7 +6,7 @@ namespace OpportunityPipeline.Domain.Tests.Opportunities.Services;
 /// <summary>
 /// Testes para ForecastCalculator, CommissionCalculator, NetForecastCalculator,
 /// ExpectedCloseDatePolicy, StagnationSpecification, OverdueSpecification.
-/// Mapeia: Req 8, Req 9, Req 12, Req 13, Req 17, PBT-04..06, TASK-04.
+/// Mapeia: Req 8, Req 9, Req 12, Req 13, Req 17, PBT-04..06, ADR-0008, TASK-04.
 /// </summary>
 public sealed class CalculatorsAndPoliciesTests
 {
@@ -22,10 +22,18 @@ public sealed class CalculatorsAndPoliciesTests
     [InlineData(10003L, 50, 5002L)]   // 10003×50/100 = 5001.5 → 5002 (ToEven: par)
     public void ForecastCalculator_ExactCases(long totalCents, int prob, long expected)
     {
-        var cv = new ContractValue(new Money(totalCents), Money.Zero, 0);
+        var cv = new ContractValue(new Money(totalCents, "BRL"), Money.Zero("BRL"), 0);
         var probability = new Probability(prob);
         var result = ForecastCalculator.Calculate(cv, probability);
         result.AmountInCents.Should().Be(expected);
+    }
+
+    [Fact(DisplayName = "ADR-0008: ForecastCalculator preserva currency do ContractValue")]
+    public void ForecastCalculator_PreservesCurrency()
+    {
+        var cv = new ContractValue(new Money(10000L, "USD"), Money.Zero("USD"), 0);
+        var result = ForecastCalculator.Calculate(cv, new Probability(50));
+        result.Currency.Should().Be("USD");
     }
 
     [Property(MaxTest = 200, DisplayName = "PBT-04: ForecastCalculator — resultado em [0, valor_total]")]
@@ -36,7 +44,7 @@ public sealed class CalculatorsAndPoliciesTests
             Arb.From(Gen.Choose(0, 100)),
             (totalCents, prob) =>
             {
-                var cv = new ContractValue(new Money(totalCents), Money.Zero, 0);
+                var cv = new ContractValue(new Money(totalCents, "BRL"), Money.Zero("BRL"), 0);
                 var probability = new Probability(prob);
                 var forecast = ForecastCalculator.Calculate(cv, probability);
                 return forecast.AmountInCents >= 0 && forecast.AmountInCents <= totalCents;
@@ -50,7 +58,7 @@ public sealed class CalculatorsAndPoliciesTests
     [Fact(DisplayName = "CommissionCalculator: percentuais — calcula setup, recorrente e total")]
     public void CommissionCalculator_WithPercentages()
     {
-        var cv = new ContractValue(new Money(10000L), new Money(5000L), 12);
+        var cv = new ContractValue(new Money(10000L, "BRL"), new Money(5000L, "BRL"), 12);
         var terms = new CommissionTerms(CommissionRole.Revendedor, 10m, 5m, null, 12);
         var calc = CommissionCalculator.Calculate(cv, terms);
 
@@ -65,8 +73,8 @@ public sealed class CalculatorsAndPoliciesTests
     [Fact(DisplayName = "CommissionCalculator: valor_fixo — total = valor_fixo")]
     public void CommissionCalculator_WithValorFixo()
     {
-        var cv = new ContractValue(new Money(10000L), new Money(5000L), 12);
-        var terms = new CommissionTerms(CommissionRole.Indicador, 0m, 0m, new Money(99900L), 0);
+        var cv = new ContractValue(new Money(10000L, "BRL"), new Money(5000L, "BRL"), 12);
+        var terms = new CommissionTerms(CommissionRole.Indicador, 0m, 0m, new Money(99900L, "BRL"), 0);
         var calc = CommissionCalculator.Calculate(cv, terms);
 
         calc.ComissaoTotal.AmountInCents.Should().Be(99900L);
@@ -75,13 +83,25 @@ public sealed class CalculatorsAndPoliciesTests
     [Fact(DisplayName = "CommissionCalculator: sem comissão retorna zeros")]
     public void CommissionCalculator_NoCommission_ReturnsZeros()
     {
-        var cv = new ContractValue(new Money(10000L), Money.Zero, 0);
+        var cv = new ContractValue(new Money(10000L, "BRL"), Money.Zero("BRL"), 0);
         var terms = new CommissionTerms(CommissionRole.Revendedor, 0m, 0m, null, 0);
         var calc = CommissionCalculator.Calculate(cv, terms);
 
         calc.ComissaoSetup.AmountInCents.Should().Be(0L);
         calc.ComissaoRecorrente.AmountInCents.Should().Be(0L);
         calc.ComissaoTotal.AmountInCents.Should().Be(0L);
+    }
+
+    [Fact(DisplayName = "ADR-0008: CommissionCalculator preserva currency do ContractValue")]
+    public void CommissionCalculator_PreservesCurrency()
+    {
+        var cv = new ContractValue(new Money(10000L, "USD"), new Money(5000L, "USD"), 12);
+        var terms = new CommissionTerms(CommissionRole.Revendedor, 10m, 5m, null, 12);
+        var calc = CommissionCalculator.Calculate(cv, terms);
+
+        calc.ComissaoSetup.Currency.Should().Be("USD");
+        calc.ComissaoRecorrente.Currency.Should().Be("USD");
+        calc.ComissaoTotal.Currency.Should().Be("USD");
     }
 
     [Property(MaxTest = 200, DisplayName = "PBT-05: CommissionCalculator — componentes não negativos e soma correta")]
@@ -102,7 +122,7 @@ public sealed class CalculatorsAndPoliciesTests
             (contractAndPcts, pctRecorrente) =>
             {
                 var ((setupCents, mensalCents), (meses, pctSetup)) = contractAndPcts;
-                var cv = new ContractValue(new Money(setupCents), new Money(mensalCents), meses);
+                var cv = new ContractValue(new Money(setupCents, "BRL"), new Money(mensalCents, "BRL"), meses);
                 var terms = new CommissionTerms(CommissionRole.Revendedor, pctSetup, pctRecorrente, null, meses);
                 var calc = CommissionCalculator.Calculate(cv, terms);
 
@@ -124,8 +144,8 @@ public sealed class CalculatorsAndPoliciesTests
             Arb.From(Gen.Choose(0, 10_000_000).Select(x => (long)x)),
             (setupCents, mensalCents, fixedCents) =>
             {
-                var cv = new ContractValue(new Money(setupCents), new Money(mensalCents > 0 ? mensalCents : 0), mensalCents > 0 ? 1 : 0);
-                var terms = new CommissionTerms(CommissionRole.Indicador, 0m, 0m, new Money(fixedCents), 0);
+                var cv = new ContractValue(new Money(setupCents, "BRL"), new Money(mensalCents > 0 ? mensalCents : 0, "BRL"), mensalCents > 0 ? 1 : 0);
+                var terms = new CommissionTerms(CommissionRole.Indicador, 0m, 0m, new Money(fixedCents, "BRL"), 0);
                 var calc = CommissionCalculator.Calculate(cv, terms);
                 return calc.ComissaoTotal.AmountInCents == fixedCents;
             });
@@ -141,9 +161,9 @@ public sealed class CalculatorsAndPoliciesTests
         // forecast = round(10000 × 50 / 100) = 5000
         // comissao_ponderada = round(1000 × 50 / 100) = 500
         // forecast_liquido = 5000 - 500 = 4500
-        var cv = new ContractValue(new Money(10000L), Money.Zero, 0);
+        var cv = new ContractValue(new Money(10000L, "BRL"), Money.Zero("BRL"), 0);
         var probability = new Probability(50);
-        var commission = new CommissionCalculation(new Money(0L), new Money(0L), new Money(1000L));
+        var commission = new CommissionCalculation(new Money(0L, "BRL"), new Money(0L, "BRL"), new Money(1000L, "BRL"));
         var result = NetForecastCalculator.Calculate(cv, probability, commission);
 
         result.ForecastPonderado.AmountInCents.Should().Be(5000L);
@@ -154,9 +174,9 @@ public sealed class CalculatorsAndPoliciesTests
     [Fact(DisplayName = "NetForecastCalculator: sem comissão, forecast_liquido = forecast_ponderado")]
     public void NetForecastCalculator_NoCommission_LiquidoEqualsForcast()
     {
-        var cv = new ContractValue(new Money(10000L), Money.Zero, 0);
+        var cv = new ContractValue(new Money(10000L, "BRL"), Money.Zero("BRL"), 0);
         var probability = new Probability(50);
-        var commission = new CommissionCalculation(Money.Zero, Money.Zero, Money.Zero);
+        var commission = new CommissionCalculation(Money.Zero("BRL"), Money.Zero("BRL"), Money.Zero("BRL"));
         var result = NetForecastCalculator.Calculate(cv, probability, commission);
 
         result.ForecastLiquido.AmountInCents.Should().Be(result.ForecastPonderado.AmountInCents);
@@ -171,9 +191,9 @@ public sealed class CalculatorsAndPoliciesTests
             Arb.From(Gen.Choose(0, 1_000_000).Select(x => (long)x)),
             (totalCents, prob, comissaoTotalCents) =>
             {
-                var cv = new ContractValue(new Money(totalCents), Money.Zero, 0);
+                var cv = new ContractValue(new Money(totalCents, "BRL"), Money.Zero("BRL"), 0);
                 var probability = new Probability(prob);
-                var commission = new CommissionCalculation(Money.Zero, Money.Zero, new Money(comissaoTotalCents));
+                var commission = new CommissionCalculation(Money.Zero("BRL"), Money.Zero("BRL"), new Money(comissaoTotalCents, "BRL"));
                 var result = NetForecastCalculator.Calculate(cv, probability, commission);
 
                 return result.ForecastLiquido.AmountInCents <= result.ForecastPonderado.AmountInCents

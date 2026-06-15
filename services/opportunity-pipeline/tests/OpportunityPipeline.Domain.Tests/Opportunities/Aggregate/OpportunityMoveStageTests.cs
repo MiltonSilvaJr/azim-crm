@@ -30,7 +30,7 @@ public sealed class OpportunityMoveStageTests
             stage: new StageRef(Guid.NewGuid(), "Qualificação", StageCategory.Open, 20, 1),
             originChannel: new OriginChannelRef(Guid.NewGuid(), "Direto", IsPartnerChannel: false),
             title: "Oportunidade Teste",
-            contractValue: new ContractValue(new Money(10000L), Money.Zero, 0),
+            contractValue: new ContractValue(new Money(10000L, "BRL"), Money.Zero("BRL"), 0),
             probability: new Probability(20),
             expectedCloseDate: null,
             notes: null,

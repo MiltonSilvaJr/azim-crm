@@ -51,7 +51,7 @@ public sealed class MoveStageHandlerTests
             stage: stage,
             originChannel: channel,
             title: "Teste MoveStage",
-            contractValue: new ContractValue(new Money(0), new Money(0), 0),
+            contractValue: new ContractValue(new Money(0, "BRL"), new Money(0, "BRL"), 0),
             probability: new Probability(30),
             expectedCloseDate: null,
             notes: null,

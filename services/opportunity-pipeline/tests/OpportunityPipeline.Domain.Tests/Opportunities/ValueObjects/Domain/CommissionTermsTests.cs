@@ -32,7 +32,7 @@ public sealed class CommissionTermsTests
             role: CommissionRole.Indicador,
             pctSetup: 0m,
             pctRecorrente: 0m,
-            valorFixo: new Money(50000L),
+            valorFixo: new Money(50000L, "BRL"),
             mesesComissionados: 0);
 
         terms.ValorFixo.Should().NotBeNull();
@@ -46,7 +46,7 @@ public sealed class CommissionTermsTests
             role: CommissionRole.Revendedor,
             pctSetup: 10m,
             pctRecorrente: 0m,
-            valorFixo: new Money(50000L),
+            valorFixo: new Money(50000L, "BRL"),
             mesesComissionados: 0);
         act.Should().Throw<DomainException>()
             .WithMessage("*mutuamente excludentes*");
@@ -59,7 +59,7 @@ public sealed class CommissionTermsTests
             role: CommissionRole.Revendedor,
             pctSetup: 0m,
             pctRecorrente: 5m,
-            valorFixo: new Money(50000L),
+            valorFixo: new Money(50000L, "BRL"),
             mesesComissionados: 0);
         act.Should().Throw<DomainException>()
             .WithMessage("*mutuamente excludentes*");

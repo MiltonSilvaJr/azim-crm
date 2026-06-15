@@ -45,7 +45,7 @@ public sealed class SetPartnerCommissionHandlerTests
         return Opportunity.Create(
             tenantId, buId, Guid.NewGuid(), actorId, partnerId,
             stage, channel, "Opp com Parceiro",
-            new ContractValue(new Money(100000), new Money(0), 0),
+            new ContractValue(new Money(100000, "BRL"), new Money(0, "BRL"), 0),
             new Probability(60), null, null,
             new OpportunityNumber("AZ-0001"), actorId, DateTimeOffset.UtcNow);
     }

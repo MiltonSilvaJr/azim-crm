@@ -41,7 +41,7 @@ public sealed class LinkContactHandlerTests
         return Opportunity.Create(
             tenantId, buId, Guid.NewGuid(), actorId, null,
             stage, channel, "Opp Link Contact",
-            new ContractValue(new Money(10000), new Money(0), 0),
+            new ContractValue(new Money(10000, "BRL"), new Money(0, "BRL"), 0),
             new Probability(50), null, null,
             new OpportunityNumber("AZ-0001"), actorId, DateTimeOffset.UtcNow);
     }
