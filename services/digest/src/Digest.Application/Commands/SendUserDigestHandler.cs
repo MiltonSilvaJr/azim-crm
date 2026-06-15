@@ -4,6 +4,7 @@ using Digest.Application.Ports;
 using Digest.Application.Repositories;
 using Digest.Application.Services;
 using Digest.Domain.Aggregates;
+using Digest.Domain.Entities;
 using Digest.Domain.Enums;
 using MediatR;
 
@@ -20,7 +21,8 @@ namespace Digest.Application.Commands;
 ///   <item>Se já existe sent/delivered/opened, retorna sem enviar (Req 9.2).</item>
 ///   <item>Invoca <see cref="DigestContentComposer"/> para montar o conteúdo.</item>
 ///   <item>Se sem bloco aplicável, aborta sem envio.</item>
-///   <item><see cref="IActionTokenFactory"/> emite tokens das atividades.</item>
+///   <item><see cref="IActionTokenFactory"/> emite tokens das atividades com TTL resolvido
+///         por <see cref="ActionTokenTtlResolver"/> (VAL-ACT-02: configurável por tenant, default 48h).</item>
 ///   <item><see cref="IEmailSender.SendAsync"/> realiza o envio físico.</item>
 ///   <item>Atualiza log para <c>sent</c>/<c>failed</c> e publica <c>DigestEmailSent</c> no Outbox (DD-009).</item>
 /// </list>
@@ -28,26 +30,38 @@ namespace Digest.Application.Commands;
 public sealed class SendUserDigestHandler : IRequestHandler<SendUserDigestCommand, SendUserDigestResult>
 {
     private readonly IEmailDigestLogRepository _logRepository;
+    private readonly IDigestActionTokenRepository _tokenRepository;
     private readonly DigestContentComposer _composer;
     private readonly IEmailSender _emailSender;
     private readonly IOutboxPublisher _outboxPublisher;
     private readonly IUserDirectoryPort _userDirectory;
+    private readonly IActivityReadPort _activityPort;
+    private readonly IActionTokenFactory _tokenFactory;
+    private readonly ActionTokenTtlResolver _ttlResolver;
 
     /// <summary>
     /// Constrói o handler com as dependências necessárias.
     /// </summary>
     public SendUserDigestHandler(
         IEmailDigestLogRepository logRepository,
+        IDigestActionTokenRepository tokenRepository,
         DigestContentComposer composer,
         IEmailSender emailSender,
         IOutboxPublisher outboxPublisher,
-        IUserDirectoryPort userDirectory)
+        IUserDirectoryPort userDirectory,
+        IActivityReadPort activityPort,
+        IActionTokenFactory tokenFactory,
+        ActionTokenTtlResolver ttlResolver)
     {
         _logRepository = logRepository;
+        _tokenRepository = tokenRepository;
         _composer = composer;
         _emailSender = emailSender;
         _outboxPublisher = outboxPublisher;
         _userDirectory = userDirectory;
+        _activityPort = activityPort;
+        _tokenFactory = tokenFactory;
+        _ttlResolver = ttlResolver;
     }
 
     /// <inheritdoc/>
@@ -113,6 +127,33 @@ public sealed class SendUserDigestHandler : IRequestHandler<SendUserDigestComman
             await _logRepository.MarkFailedAsync(
                 request.TenantId, request.UserId, request.DigestDate, cancellationToken);
             return new SendUserDigestResult(Sent: false, Skipped: false);
+        }
+
+        // Passo 3b: Emissão de tokens de ação de um clique (design §5.3, Req 7)
+        // TTL resolvido aqui: setting do tenant (quando presente) ou default global 48h (VAL-ACT-02)
+        var ttl = await _ttlResolver.ResolveAsync(request.TenantId, cancellationToken);
+        var referenceDate = DateOnly.FromDateTime(request.DigestDate.Value.ToDateTimeUnspecified());
+
+        var overdueActivities = await _activityPort.GetOverdueActivitiesAsync(
+            request.TenantId, request.UserId, referenceDate, cancellationToken);
+
+        foreach (var activity in overdueActivities)
+        {
+            // Complete
+            var completeActionToken = await _tokenFactory.IssueAsync(
+                request.TenantId, request.UserId, activity.ActivityId, ActionType.Complete, cancellationToken);
+            var completeEntity = DigestActionToken.Issue(
+                request.TenantId, request.UserId, activity.ActivityId, ActionType.Complete,
+                completeActionToken, ttl);
+            await _tokenRepository.IssueTokenAsync(completeEntity, cancellationToken);
+
+            // Reschedule
+            var rescheduleActionToken = await _tokenFactory.IssueAsync(
+                request.TenantId, request.UserId, activity.ActivityId, ActionType.Reschedule, cancellationToken);
+            var rescheduleEntity = DigestActionToken.Issue(
+                request.TenantId, request.UserId, activity.ActivityId, ActionType.Reschedule,
+                rescheduleActionToken, ttl);
+            await _tokenRepository.IssueTokenAsync(rescheduleEntity, cancellationToken);
         }
 
         // Passo 4: Envio via IEmailSender

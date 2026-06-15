@@ -61,7 +61,8 @@ public sealed class CrossTenantIsolationGateTests : IAsyncLifetime
             userId: _userA,
             activityId: Guid.NewGuid(),
             action: ActionType.Complete,
-            token: ActionToken.Issue());
+            token: ActionToken.Issue(),
+            ttl: TimeSpan.FromHours(48));
         adminCtx.DigestActionTokens.Add(tokenA);
         await adminCtx.SaveChangesAsync();
 
@@ -72,7 +73,8 @@ public sealed class CrossTenantIsolationGateTests : IAsyncLifetime
             userId: _userB,
             activityId: Guid.NewGuid(),
             action: ActionType.Reschedule,
-            token: ActionToken.Issue());
+            token: ActionToken.Issue(),
+            ttl: TimeSpan.FromHours(48));
         adminCtx.DigestActionTokens.Add(tokenB);
         await adminCtx.SaveChangesAsync();
     }

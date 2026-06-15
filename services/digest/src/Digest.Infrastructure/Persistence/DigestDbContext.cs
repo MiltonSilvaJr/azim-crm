@@ -7,9 +7,10 @@ namespace Digest.Infrastructure.Persistence;
 
 /// <summary>
 /// DbContext do módulo digest.
-/// Contém apenas as entidades próprias do BC: <see cref="EmailDigestLog"/>, <see cref="DigestActionToken"/>
-/// e <see cref="OutboxMessage"/>. Proibido mapear tabelas de outros BCs (Req 6.2, Architecture.Tests).
-/// Global Query Filter por <c>tenant_id</c> em ambas as entidades (ADR-0001, design §6.1).
+/// Contém apenas as entidades próprias do BC: <see cref="EmailDigestLog"/>, <see cref="DigestActionToken"/>,
+/// <see cref="OutboxMessage"/> e <see cref="DigestTenantSettings"/>.
+/// Proibido mapear tabelas de outros BCs (Req 6.2, Architecture.Tests).
+/// Global Query Filter por <c>tenant_id</c> em todas as entidades com tenant (ADR-0001, design §6.1).
 /// O filtro de tenant é a primeira camada de defesa em profundidade; RLS é a segunda (DD-002).
 /// </summary>
 public sealed class DigestDbContext : DbContext
@@ -25,6 +26,9 @@ public sealed class DigestDbContext : DbContext
 
     /// <summary>Outbox transacional para publicação de <c>DigestEmailSent</c> (DD-009).</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+
+    /// <summary>Configuração de digest por tenant — TTL configurável (VAL-ACT-02).</summary>
+    internal DbSet<DigestTenantSettings> DigestTenantSettings => Set<DigestTenantSettings>();
 
     /// <summary>
     /// Construtor primário para injeção de dependência.
@@ -44,6 +48,7 @@ public sealed class DigestDbContext : DbContext
         modelBuilder.ApplyConfiguration(new EmailDigestLogConfiguration());
         modelBuilder.ApplyConfiguration(new DigestActionTokenConfiguration());
         modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
+        modelBuilder.ApplyConfiguration(new DigestTenantSettingsConfiguration());
 
         // ------------------------------------------------------------------
         // Global Query Filter por tenant_id (ADR-0001, design §6.1)
@@ -54,6 +59,10 @@ public sealed class DigestDbContext : DbContext
             .HasQueryFilter(e => e.TenantId == _tenantContext.CurrentTenantId);
 
         modelBuilder.Entity<DigestActionToken>()
+            .HasQueryFilter(e => e.TenantId == _tenantContext.CurrentTenantId);
+
+        // digest_tenant_settings — Global Query Filter por tenant_id (VAL-ACT-02)
+        modelBuilder.Entity<DigestTenantSettings>()
             .HasQueryFilter(e => e.TenantId == _tenantContext.CurrentTenantId);
 
         // OutboxMessage não tem Global Query Filter — o relay lê cross-tenant

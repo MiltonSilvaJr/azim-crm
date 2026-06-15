@@ -2,6 +2,8 @@ using System.Text.Json;
 using Digest.Api.Endpoints;
 using Digest.Api.Infrastructure;
 using Digest.Api.Jobs;
+using Digest.Application.Options;
+using Digest.Application.Services;
 using Digest.Infrastructure.Observability;
 using FluentValidation;
 using Digest.Application.Abstractions;
@@ -37,6 +39,14 @@ var builder = WebApplication.CreateBuilder(args);
 // ---------------------------------------------------------------------------
 var oidcOptions = builder.Configuration.GetSection("Oidc").Get<OidcOptions>()
     ?? new OidcOptions();
+
+// DigestOptions: TTL default do action token + outras opções globais (VAL-ACT-02)
+builder.Services.Configure<DigestOptions>(
+    builder.Configuration.GetSection(DigestOptions.SectionName));
+
+// Registra DigestOptions como singleton resolvível sem IOptions<T> na Application
+builder.Services.AddSingleton(sp =>
+    sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<DigestOptions>>().Value);
 
 // ---------------------------------------------------------------------------
 // Autenticação: OIDC/WIF — valida token do Cloud Scheduler (RNF 7.1, design §10)
@@ -122,11 +132,17 @@ builder.Services.AddDbContext<DigestDbContext>((sp, options) =>
 builder.Services.AddScoped<TenantConnectionInterceptor>();
 
 // ---------------------------------------------------------------------------
-// Infrastructure — Repositórios (TASK-17)
+// Infrastructure — Repositórios (TASK-17, VAL-ACT-02)
 // ---------------------------------------------------------------------------
 builder.Services.AddScoped<IEmailDigestLogRepository, EmailDigestLogRepository>();
 builder.Services.AddScoped<IDigestActionTokenRepository, DigestActionTokenRepository>();
+builder.Services.AddScoped<IDigestTenantSettingsRepository, DigestTenantSettingsRepository>();
 builder.Services.AddScoped<Digest.Application.Behaviors.IUnitOfWork, Digest.Infrastructure.Persistence.UnitOfWork>();
+
+// ---------------------------------------------------------------------------
+// Application — Serviços transversais (VAL-ACT-02)
+// ---------------------------------------------------------------------------
+builder.Services.AddScoped<ActionTokenTtlResolver>();
 
 // ---------------------------------------------------------------------------
 // Infrastructure — Outbox, Clock, Renderer, Token (TASK-16, TASK-18, TASK-20)

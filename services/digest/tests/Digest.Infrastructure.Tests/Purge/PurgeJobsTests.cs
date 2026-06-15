@@ -110,7 +110,8 @@ public sealed class PurgeJobsTests
             userId: _userId,
             activityId: activityId,
             action: Domain.Enums.ActionType.Complete,
-            token: Domain.ValueObjects.ActionToken.Issue());
+            token: Domain.ValueObjects.ActionToken.Issue(),
+            ttl: TimeSpan.FromHours(48));
 
         ctx.DigestActionTokens.Add(expiredToken);
         await ctx.SaveChangesAsync();
@@ -127,7 +128,8 @@ public sealed class PurgeJobsTests
             userId: _userId,
             activityId: activityId2,
             action: Domain.Enums.ActionType.Reschedule,
-            token: Domain.ValueObjects.ActionToken.Issue());
+            token: Domain.ValueObjects.ActionToken.Issue(),
+            ttl: TimeSpan.FromHours(48));
 
         ctx.DigestActionTokens.Add(validToken);
         await ctx.SaveChangesAsync();
