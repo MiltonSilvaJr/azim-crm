@@ -1,5 +1,7 @@
 namespace ActivityManagement.Application.Tests.Activities.Commands;
 
+using System.Security.Cryptography;
+using System.Text;
 using ActivityManagement.Application.Activities.Commands;
 using ActivityManagement.Application.Ports;
 using ActivityManagement.Domain.Activities;
@@ -15,7 +17,9 @@ using Microsoft.Extensions.Logging.Abstractions;
 /// Testes unitários e PBTs do ProcessDigestActionCommand.
 /// PBT-02 completo: N cliques no mesmo token → exatamente 1 conclusão, 1 completedAt, 1 evento.
 /// PBT-03: token inexistente/malformado/inacessível → resposta indistinguível em forma.
-/// Mapeia: design §5.1, Req 7, RNF 3, RNF 5, DD-003, DD-004, PBT-02, PBT-03, TASK-09.
+/// O comando recebe o token em claro e computa SHA-256 BYTEA antes de chamar FindByHashAsync
+/// — algoritmo idêntico ao do digest (ADR-0006, DD-007).
+/// Mapeia: design §5.1, Req 7, RNF 3, RNF 5, DD-003, DD-004, ADR-0006, PBT-02, PBT-03, TASK-09.
 /// </summary>
 public sealed class ProcessDigestActionCommandTests
 {
@@ -33,6 +37,15 @@ public sealed class ProcessDigestActionCommandTests
         _clock.UtcNow.Returns(Now);
     }
 
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Computa o hash SHA-256 de um token em claro — idêntico ao algoritmo do digest
+    /// e ao <see cref="ProcessDigestActionCommand.ComputeTokenHash"/>.
+    /// </summary>
+    private static byte[] Hash(string clearToken)
+        => SHA256.HashData(Encoding.UTF8.GetBytes(clearToken));
+
     private Activity CreateActivity()
     {
         return Activity.Create(
@@ -45,12 +58,13 @@ public sealed class ProcessDigestActionCommandTests
             now:      Now);
     }
 
+    // Casing canônico do enum ActionType do digest (ADR-0006)
     private DigestActionTokenData ValidToken(Guid activityId) => new(
         Id:         Guid.NewGuid(),
         TenantId:   TenantId,
         UserId:     Guid.NewGuid(),
         ActivityId: activityId,
-        Action:     "complete",
+        Action:     "Complete",
         ExpiresAt:  Now.AddHours(48),
         UsedAt:     null);
 
@@ -59,7 +73,7 @@ public sealed class ProcessDigestActionCommandTests
         TenantId:   TenantId,
         UserId:     Guid.NewGuid(),
         ActivityId: activityId,
-        Action:     "complete",
+        Action:     "Complete",
         ExpiresAt:  Now.AddHours(48),
         UsedAt:     Now.AddMinutes(-5));
 
@@ -68,7 +82,7 @@ public sealed class ProcessDigestActionCommandTests
         TenantId:   TenantId,
         UserId:     Guid.NewGuid(),
         ActivityId: activityId,
-        Action:     "complete",
+        Action:     "Complete",
         ExpiresAt:  Now.AddHours(-1), // expirado
         UsedAt:     null);
 
@@ -77,15 +91,19 @@ public sealed class ProcessDigestActionCommandTests
     [Fact]
     public async Task Handle_ValidToken_CompletesActivityAndMarksUsed()
     {
-        var activity = CreateActivity();
-        var token    = ValidToken(activity.Id);
-        const string hash = "hash-valido";
+        var activity   = CreateActivity();
+        var token      = ValidToken(activity.Id);
+        const string clearToken = "clear-token-valido-abc123";
+        var hash = Hash(clearToken);
 
-        _tokenPort.FindByHashAsync(hash, Arg.Any<CancellationToken>()).Returns(token);
+        _tokenPort.FindByHashAsync(Arg.Is<byte[]>(h => h.SequenceEqual(hash)), Arg.Any<CancellationToken>())
+            .Returns(token);
         _repository.FindByIdAsync(activity.Id, Arg.Any<CancellationToken>()).Returns(activity);
 
-        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock, _metrics, NullLogger<ProcessDigestActionCommandHandler>.Instance);
-        var command = new ProcessDigestActionCommand(hash);
+        var handler = new ProcessDigestActionCommandHandler(
+            _tokenPort, _repository, _auditPublisher, _clock, _metrics,
+            NullLogger<ProcessDigestActionCommandHandler>.Instance);
+        var command = new ProcessDigestActionCommand(clearToken);
 
         var result = await handler.Handle(command, CancellationToken.None);
 
@@ -103,12 +121,16 @@ public sealed class ProcessDigestActionCommandTests
     {
         var activity = CreateActivity();
         var token    = UsedToken(activity.Id);
-        const string hash = "hash-usado";
+        const string clearToken = "clear-token-ja-usado";
+        var hash = Hash(clearToken);
 
-        _tokenPort.FindByHashAsync(hash, Arg.Any<CancellationToken>()).Returns(token);
+        _tokenPort.FindByHashAsync(Arg.Is<byte[]>(h => h.SequenceEqual(hash)), Arg.Any<CancellationToken>())
+            .Returns(token);
 
-        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock, _metrics, NullLogger<ProcessDigestActionCommandHandler>.Instance);
-        var command = new ProcessDigestActionCommand(hash);
+        var handler = new ProcessDigestActionCommandHandler(
+            _tokenPort, _repository, _auditPublisher, _clock, _metrics,
+            NullLogger<ProcessDigestActionCommandHandler>.Instance);
+        var command = new ProcessDigestActionCommand(clearToken);
 
         var result = await handler.Handle(command, CancellationToken.None);
 
@@ -124,12 +146,16 @@ public sealed class ProcessDigestActionCommandTests
     {
         var activity = CreateActivity();
         var token    = ExpiredToken(activity.Id);
-        const string hash = "hash-expirado";
+        const string clearToken = "clear-token-expirado";
+        var hash = Hash(clearToken);
 
-        _tokenPort.FindByHashAsync(hash, Arg.Any<CancellationToken>()).Returns(token);
+        _tokenPort.FindByHashAsync(Arg.Is<byte[]>(h => h.SequenceEqual(hash)), Arg.Any<CancellationToken>())
+            .Returns(token);
 
-        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock, _metrics, NullLogger<ProcessDigestActionCommandHandler>.Instance);
-        var command = new ProcessDigestActionCommand(hash);
+        var handler = new ProcessDigestActionCommandHandler(
+            _tokenPort, _repository, _auditPublisher, _clock, _metrics,
+            NullLogger<ProcessDigestActionCommandHandler>.Instance);
+        var command = new ProcessDigestActionCommand(clearToken);
 
         var act = async () => await handler.Handle(command, CancellationToken.None);
 
@@ -142,11 +168,13 @@ public sealed class ProcessDigestActionCommandTests
     [Fact]
     public async Task Handle_NullToken_ThrowsInvalidDigestTokenException()
     {
-        _tokenPort.FindByHashAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _tokenPort.FindByHashAsync(Arg.Any<byte[]>(), Arg.Any<CancellationToken>())
             .Returns((DigestActionTokenData?)null);
 
-        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock, _metrics, NullLogger<ProcessDigestActionCommandHandler>.Instance);
-        var command = new ProcessDigestActionCommand("hash-inexistente");
+        var handler = new ProcessDigestActionCommandHandler(
+            _tokenPort, _repository, _auditPublisher, _clock, _metrics,
+            NullLogger<ProcessDigestActionCommandHandler>.Instance);
+        var command = new ProcessDigestActionCommand("clear-token-inexistente");
 
         var act = async () => await handler.Handle(command, CancellationToken.None);
 
@@ -159,14 +187,18 @@ public sealed class ProcessDigestActionCommandTests
     public async Task Handle_ActivityNotFound_ThrowsSameExceptionTypeAsNullToken()
     {
         var token    = ValidToken(Guid.NewGuid());
-        const string hash = "hash-valido-atividade-inexistente";
+        const string clearToken = "clear-token-atividade-inexistente";
+        var hash = Hash(clearToken);
 
-        _tokenPort.FindByHashAsync(hash, Arg.Any<CancellationToken>()).Returns(token);
+        _tokenPort.FindByHashAsync(Arg.Is<byte[]>(h => h.SequenceEqual(hash)), Arg.Any<CancellationToken>())
+            .Returns(token);
         _repository.FindByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns((Activity?)null);
 
-        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock, _metrics, NullLogger<ProcessDigestActionCommandHandler>.Instance);
-        var command = new ProcessDigestActionCommand(hash);
+        var handler = new ProcessDigestActionCommandHandler(
+            _tokenPort, _repository, _auditPublisher, _clock, _metrics,
+            NullLogger<ProcessDigestActionCommandHandler>.Instance);
+        var command = new ProcessDigestActionCommand(clearToken);
 
         var act = async () => await handler.Handle(command, CancellationToken.None);
 
@@ -185,26 +217,49 @@ public sealed class ProcessDigestActionCommandTests
             TenantId:   TenantId,
             UserId:     Guid.NewGuid(),
             ActivityId: activity.Id,
-            Action:     "reschedule",
+            Action:     "Reschedule",
             ExpiresAt:  Now.AddHours(48),
             UsedAt:     null);
 
-        const string hash = "hash-reschedule";
+        const string clearToken = "clear-token-reschedule";
+        var hash = Hash(clearToken);
         var newDueAt = Now.AddDays(7);
 
-        _tokenPort.FindByHashAsync(hash, Arg.Any<CancellationToken>()).Returns(rescheduleToken);
+        _tokenPort.FindByHashAsync(Arg.Is<byte[]>(h => h.SequenceEqual(hash)), Arg.Any<CancellationToken>())
+            .Returns(rescheduleToken);
         _repository.FindByIdAsync(activity.Id, Arg.Any<CancellationToken>()).Returns(activity);
 
-        var handler = new ProcessDigestActionCommandHandler(_tokenPort, _repository, _auditPublisher, _clock, _metrics, NullLogger<ProcessDigestActionCommandHandler>.Instance);
-        var command = new ProcessDigestActionCommand(hash, NewDueAt: newDueAt);
+        var handler = new ProcessDigestActionCommandHandler(
+            _tokenPort, _repository, _auditPublisher, _clock, _metrics,
+            NullLogger<ProcessDigestActionCommandHandler>.Instance);
+        var command = new ProcessDigestActionCommand(clearToken, NewDueAt: newDueAt);
 
         var result = await handler.Handle(command, CancellationToken.None);
 
-        result.Action.Should().Be("reschedule");
+        result.Action.Should().Be("Reschedule");
         result.WasAlreadyProcessed.Should().BeFalse();
         await _repository.Received(1).SaveAsync(
             Arg.Is<Activity>(a => a.DueAt.Value == newDueAt),
             Arg.Any<CancellationToken>());
+    }
+
+    // ── PBT: ComputeTokenHash é determinístico ───────────────────────────────
+
+    [Property(MaxTest = 500)]
+    public Property ComputeTokenHash_IsDeterministic(FsCheck.NonEmptyString clearToken)
+    {
+        // O mesmo token em claro deve sempre gerar o mesmo hash (SHA-256 é determinístico)
+        var hash1 = ProcessDigestActionCommand.ComputeTokenHash(clearToken.Get);
+        var hash2 = ProcessDigestActionCommand.ComputeTokenHash(clearToken.Get);
+        return hash1.SequenceEqual(hash2).ToProperty();
+    }
+
+    [Property(MaxTest = 500)]
+    public Property ComputeTokenHash_ProducesExactly32Bytes(FsCheck.NonEmptyString clearToken)
+    {
+        // SHA-256 sempre produz 32 bytes
+        var hash = ProcessDigestActionCommand.ComputeTokenHash(clearToken.Get);
+        return (hash.Length == 32).ToProperty();
     }
 
     // ── PBT-02 completo (via token): N cliques → exatamente 1 conclusão ──────

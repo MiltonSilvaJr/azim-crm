@@ -1,5 +1,7 @@
 namespace ActivityManagement.Infrastructure.Tests.Tokens;
 
+using System.Security.Cryptography;
+using System.Text;
 using ActivityManagement.Infrastructure.Persistence;
 using ActivityManagement.Infrastructure.Tokens;
 using FluentAssertions;
@@ -11,16 +13,21 @@ using Xunit;
 /// <summary>
 /// Testes de integração para <see cref="DigestActionTokenAdapter"/> com PostgreSQL real.
 ///
+/// Schema canônico (ADR-0006, alinhado ao digest):
+///   - token_hash: BYTEA NOT NULL (SHA-256, 32 bytes).
+///   - activity_id: UUID NOT NULL (referência lógica sem FK física — DD-001).
+///   - action: VARCHAR(20) com casing 'Complete'/'Reschedule'.
+///
 /// Garantias testadas:
 ///   1. Token válido (não expirado, não usado) → retorna dados corretos.
-///   2. Token expirado → retorna nulo (anti-enumeração na camada de dados).
-///   3. Token já usado (used_at preenchido) → retorna dados (decisão de uso-único cabe ao domínio).
+///   2. Token expirado → retorna dados (decisão de rejeitar cabe ao domínio).
+///   3. Token já usado (used_at preenchido) → retorna dados com used_at.
 ///   4. Token inexistente → retorna nulo.
 ///   5. MarkUsedAsync preenche used_at somente quando nulo (idempotência).
-///   6. MarkUsedAsync é no-op se used_at já preenchido (uso-único garantido por índice).
-///   7. FindByHashAsync retorna nulo quando app.current_tenant não coincide (RLS/tenant filter).
+///   6. MarkUsedAsync é no-op se used_at já preenchido (uso-único garantido).
+///   7. FindByHashAsync retorna nulo quando tenant não coincide (Global Query Filter).
 ///
-/// Mapeia: TASK-17, DD-003, RNF 5, design §6.4, Req 7.
+/// Mapeia: TASK-17, DD-003, DD-007, ADR-0006, RNF 5, design §6.4, Req 7.
 /// </summary>
 public sealed class DigestActionTokenAdapterTests : IAsyncLifetime
 {
@@ -35,8 +42,8 @@ public sealed class DigestActionTokenAdapterTests : IAsyncLifetime
     private ActivityManagementDbContext _ctx = null!;
     private DigestActionTokenAdapter _adapter = null!;
 
-    private static readonly Guid TenantId  = Guid.NewGuid();
-    private static readonly Guid UserId    = Guid.NewGuid();
+    private static readonly Guid TenantId   = Guid.NewGuid();
+    private static readonly Guid UserId     = Guid.NewGuid();
     private static readonly Guid ActivityId = Guid.NewGuid();
 
     public async Task InitializeAsync()
@@ -66,28 +73,39 @@ public sealed class DigestActionTokenAdapterTests : IAsyncLifetime
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Computa SHA-256 de um token em claro — idêntico ao algoritmo do digest (ADR-0006).
+    /// SHA256(UTF-8(clearToken)) → 32 bytes.
+    /// </summary>
+    private static byte[] ComputeHash(string clearToken)
+        => SHA256.HashData(Encoding.UTF8.GetBytes(clearToken));
+
     private async Task SetupSchemaAsync()
     {
         await using var cmd = new NpgsqlCommand(SchemaSetupSql, _conn);
         await cmd.ExecuteNonQueryAsync();
     }
 
+    /// <summary>
+    /// Insere um token com token_hash BYTEA e activity_id NOT NULL — schema canônico do digest (ADR-0006).
+    /// </summary>
     private async Task InsertTokenAsync(
-        string tokenHash,
-        DateTimeOffset expiresAt,
+        byte[]          tokenHash,
+        DateTimeOffset  expiresAt,
         DateTimeOffset? usedAt = null,
-        Guid? overrideTenant = null)
+        Guid?           overrideTenant = null)
     {
         var tenant = overrideTenant ?? TenantId;
         await using var cmd = new NpgsqlCommand(@"
             INSERT INTO digest_action_tokens
                 (id, tenant_id, user_id, activity_id, action, token_hash, expires_at, used_at)
             VALUES
-                (gen_random_uuid(), @tenantId, @userId, @activityId, 'complete', @hash, @expiresAt, @usedAt)", _conn);
+                (gen_random_uuid(), @tenantId, @userId, @activityId, 'Complete', @hash, @expiresAt, @usedAt)", _conn);
         cmd.Parameters.AddWithValue("tenantId",   tenant);
         cmd.Parameters.AddWithValue("userId",     UserId);
         cmd.Parameters.AddWithValue("activityId", ActivityId);
-        cmd.Parameters.AddWithValue("hash",       tokenHash);
+        // BYTEA: Npgsql representa byte[] como NpgsqlDbType.Bytea automaticamente
+        cmd.Parameters.Add(new NpgsqlParameter("hash", NpgsqlTypes.NpgsqlDbType.Bytea) { Value = tokenHash });
         cmd.Parameters.AddWithValue("expiresAt",  expiresAt);
         cmd.Parameters.AddWithValue("usedAt",     (object?)usedAt ?? DBNull.Value);
         await cmd.ExecuteNonQueryAsync();
@@ -98,28 +116,29 @@ public sealed class DigestActionTokenAdapterTests : IAsyncLifetime
     [Fact]
     public async Task FindByHashAsync_ValidToken_Returns_TokenData()
     {
-        // Arrange
-        var hash      = "sha256:valid-token-abc123";
+        // Arrange: token em claro → SHA-256 → BYTEA (fluxo real do digest)
+        const string clearToken = "valid-clear-token-abc123";
+        var hash      = ComputeHash(clearToken);
         var expiresAt = DateTimeOffset.UtcNow.AddHours(24);
         await InsertTokenAsync(hash, expiresAt);
 
-        // Act
+        // Act: adapter busca por byte[]
         var result = await _adapter.FindByHashAsync(hash);
 
         // Assert
-        result.Should().NotBeNull(because: "token válido deve ser encontrado pelo hash");
+        result.Should().NotBeNull(because: "token válido deve ser encontrado pelo hash BYTEA");
         result!.TenantId.Should().Be(TenantId);
         result.UserId.Should().Be(UserId);
-        result.ActivityId.Should().Be(ActivityId);
-        result.Action.Should().Be("complete");
+        result.ActivityId.Should().Be(ActivityId, because: "activity_id é NOT NULL (ADR-0006)");
+        result.Action.Should().Be("Complete");
         result.UsedAt.Should().BeNull(because: "token ainda não foi usado");
     }
 
     [Fact]
     public async Task FindByHashAsync_NonExistentToken_Returns_Null()
     {
-        // Act: hash que não existe no banco
-        var result = await _adapter.FindByHashAsync("sha256:nao-existe-no-banco");
+        // Act: hash de zeros — nunca emitido
+        var result = await _adapter.FindByHashAsync(new byte[32]);
 
         // Assert: anti-enumeração — retorna nulo sem distinguir inexistente de inacessível
         result.Should().BeNull(because: "token inexistente deve retornar nulo (anti-enumeração, Req 7.6)");
@@ -129,7 +148,8 @@ public sealed class DigestActionTokenAdapterTests : IAsyncLifetime
     public async Task FindByHashAsync_ExpiredToken_Returns_TokenData_With_Expired_ExpiresAt()
     {
         // Arrange: token expirado
-        var hash      = "sha256:expired-token-xyz";
+        const string clearToken = "expired-token-xyz";
+        var hash      = ComputeHash(clearToken);
         var expiresAt = DateTimeOffset.UtcNow.AddHours(-1); // expirado
         await InsertTokenAsync(hash, expiresAt);
 
@@ -146,7 +166,8 @@ public sealed class DigestActionTokenAdapterTests : IAsyncLifetime
     public async Task FindByHashAsync_UsedToken_Returns_TokenData_With_UsedAt_Set()
     {
         // Arrange: token já usado
-        var hash   = "sha256:used-token-def456";
+        const string clearToken = "used-token-def456";
+        var hash   = ComputeHash(clearToken);
         var usedAt = DateTimeOffset.UtcNow.AddMinutes(-10);
         await InsertTokenAsync(hash, DateTimeOffset.UtcNow.AddHours(24), usedAt);
 
@@ -162,7 +183,8 @@ public sealed class DigestActionTokenAdapterTests : IAsyncLifetime
     public async Task FindByHashAsync_WrongTenant_Returns_Null()
     {
         // Arrange: token de outro tenant
-        var hash      = "sha256:other-tenant-token";
+        const string clearToken = "other-tenant-token";
+        var hash        = ComputeHash(clearToken);
         var otherTenant = Guid.NewGuid();
         await InsertTokenAsync(hash, DateTimeOffset.UtcNow.AddHours(24), overrideTenant: otherTenant);
 
@@ -179,8 +201,9 @@ public sealed class DigestActionTokenAdapterTests : IAsyncLifetime
     [Fact]
     public async Task MarkUsedAsync_Sets_UsedAt_When_Null()
     {
-        // Arrange: token válido, not yet used
-        var hash      = "sha256:mark-used-token";
+        // Arrange: token válido, ainda não usado
+        const string clearToken = "mark-used-token";
+        var hash      = ComputeHash(clearToken);
         var expiresAt = DateTimeOffset.UtcNow.AddHours(24);
         await InsertTokenAsync(hash, expiresAt);
 
@@ -197,7 +220,7 @@ public sealed class DigestActionTokenAdapterTests : IAsyncLifetime
         // Assert: used_at deve estar preenchido no banco
         await using var checkCmd = new NpgsqlCommand(
             "SELECT used_at FROM digest_action_tokens WHERE token_hash = @hash", _conn);
-        checkCmd.Parameters.AddWithValue("hash", hash);
+        checkCmd.Parameters.Add(new NpgsqlParameter("hash", NpgsqlTypes.NpgsqlDbType.Bytea) { Value = hash });
         var dbUsedAt = await checkCmd.ExecuteScalarAsync();
         dbUsedAt.Should().NotBe(DBNull.Value, because: "MarkUsedAsync deve preencher used_at");
     }
@@ -206,7 +229,8 @@ public sealed class DigestActionTokenAdapterTests : IAsyncLifetime
     public async Task MarkUsedAsync_Is_Noop_When_AlreadyUsed()
     {
         // Arrange: token já usado
-        var hash          = "sha256:already-used-token";
+        const string clearToken = "already-used-token";
+        var hash           = ComputeHash(clearToken);
         var originalUsedAt = DateTimeOffset.UtcNow.AddMinutes(-30);
         await InsertTokenAsync(hash, DateTimeOffset.UtcNow.AddHours(24), originalUsedAt);
 
@@ -220,11 +244,15 @@ public sealed class DigestActionTokenAdapterTests : IAsyncLifetime
         // Assert: used_at original deve ser mantido (UPDATE WHERE used_at IS NULL)
         DateTimeOffset? dbUsedAt = null;
         await using var checkCmd = new NpgsqlCommand(
-            "SELECT used_at FROM digest_action_tokens WHERE token_hash = @hash", _conn);
-        checkCmd.Parameters.AddWithValue("hash", hash);
+            "SELECT used_at AT TIME ZONE 'UTC' FROM digest_action_tokens WHERE token_hash = @hash", _conn);
+        checkCmd.Parameters.Add(new NpgsqlParameter("hash", NpgsqlTypes.NpgsqlDbType.Bytea) { Value = hash });
         await using var reader = await checkCmd.ExecuteReaderAsync();
         if (await reader.ReadAsync() && !reader.IsDBNull(0))
-            dbUsedAt = reader.GetFieldValue<DateTimeOffset>(0);
+        {
+            // Npgsql retorna DateTime (UTC) para timestamptz — converte para DateTimeOffset
+            var dt = reader.GetDateTime(0);
+            dbUsedAt = new DateTimeOffset(dt, TimeSpan.Zero);
+        }
 
         // Deve permanecer próximo ao original (tolerância de 1 segundo)
         dbUsedAt.Should().NotBeNull();
@@ -232,23 +260,24 @@ public sealed class DigestActionTokenAdapterTests : IAsyncLifetime
             because: "MarkUsedAsync não deve sobrescrever used_at já preenchido (uso único, RNF 5.2)");
     }
 
-    // ── Schema ────────────────────────────────────────────────────────────────
+    // ── Schema canônico (ADR-0006, alinhado ao digest) ─────────────────────────
 
     private const string SchemaSetupSql = @"
         CREATE TABLE IF NOT EXISTS digest_action_tokens (
             id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             tenant_id       UUID NOT NULL,
             user_id         UUID NOT NULL,
-            activity_id     UUID,
-            action          VARCHAR(20) NOT NULL DEFAULT 'complete',
-            token_hash      TEXT NOT NULL,
+            activity_id     UUID NOT NULL,
+            action          VARCHAR(20) NOT NULL DEFAULT 'Complete',
+            token_hash      BYTEA NOT NULL,
             expires_at      TIMESTAMPTZ NOT NULL,
             used_at         TIMESTAMPTZ,
             created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-            CONSTRAINT chk_digest_action_type CHECK (action IN ('complete','reschedule'))
+            CONSTRAINT uq_digest_action_tokens_hash UNIQUE (token_hash),
+            CONSTRAINT ck_digest_action_tokens_action CHECK (action IN ('Complete','Reschedule'))
         );
 
-        CREATE UNIQUE INDEX IF NOT EXISTS uq_digest_action_tokens_hash
-            ON digest_action_tokens (token_hash);
+        CREATE INDEX IF NOT EXISTS ix_digest_action_tokens_expires
+            ON digest_action_tokens (expires_at);
     ";
 }
