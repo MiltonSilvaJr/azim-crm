@@ -58,28 +58,21 @@ public partial class AddIndexesAndRls : Migration
         ");
 
         // ── RLS em digest_action_tokens ───────────────────────────────────────
-        migrationBuilder.Sql(@"
-            ALTER TABLE digest_action_tokens ENABLE ROW LEVEL SECURITY;
-            ALTER TABLE digest_action_tokens FORCE ROW LEVEL SECURITY;
-
-            DROP POLICY IF EXISTS rls_digest_action_tokens_tenant ON digest_action_tokens;
-            CREATE POLICY rls_digest_action_tokens_tenant ON digest_action_tokens
-                USING (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid)
-                WITH CHECK (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid);
-        ");
+        // ADR-0006: RLS de digest_action_tokens é responsabilidade do digest (BC-06).
+        // A política rls_digest_action_tokens_tenant é criada pelas migrations do Digest.Infrastructure.
+        // O activity-management não deve emitir DDL para esta tabela.
     }
 
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        // Remove RLS
+        // Remove RLS de activities
         migrationBuilder.Sql(@"
-            DROP POLICY IF EXISTS rls_digest_action_tokens_tenant ON digest_action_tokens;
-            ALTER TABLE digest_action_tokens DISABLE ROW LEVEL SECURITY;
-
             DROP POLICY IF EXISTS rls_activities_tenant ON activities;
             ALTER TABLE activities DISABLE ROW LEVEL SECURITY;
         ");
+
+        // ADR-0006: RLS de digest_action_tokens é owned pelo digest — não reverter aqui.
 
         // Remove índices
         migrationBuilder.Sql(@"

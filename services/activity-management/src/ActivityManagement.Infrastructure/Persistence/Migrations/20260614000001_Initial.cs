@@ -37,20 +37,10 @@ public partial class Initial : Migration
         ");
 
         // ── digest_action_tokens ──────────────────────────────────────────────
-        migrationBuilder.Sql(@"
-            CREATE TABLE IF NOT EXISTS digest_action_tokens (
-                id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                tenant_id       UUID NOT NULL,
-                user_id         UUID NOT NULL,
-                activity_id     UUID REFERENCES activities(id),
-                action          VARCHAR(20) NOT NULL,
-                token_hash      TEXT NOT NULL,
-                expires_at      TIMESTAMPTZ NOT NULL,
-                used_at         TIMESTAMPTZ,
-                created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-                CONSTRAINT chk_digest_action_type CHECK (action IN ('complete','reschedule'))
-            );
-        ");
+        // ADR-0006: a tabela digest_action_tokens é owned exclusivamente pelo digest (BC-06).
+        // O activity-management é somente consumidor — não cria nem altera esta tabela.
+        // A DDL, RLS e índices são responsabilidade das migrations do Digest.Infrastructure.
+        // A tabela deve existir no banco compartilhado ANTES que este serviço seja deployado.
 
         // ── outbox_messages ───────────────────────────────────────────────────
         migrationBuilder.Sql(@"
@@ -86,7 +76,7 @@ public partial class Initial : Migration
     {
         migrationBuilder.Sql("DROP TABLE IF EXISTS audit_logs CASCADE;");
         migrationBuilder.Sql("DROP TABLE IF EXISTS outbox_messages CASCADE;");
-        migrationBuilder.Sql("DROP TABLE IF EXISTS digest_action_tokens CASCADE;");
+        // digest_action_tokens NÃO é dropada aqui — owned pelo digest (ADR-0006).
         migrationBuilder.Sql("DROP TABLE IF EXISTS activities CASCADE;");
     }
 }
