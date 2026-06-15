@@ -4,9 +4,11 @@ namespace PartnerManagement.Domain.Partners.ValueObjects;
 
 /// <summary>
 /// Objeto de valor que representa o nome de um parceiro.
-/// Imutável, com igualdade por valor. Nome é tratado como possível PII (DD-008).
-/// <c>ToString()</c> nunca retorna o valor em claro (RNF 4).
-/// Mapeia: Req 1.1, RNF 4, design §4.3.
+/// Imutável, com igualdade por valor.
+/// <c>partner.name</c> não é PII por decisão VAL-PARTNER-01 (2026-06-15); pode aparecer em claro.
+/// <c>ToString()</c> retorna representação neutra por design defensivo do VO — use <see cref="Value"/>
+/// quando precisar do valor em contextos estruturados (logs, contratos, etc.).
+/// Mapeia: Req 1.1, design §4.3.
 /// </summary>
 public sealed class PartnerName : IEquatable<PartnerName>
 {
@@ -42,8 +44,9 @@ public sealed class PartnerName : IEquatable<PartnerName>
     }
 
     /// <summary>
-    /// Retorna representação neutra — não expõe o valor em claro (RNF 4, DD-008).
-    /// Use <see cref="Value"/> apenas em contextos autorizados.
+    /// Retorna representação neutra por design defensivo do VO, evitando vazamento acidental
+    /// em interpolações de string e logs não estruturados.
+    /// Use <see cref="Value"/> quando precisar do valor em claro.
     /// </summary>
     public override string ToString() => "[PartnerName]";
 

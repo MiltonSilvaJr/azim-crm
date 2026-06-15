@@ -3,7 +3,9 @@ namespace PartnerManagement.Contracts.Events;
 /// <summary>
 /// Envelope de evento de integração <c>partner.created.v1</c>.
 /// Publicado via Outbox + Cloud Pub/Sub após criação de parceiro.
-/// Carga sem PII em claro: sem <c>name</c>, <c>contact_email</c>, <c>contact_phone</c> (RNF 4, DD-008).
+/// Carga contém apenas IDs e metadados — sem <c>contact_email</c> nem <c>contact_phone</c> em claro (RNF 4).
+/// <c>name</c> não é incluído por decisão de design do contrato (consumidores devem consultar a API para dados completos).
+/// Nota: <c>partner.name</c> não é PII por VAL-PARTNER-01 (2026-06-15) — a ausência no evento é por design, não por obrigação de mascaramento.
 /// Mapeia: design §9, Req 1.8, RNF 2.4, TASK-22.
 /// </summary>
 public sealed class PartnerCreatedV1

@@ -28,7 +28,7 @@ Entrega cinco capacidades técnicas centrais:
 4. **Visão de comissão do parceiro** (projetada × consolidada) e **relatório por período**, **consumindo o _read model_** `opportunity_partner_commissions` do pipeline via porta de leitura — **este módulo nunca recalcula nem persiste comissão** (Req 9, Req 10, PBT-01, PBT-05).
 5. **Marcação de pendência de triagem** de percentuais pós-importação (Req 11).
 
-Tudo sob isolamento multi-tenant em profundidade (RNF 1, PBT-04 — ADR-0001), auditoria append-only de toda escrita (RNF 2), e tratamento de PII conservador para `partner.name`/contato (RNF 4). No MVP, o parceiro **não possui credencial de acesso** à plataforma (Req 12, RN-021, DEC-012): é uma entidade de dados gerida pelo tenant.
+Tudo sob isolamento multi-tenant em profundidade (RNF 1, PBT-04 — ADR-0001), auditoria append-only de toda escrita (RNF 2), e mascaramento de PII de contato (`contact_email`, `contact_phone`) em logs, traces e payloads (RNF 4). `partner.name` **não é PII** por decisão VAL-PARTNER-01 (2026-06-15) — pode aparecer em claro. No MVP, o parceiro **não possui credencial de acesso** à plataforma (Req 12, RN-021, DEC-012): é uma entidade de dados gerida pelo tenant.
 
 O módulo é organizado em Clean Architecture (.NET, 5 projetos), com DDD tático no agregado `Partner`. Persistência em Cloud SQL/PostgreSQL (tabela `partners`); eventos de auditoria publicados via Outbox + Cloud Pub/Sub para o `audit-log`.
 
@@ -51,7 +51,7 @@ O módulo é organizado em Clean Architecture (.NET, 5 projetos), com DDD tátic
 | RNF 1 — RBAC + isolamento por tenant | `TenantScopeBehavior`, filtro global EF + RLS (DD-001), `permissions` JWT, PBT-04 (§10, §14) |
 | RNF 2 — Auditoria append-only | `IAuditPublisher`, Outbox, `audit_logs` append-only (trigger + REVOKE), evento `PartnerCreated` (§6.6, §9, §11) |
 | RNF 3 — Retenção indefinida de auditoria | Sem TTL/purge em `audit_logs`; purge legal via `app_admin` com aprovação dupla (§7, §10, RISK-PM-04) |
-| RNF 4 — PII no cadastro (LGPD) | `PartnerPiiMasker`, logs/erros sem `name`/contato, pendência VAL-PARTNER-01 (DD-008, §10, §11) |
+| RNF 4 — PII no cadastro (LGPD) | `PartnerPiiMasker`, logs/erros sem contato (`contact_email`/`contact_phone`) em claro; `partner.name` não é PII por VAL-PARTNER-01 (DD-008 atualizado, §10, §11) |
 | RNF 5 — Observabilidade | Logs estruturados com `correlation_id`/`tenant_id`/`partner_id`; métricas `partners_created_total`/`partners_deactivated_total` (§11) |
 | RNF 6 — Integridade de percentuais/monetária | `CommissionDefaults` NUMERIC(5,2) round-trip; sem `float`/`double`; comissão em centavos só no pipeline (DD-004, PBT-03, §7) |
 | RNF 7 — Performance | Índice `idx_partners_tenant_active`; read model do pipeline para a visão de comissão (§7, §15) |
@@ -73,7 +73,7 @@ O módulo é organizado em Clean Architecture (.NET, 5 projetos), com DDD tátic
 | P6 | Percentual não é dinheiro | Percentuais são `NUMERIC(5,2)` (objeto de valor `CommissionDefaults`); valores monetários de comissão são centavos inteiros e pertencem ao pipeline; proibido `float`/`double` em qualquer cálculo monetário (DD-004) |
 | P7 | Soft-delete idempotente | Inativação/reativação alteram `active`; repetições não produzem efeito além da auditoria (DD-006, PBT-02) |
 | P8 | Parceiro sem login no MVP | Nenhuma identidade no Identity Platform; sem autenticação/autoatendimento do parceiro (DD-002, RN-021) |
-| P9 | LGPD by design | `partner.name` e contato tratados como possível PII: fora de logs e mensagens de erro; pendência jurídica VAL-PARTNER-01 (DD-008) |
+| P9 | LGPD by design | Contato do parceiro (`contact_email`/`contact_phone`) mascarado em logs e mensagens de erro; `partner.name` **não é PII** por VAL-PARTNER-01 (2026-06-15) — pode aparecer em claro (DD-008 atualizado) |
 | P10 | API-first/contract-first | Contratos OpenAPI versionados em `/api/v1`; erros padronizados com `correlationId` |
 
 ## 3. Estrutura da Solução
@@ -174,7 +174,7 @@ Não há entidades adicionais com identidade própria além do Aggregate Root `P
 
 | Objeto de valor | Atributos | Regras / Invariantes | Requisitos |
 |-----------------|-----------|----------------------|------------|
-| `PartnerName` | `value: string` | Não vazio após trim; comprimento máximo definido; igualdade por valor; possível PII (DD-008) | Req 1.1, RNF 4 |
+| `PartnerName` | `value: string` | Não vazio após trim; comprimento máximo definido; igualdade por valor; **não é PII** por VAL-PARTNER-01 (2026-06-15) | Req 1.1 |
 | `PartnerRole` | `value: string` | Pertence à lista canônica vigente do tenant (seed: Indicador, Revendedor, Distribuidor, Integrador); igualdade por valor; classificatório, não altera comissão | Req 5, seção 4.1 |
 | `Percentage` | `value: decimal` | Intervalo fechado [0,00; 100,00]; exatamente 2 casas decimais; sem `float`/`double`; lança `PercentageOutOfRangeException` fora do intervalo; igualdade por valor | Req 6.3, RNF 6 |
 | `CommissionDefaults` | `pctSetup: Percentage`, `pctRecorrente: Percentage` | Imutável; default `0,00`/`0,00`; herdado pela oportunidade na vinculação (no pipeline); igualdade por valor | Req 6, PBT-03 |
@@ -196,7 +196,7 @@ Todos os objetos de valor são imutáveis e implementam igualdade por valor (rul
 | `PartnerDeactivated` | Parceiro inativado (transição efetiva) | `partnerId`, `tenantId`, `occurredAt` | audit-log | Req 3.6 |
 | `PartnerReactivated` | Parceiro reativado (transição efetiva) | `partnerId`, `tenantId`, `occurredAt` | audit-log | Req 3.6 |
 
-Eventos de domínio são acumulados no agregado e despachados após commit via Outbox (§6.6). A carga **jamais** inclui `partner.name` nem contato em texto claro (RNF 4). `PartnerCreated` é o único evento listado no README §10; os demais cobrem RNF 2.1 (cada escrita gera auditoria) e são publicados como contratos de integração para o audit-log. Em transições idempotentes (inativar já inativo), **nenhum** evento de transição é emitido — apenas o registro de auditoria da tentativa (DD-006, PBT-02).
+Eventos de domínio são acumulados no agregado e despachados após commit via Outbox (§6.6). A carga **jamais** inclui `contact_email` nem `contact_phone` em texto claro (RNF 4); `partner.name` pode aparecer em claro pois não é PII por VAL-PARTNER-01 (2026-06-15). `PartnerCreated` é o único evento listado no README §10; os demais cobrem RNF 2.1 (cada escrita gera auditoria) e são publicados como contratos de integração para o audit-log. Em transições idempotentes (inativar já inativo), **nenhum** evento de transição é emitido — apenas o registro de auditoria da tentativa (DD-006, PBT-02).
 
 ### 4.5 State Machines
 
@@ -340,7 +340,7 @@ Convenções: `snake_case`, `tenant_id` obrigatório, timestamps `created_at`/`u
 partners (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id       UUID NOT NULL,                          -- RLS (ADR-0001)
-  name            TEXT NOT NULL,                          -- possível PII (DD-008); mascarar em logs (RNF 4)
+  name            TEXT NOT NULL,                          -- não é PII por VAL-PARTNER-01 (2026-06-15); pode aparecer em claro
   partner_type    TEXT NOT NULL,                          -- papel canônico do tenant (Req 5)
   pct_setup       NUMERIC(5,2) NOT NULL DEFAULT 0,        -- [0,00; 100,00] (Req 6, RNF 6)
   pct_recorrente  NUMERIC(5,2) NOT NULL DEFAULT 0,        -- [0,00; 100,00]
@@ -442,7 +442,7 @@ Notas de contrato:
 | Isolamento multi-tenant | `tenant_id` em coluna + filtro global EF Core + **RLS** falha-fechada; `TenantScopeBehavior` + `SET app.current_tenant` (DD-001 / ADR-0001) | RNF 1.4, PBT-04 |
 | Proteção contra enumeração | `partner_id` fora do tenant responde 404 (PM-ERR-007) sem distinguir "não existe" de "sem acesso"; RLS impede leitura cross-tenant mesmo com `id` válido de outro tenant (PBT-04) | RNF 1.4, PBT-04 |
 | Parceiro sem credencial | Nenhuma identidade provisionada no Identity Platform para o parceiro; nenhum fluxo de autenticação/autoatendimento do parceiro (DD-002) | Req 12 |
-| Tratamento de PII (LGPD) | `partner.name` e contato tratados como possível PII: `PartnerPiiMasker` em logs, traces, `delta_json` e payload de evento; mensagens de erro não expõem PII (DD-008) | RNF 4 |
+| Tratamento de PII (LGPD) | Contato do parceiro (`contact_email`/`contact_phone`) mascarado via `PartnerPiiMasker` em logs, traces, `delta_json` e payload de evento; mensagens de erro não expõem dados de contato. `partner.name` não é PII por VAL-PARTNER-01 (2026-06-15) — pode aparecer em claro (DD-008 atualizado) | RNF 4 |
 | Criptografia em trânsito | TLS para clientes; mTLS nas chamadas internas ao read model do pipeline e ao `/eligibility` (rule `mtls-internal-services.md`) | RNF 4 |
 | Criptografia em repouso | Encryption at rest nativo do Cloud SQL | RNF 4 |
 | Secrets | Sem segredo em repositório; Workload Identity Federation / Service Accounts (TRD) | — |
@@ -455,13 +455,13 @@ Cada controle aponta o mecanismo concreto; nenhuma afirmação genérica de segu
 
 Três pilares (rule `observability.md`): métricas, logs, traces.
 
-- **Logs estruturados (JSON):** campos `correlation_id`, `tenant_id`, `partner_id`, `action`, `service`, `level`, `timestamp`. **Nunca** contêm `name`/`contact_email`/`contact_phone` em claro (RNF 4.1, RNF 5.1); `PartnerPiiMasker` aplicado antes de qualquer registro. Mensagens de erro não expõem PII (RNF 4.2).
+- **Logs estruturados (JSON):** campos `correlation_id`, `tenant_id`, `partner_id`, `action`, `service`, `level`, `timestamp`. **Nunca** contêm `contact_email`/`contact_phone` em claro (RNF 4.1, RNF 5.1); `PartnerPiiMasker` aplicado antes de qualquer registro. `partner.name` pode aparecer em claro por VAL-PARTNER-01 (2026-06-15). Mensagens de erro não expõem dados de contato (RNF 4.2).
 - **Métricas (Prometheus):** obrigatórias `partners_created_total` e `partners_deactivated_total` (RNF 5.2); além de `partners_reactivated_total`, `http_requests_total`, `http_request_duration_seconds` (p50/p95/p99), `domain_events_published_total`, `partner_commission_view_duration_seconds`.
 - **Traces (OpenTelemetry):** spans para handlers de Command/Query, chamada ao `IPartnerCommissionReadPort` e operações de banco; `correlation_id` como atributo do trace root (ADR-0001).
 - **Alertas:** taxa de erro de criação > 5%; falha de relay do Outbox; latência p95 da visão de comissão acima do SLO (RNF 7.2).
 - **Health/readiness/liveness:** endpoints de saúde no `azim-api`; readiness verifica Cloud SQL e o read port do pipeline.
 - **Auditoria operacional:** toda escrita em `partners` gera `audit_logs` com `delta_json` mascarado.
-- **Verificação anti-PII:** teste automatizado de scan de logs falha se `name`/contato for detectado (RNF 4.1).
+- **Verificação anti-PII:** teste automatizado de scan de logs falha se `contact_email`/`contact_phone` for detectado em claro (RNF 4.1). `partner.name` em claro não aciona o gate por VAL-PARTNER-01 (2026-06-15).
 
 ## 12. Catálogo de Erros
 
@@ -478,7 +478,7 @@ Três pilares (rule `observability.md`): métricas, logs, traces.
 | `PM-ERR-010` | Requisição duplicada | 409 | `Idempotency-Key` reutilizada com payload divergente (data-migration) | Usar nova chave ou reenviar payload idêntico |
 | `PM-ERR-011` | Período de comissão inválido | 400 | `from`/`to` ausentes, invertidos ou malformados (Req 9.7) | Informar um período válido |
 
-Regras: todo endpoint (§8) referencia erros deste catálogo; mensagens não expõem PII (`name`/contato); erros de autorização/404 não permitem enumeração cross-tenant (RNF 1.4, PBT-04); códigos estáveis com prefixo `PM-ERR`. Inativar/reativar é idempotente e **não** possui erro de "já inativo/ativo" (Req 3.5, DD-006).
+Regras: todo endpoint (§8) referencia erros deste catálogo; mensagens não expõem dados de contato (`contact_email`/`contact_phone`) — `partner.name` pode aparecer por VAL-PARTNER-01; erros de autorização/404 não permitem enumeração cross-tenant (RNF 1.4, PBT-04); códigos estáveis com prefixo `PM-ERR`. Inativar/reativar é idempotente e **não** possui erro de "já inativo/ativo" (Req 3.5, DD-006).
 
 ## 13. Testes
 
@@ -731,25 +731,25 @@ Ver §4.5 (ciclo de vida do parceiro `Active ↔ Inactive`, idempotente).
 
 **Impacto:** contrato claro: o pipeline deve consultar `/eligibility` (ou usar a lista filtrada) na vinculação. PM-ERR-005 é catalogado aqui por rastreabilidade, mas emitido pelo pipeline.
 
-### DD-008 - partner.name e contato tratados como possível PII até resolução de VAL-PARTNER-01 (pendência)
+### DD-008 - partner.name não é PII; contato mascarado (VAL-PARTNER-01 resolvida em 2026-06-15)
 
-**Contexto:** RNF 4 e VAL-PARTNER-01 levantam que `partner.name` e o contato podem ser dado pessoal quando o parceiro é pessoa física; a confirmação jurídica está pendente (RISK-PARTNER-02).
+**Contexto:** RNF 4 e VAL-PARTNER-01 levantaram que `partner.name` e o contato poderiam ser dado pessoal quando o parceiro é pessoa física. A decisão estava pendente de validação jurídica/produto.
 
-**Decisão (conservadora):** tratar `partner.name`, `contact_email` e `contact_phone` como **possível PII** já no MVP: nunca aparecem em logs, traces, mensagens de erro nem payloads de evento; `PartnerPiiMasker` aplica máscara em `delta_json` de auditoria e em qualquer enriquecimento de log. A pendência VAL-PARTNER-01 permanece aberta para definir mascaramento adicional, base legal e retenção específicos.
+**Decisão original (conservadora):** tratava `partner.name`, `contact_email` e `contact_phone` como possível PII.
 
-**Justificativa:** falha segura — proteger por padrão evita exposição enquanto a classificação não é confirmada; custo baixo e reversível.
+**Decisão atualizada — VAL-PARTNER-01 (2026-06-15):** `partner.name` (nome/razão social) **não é PII**. Pode aparecer em claro em logs, traces, `delta_json` de auditoria e payloads de evento. `contact_email` e `contact_phone` **continuam sendo PII** e permanecem mascarados via `PartnerPiiMasker` em todos os contextos.
 
-**Alternativas:** (a) tratar como não-PII até confirmação — rejeitada (risco regulatório se for PF); (b) bloquear o cadastro até decisão jurídica — rejeitada (inviabiliza o MVP).
+**Justificativa:** validação jurídica/produto confirmou que nome/razão social de parceiro (tipicamente PJ) não configura dado pessoal sensível nos termos da LGPD para o contexto do Azim CRM. O mascaramento conservador de name foi revertido para não prejudicar observabilidade e auditoria operacional.
 
-**Impacto:** a fronteira LGPD definitiva do módulo depende de VAL-PARTNER-01 (registrada em §18). Se confirmada como PII sensível, podem ser exigidos criptografia de campo e política de retenção próprios — avaliar em nova versão.
+**Impacto técnico:** `PartnerPiiMasker.MaskName()` e a constante `MaskedName` foram removidos. `MaskJson()` não mascara mais o campo `"name"`. `ContainsPii()` não verifica mais presença de name em claro. Gate anti-PII atualizado para verificar apenas `contact_email`/`contact_phone`.
 
 ## 18. Riscos
 
 | Código | Risco | Impacto | Probabilidade | Mitigação |
 |--------|-------|---------|---------------|-----------|
 | RISK-PM-01 | Parceiro inativo vinculado a nova oportunidade | Comissão para parceiro sem contrato ativo | Média | Exposição de `active`/`/eligibility` + enforcement no pipeline (DD-007, Req 8) |
-| RISK-PM-02 | `partner.name`/contato vazado em logs/erros/eventos | Violação LGPD se PF (RN-025) | Média | `PartnerPiiMasker` (DD-008); teste de scan anti-PII como gate (RNF 4.1) |
-| RISK-PM-03 | Classificação LGPD de `partner.name` não confirmada | Não conformidade / retrabalho | Alta | Pendência VAL-PARTNER-01 resolvida com produto/jurídico antes do go-live; tratamento conservador no MVP (DD-008) |
+| RISK-PM-02 | `contact_email`/`contact_phone` vazados em logs/erros/eventos | Violação LGPD (RN-025) | Média | `PartnerPiiMasker` (DD-008 atualizado); teste de scan anti-PII como gate (RNF 4.1) |
+| RISK-PM-03 | ~~Classificação LGPD de `partner.name` não confirmada~~ | ~~Não conformidade / retrabalho~~ | ~~Alta~~ | Resolvido por VAL-PARTNER-01 (2026-06-15): `partner.name` não é PII |
 | RISK-PM-04 | Expectativa de purge de auditoria conflita com retenção indefinida | Perda de trilha ou não conformidade | Baixa | Sem TTL/purge automático; remoção só por processo legal com aprovação dupla (RNF 3) |
 | RISK-PM-05 | Divergência de verbo HTTP entre README (PUT) e TRD (PATCH) | Contrato inconsistente | Baixa | Adotado `PATCH` conforme TRD §8.4; README a alinhar (§8) |
 | RISK-PM-06 | Indisponibilidade do read model do pipeline degrada a visão de comissão | Visão parcial | Média | Timeout/retry/circuit breaker + degradação parcial (DD-003, §15) |
@@ -765,13 +765,13 @@ Ver §4.5 (ciclo de vida do parceiro `Active ↔ Inactive`, idempotente).
 - [ ] Endpoints `/api/v1/partners` (CRUD, deactivate/reactivate, eligibility, commissions) implementados e documentados em OpenAPI; erros do catálogo padronizados (§8, §12).
 - [ ] Eventos `partner.created.v1`, `partner.commission_percentages_updated.v1`, `partner.deactivated.v1`, `partner.reactivated.v1` publicados via Outbox + Pub/Sub, sem PII (§9).
 - [ ] `IPartnerCommissionReadPort` integrado ao read model do pipeline com timeout/retry/circuit breaker; visão e relatório de comissão sem recálculo (§5.2, §6.4, DD-003).
-- [ ] `PartnerPiiMasker` aplicado em logs, traces, `delta_json` e eventos; teste anti-PII verde (RNF 4.1, DD-008).
+- [ ] `PartnerPiiMasker` aplicado em logs, traces, `delta_json` e eventos para dados de contato; `partner.name` em claro é permitido por VAL-PARTNER-01; teste anti-PII verde (RNF 4.1, DD-008 atualizado).
 - [ ] RBAC: escrita e relatório restritos a Tenant Admin/Gestor de BU; listagem a Viewer+ (§10, RNF 1).
-- [ ] Observabilidade: métricas `partners_created_total`/`partners_deactivated_total`, logs com `correlation_id`/`tenant_id`/`partner_id` sem PII, traces (§11).
+- [ ] Observabilidade: métricas `partners_created_total`/`partners_deactivated_total`, logs com `correlation_id`/`tenant_id`/`partner_id` sem dados de contato em claro, traces (§11).
 - [ ] Isolamento multi-tenant com filtro global + RLS; PBT-04 como gate de CI verde (§14).
 - [ ] PBT-01..05 implementados e verdes (§13).
 - [ ] Idempotência de inativação/reativação validada (Req 3.5, DD-006, PBT-02).
-- [ ] Pendência VAL-PARTNER-01 (PII de `partner.name`) e divergência RISK-PM-05 registradas no `approvals.yaml`/README antes do go-live.
+- [x] VAL-PARTNER-01 resolvida (2026-06-15): `partner.name` não é PII — mascaramento revertido. Divergência RISK-PM-05 registrada no `approvals.yaml`/README antes do go-live.
 
 ## 20. Referências
 
@@ -795,4 +795,4 @@ Ver §4.5 (ciclo de vida do parceiro `Active ↔ Inactive`, idempotente).
 | Nomenclatura de banco / multi-tenancy | `.forge/rules/conventions/database-naming.md` |
 | Permissões JWT (RBAC) | `.forge/rules/architecture/jwt-permissions.md` |
 | mTLS interno | `.forge/rules/architecture/mtls-internal-services.md` |
-| Pendências | VAL-PARTNER-01 (PII de partner.name), VAL-PARTNER-02 (portal do parceiro — Fase 2) |
+| Pendências | VAL-PARTNER-01 resolvida (2026-06-15); VAL-PARTNER-02 (portal do parceiro — Fase 2) |

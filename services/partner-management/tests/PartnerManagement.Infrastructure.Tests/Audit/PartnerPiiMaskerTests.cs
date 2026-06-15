@@ -6,25 +6,14 @@ namespace PartnerManagement.Infrastructure.Tests.Audit;
 
 /// <summary>
 /// Testes unitários para <see cref="PartnerPiiMasker"/> (TASK-20).
-/// Verifica: mascaramento de nome, e-mail, telefone, JSON estruturado e detecção de PII.
-/// Mapeia: RNF 4, DD-008, design §6.6, design §11, TASK-20.
+/// Verifica: mascaramento de e-mail, telefone, JSON estruturado e detecção de PII.
+/// <c>partner.name</c> não é PII por decisão VAL-PARTNER-01 (2026-06-15) — não é mascarado.
+/// Mapeia: RNF 4, design §6.6, design §11, TASK-20.
 /// </summary>
 [Trait("Category", "Unit")]
 public sealed class PartnerPiiMaskerTests
 {
     private readonly PartnerPiiMasker _masker = new();
-
-    // =========================================================================
-    // MaskName
-    // =========================================================================
-
-    [Fact(DisplayName = "TASK-20: MaskName mascara qualquer string")]
-    public void MaskName_AlwaysReturnsMaskedConstant()
-    {
-        _masker.MaskName("Acme Corp").Should().Be(PartnerPiiMasker.MaskedName);
-        _masker.MaskName(null).Should().Be(PartnerPiiMasker.MaskedName);
-        _masker.MaskName(string.Empty).Should().Be(PartnerPiiMasker.MaskedName);
-    }
 
     // =========================================================================
     // MaskEmail
@@ -52,14 +41,13 @@ public sealed class PartnerPiiMaskerTests
     // MaskJson
     // =========================================================================
 
-    [Fact(DisplayName = "TASK-20: MaskJson mascara campo 'name' em JSON")]
-    public void MaskJson_MasksNameField()
+    [Fact(DisplayName = "VAL-PARTNER-01: MaskJson NÃO mascara campo 'name' — name não é PII")]
+    public void MaskJson_DoesNotMaskNameField()
     {
         string json = """{"name":"João Silva","partner_type":"Indicador"}""";
         string result = _masker.MaskJson(json);
 
-        result.Should().NotContain("João Silva");
-        result.Should().Contain(PartnerPiiMasker.MaskedName);
+        result.Should().Contain("João Silva", "name não é PII por VAL-PARTNER-01 e deve permanecer em claro");
     }
 
     [Fact(DisplayName = "TASK-20: MaskJson mascara campo 'contact_email' em JSON")]
@@ -113,14 +101,14 @@ public sealed class PartnerPiiMaskerTests
     // ContainsPii
     // =========================================================================
 
-    [Fact(DisplayName = "TASK-20: ContainsPii detecta nome em claro")]
-    public void ContainsPii_DetectsKnownName()
+    [Fact(DisplayName = "VAL-PARTNER-01: ContainsPii NÃO detecta name em claro como violação")]
+    public void ContainsPii_DoesNotDetectNameAsViolation()
     {
+        // name em claro é permitido por VAL-PARTNER-01
         bool result = _masker.ContainsPii(
-            "Parceiro Acme Corp foi criado",
-            knownName: "Acme Corp");
+            "Parceiro Acme Corp foi criado");
 
-        result.Should().BeTrue();
+        result.Should().BeFalse("name em claro não é PII por VAL-PARTNER-01");
     }
 
     [Fact(DisplayName = "TASK-20: ContainsPii detecta e-mail em claro")]
@@ -155,10 +143,11 @@ public sealed class PartnerPiiMaskerTests
         _masker.ContainsPii(string.Empty).Should().BeFalse();
     }
 
-    [Fact(DisplayName = "TASK-20: MaskJson seguido de ContainsPii não detecta PII")]
+    [Fact(DisplayName = "TASK-20: MaskJson seguido de ContainsPii não detecta PII de contato")]
     public void MaskJson_ThenContainsPii_ReturnsFalse()
     {
-        // Verifica o gate anti-PII: após mascaramento, ContainsPii não deve detectar
+        // Verifica o gate anti-PII: após mascaramento, ContainsPii não deve detectar PII de contato.
+        // name aparece em claro no output pois não é PII (VAL-PARTNER-01).
         string originalJson = """
             {
                 "name": "Maria Aparecida",
@@ -171,10 +160,9 @@ public sealed class PartnerPiiMaskerTests
 
         bool containsPii = _masker.ContainsPii(
             masked,
-            knownName: "Maria Aparecida",
             knownEmail: "maria@empresa.com.br",
             knownPhone: "+5511988887777");
 
-        containsPii.Should().BeFalse("após MaskJson, nenhuma PII deve estar em claro");
+        containsPii.Should().BeFalse("após MaskJson, nenhuma PII de contato deve estar em claro");
     }
 }
