@@ -45,6 +45,7 @@ public sealed class AccountsControllerTests : IClassFixture<TestWebApplicationFa
     private static Account BuildAccount(string name = "Azim Corp", Guid? tenantId = null) =>
         Account.Create(
             tenantId ?? TestWebApplicationFactory.DefaultTenantId,
+            Guid.NewGuid(),
             AccountName.Create(name),
             website: null,
             notes: null,

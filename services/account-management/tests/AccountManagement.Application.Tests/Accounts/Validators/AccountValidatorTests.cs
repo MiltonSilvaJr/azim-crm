@@ -22,6 +22,7 @@ public sealed class CreateAccountValidatorTests
             Name: "",
             Website: null,
             Notes: null,
+            BuId: null,
             ConfirmCreateDespiteSimilar: false);
 
         var result = _validator.Validate(command);
@@ -38,6 +39,7 @@ public sealed class CreateAccountValidatorTests
             Name: "   ",
             Website: null,
             Notes: null,
+            BuId: null,
             ConfirmCreateDespiteSimilar: false);
 
         var result = _validator.Validate(command);
@@ -54,6 +56,7 @@ public sealed class CreateAccountValidatorTests
             Name: null!,
             Website: null,
             Notes: null,
+            BuId: null,
             ConfirmCreateDespiteSimilar: false);
 
         var result = _validator.Validate(command);
@@ -70,6 +73,7 @@ public sealed class CreateAccountValidatorTests
             Name: "Empresa Válida",
             Website: null,
             Notes: null,
+            BuId: null,
             ConfirmCreateDespiteSimilar: false);
 
         var result = _validator.Validate(command);
@@ -86,6 +90,7 @@ public sealed class CreateAccountValidatorTests
             Name: new string('A', 256),
             Website: null,
             Notes: null,
+            BuId: null,
             ConfirmCreateDespiteSimilar: false);
 
         var result = _validator.Validate(command);

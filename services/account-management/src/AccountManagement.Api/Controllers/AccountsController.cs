@@ -24,7 +24,7 @@ namespace AccountManagement.Api.Controllers;
 ///
 /// Sem lógica de negócio — toda delegação vai para a camada Application via MediatR.
 ///
-/// Mapeia: TASK-13, design §8, Req 1..4, ACC-ERR-001/002/003/009.
+/// Mapeia: TASK-13, design §8, Req 1..4, ACC-ERR-001/002/003/009/010/011, ADR-0009.
 /// </summary>
 [ApiController]
 [Route("api/v1/accounts")]
@@ -34,16 +34,19 @@ public sealed class AccountsController : ControllerBase
     private readonly ISender _sender;
     private readonly TenantContext _tenantContext;
     private readonly UserContext _userContext;
+    private readonly BuScopeContext _buScopeContext;
 
     /// <summary>Inicializa o controller com o sender MediatR e contextos de request.</summary>
     public AccountsController(
         ISender sender,
         TenantContext tenantContext,
-        UserContext userContext)
+        UserContext userContext,
+        BuScopeContext buScopeContext)
     {
         _sender = sender;
         _tenantContext = tenantContext;
         _userContext = userContext;
+        _buScopeContext = buScopeContext;
     }
 
     // =========================================================================
@@ -118,6 +121,7 @@ public sealed class AccountsController : ControllerBase
                 Name: request.Name,
                 Website: request.Website,
                 Notes: request.Notes,
+                BuId: request.BuId,
                 ConfirmCreateDespiteSimilar: request.ConfirmCreateDespiteSimilar),
             cancellationToken);
 
@@ -198,19 +202,40 @@ public sealed class AccountsController : ControllerBase
     // =========================================================================
 
     /// <summary>
-    /// Popula os contextos de tenant e usuário a partir dos claims JWT.
+    /// Popula os contextos de tenant, usuário e escopo de BU a partir dos claims JWT.
     /// Chamado no início de cada action.
+    ///
+    /// Claims esperados do IdP/Auth:
+    /// - <c>tenant_id</c>: UUID do tenant (ADR-0001).
+    /// - <c>role</c>: papel do usuário (ex.: TenantAdmin, Gestor, Vendedor, Viewer).
+    /// - <c>bu_ids</c>: lista de BU ids separada por vírgula (memberships do usuário — ADR-0009).
+    ///
+    /// Papéis de gestão (TenantAdmin, Gestor) recebem visão tenant-wide (ADR-0009).
     /// </summary>
     private void SetContextFromClaims()
     {
         if (Guid.TryParse(User.FindFirstValue("tenant_id"), out var tenantId))
             _tenantContext.SetTenant(tenantId);
 
+        var role = User.FindFirstValue("role") ?? "Viewer";
+
         if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-        {
-            var role = User.FindFirstValue("role") ?? "Viewer";
             _userContext.SetUser(userId, role);
-        }
+
+        // Resolve escopo de BU a partir dos claims do principal (ADR-0009).
+        // O claim "bu_ids" contém os BU ids do usuário (vírgula-separado).
+        // Papéis de gestão (TenantAdmin, Gestor) têm visão tenant-wide.
+        var isTenantWide = role is "TenantAdmin" or "Gestor";
+        var buIdsRaw = User.FindFirstValue("bu_ids") ?? string.Empty;
+        var buIds = buIdsRaw
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(s => Guid.TryParse(s, out var g) ? (Guid?)g : null)
+            .Where(g => g.HasValue)
+            .Select(g => g!.Value)
+            .ToList()
+            .AsReadOnly();
+
+        _buScopeContext.SetScope(buIds, isTenantWide);
     }
 
     /// <summary>Mapeia uma entidade de domínio Account para o DTO de resposta.</summary>
@@ -218,6 +243,7 @@ public sealed class AccountsController : ControllerBase
         new(
             Id: account.Id,
             TenantId: account.TenantId,
+            BuId: account.BuId,
             Name: account.Name.Value,
             NormalizedName: account.NormalizedName.Value,
             Website: account.Website,

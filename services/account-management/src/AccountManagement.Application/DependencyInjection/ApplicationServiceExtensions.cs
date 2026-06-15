@@ -37,13 +37,16 @@ public static class ApplicationServiceExtensions
             // 2. TenantScopeBehavior
             cfg.AddBehavior(typeof(IPipelineBehavior<,>),
                 typeof(TenantScopeBehavior<,>));
-            // 3. ValidationBehavior
+            // 3. BuScopeBehavior (após TenantScope — ADR-0009)
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>),
+                typeof(BuScopeBehavior<,>));
+            // 4. ValidationBehavior
             cfg.AddBehavior(typeof(IPipelineBehavior<,>),
                 typeof(ValidationBehavior<,>));
-            // 4. PiiAccessBehavior
+            // 5. PiiAccessBehavior
             cfg.AddBehavior(typeof(IPipelineBehavior<,>),
                 typeof(PiiAccessBehavior<,>));
-            // 5. TransactionBehavior
+            // 6. TransactionBehavior
             cfg.AddBehavior(typeof(IPipelineBehavior<,>),
                 typeof(TransactionBehavior<,>));
         });
@@ -55,6 +58,7 @@ public static class ApplicationServiceExtensions
         services.AddScoped<TenantContext>();
         services.AddScoped<UserContext>();
         services.AddScoped<CorrelationContext>();
+        services.AddScoped<BuScopeContext>();
 
         return services;
     }

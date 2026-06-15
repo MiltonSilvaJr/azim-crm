@@ -14,24 +14,26 @@ namespace AccountManagement.Infrastructure.Persistence;
 ///   <see cref="IEntityTypeConfiguration{TEntity}"/> (rule database-naming.md — snake_case).
 /// - Filtro global de query por <c>tenant_id</c> para isolamento multi-tenant
 ///   (<see cref="HasQueryFilter"/> — DD-002, ADR-0001).
+/// - Filtro global de query por <c>bu_id</c> para segmentação por BU (ADR-0009).
 /// - Exposição de <see cref="OutboxMessage"/> para o relay de Outbox (DD-007).
 /// - <c>DbSet</c> é interno — nunca exposto fora da Infrastructure (design §6.1).
 ///
-/// O filtro global usa a propriedade <see cref="CurrentTenantId"/> desta instância.
+/// O filtro global usa as propriedades <see cref="CurrentTenantId"/>,
+/// <see cref="CurrentBuIds"/> e <see cref="CurrentIsTenantWide"/> desta instância.
 /// O EF Core avalia propriedades de instância do DbContext em cada execução de query.
-/// Para desabilitar o filtro (migrations/tooling/setup de testes), use
+/// Para desabilitar os filtros (migrations/tooling/setup de testes), use
 /// <c>dbSet.IgnoreQueryFilters()</c> ou o construtor sem <see cref="InfrastructureTenantContext"/>.
 ///
-/// Mapeia: design §6.1, design §7, DD-002, ADR-0001, RNF 5, RNF 7.1, TASK-08.
+/// Mapeia: design §6.1, design §7, DD-002, ADR-0001, ADR-0009, RNF 5, RNF 7.1, TASK-08.
 /// </summary>
 public sealed class AccountManagementDbContext : DbContext
 {
     private readonly InfrastructureTenantContext? _tenantContext;
+    private readonly InfrastructureBuScopeContext? _buScopeContext;
 
     // =========================================================================
-    // Propriedade usada diretamente na expressão HasQueryFilter.
-    // O EF Core avalia esta propriedade por instância em cada execução de query.
-    // Quando não há tenant context (tooling/migrations), retorna Guid.Empty.
+    // Propriedades usadas diretamente nas expressões HasQueryFilter.
+    // O EF Core avalia estas propriedades por instância em cada execução de query.
     // =========================================================================
 
     /// <summary>
@@ -40,11 +42,25 @@ public sealed class AccountManagementDbContext : DbContext
     /// </summary>
     internal Guid CurrentTenantId => _tenantContext?.TenantId ?? Guid.Empty;
 
+    /// <summary>
+    /// Conjunto de BU ids do usuário autenticado.
+    /// Usado exclusivamente na expressão do <see cref="HasQueryFilter"/> de BU (ADR-0009).
+    /// Retorna coleção vazia quando não há contexto (tooling/migrations).
+    /// </summary>
+    internal IReadOnlyCollection<Guid> CurrentBuIds =>
+        _buScopeContext?.BuIds ?? Array.Empty<Guid>();
+
+    /// <summary>
+    /// Indica se o usuário tem visão tenant-wide — dispensa o filtro de BU (ADR-0009).
+    /// Retorna <c>false</c> quando não há contexto (fail-closed).
+    /// </summary>
+    internal bool CurrentIsTenantWide => _buScopeContext?.IsTenantWide ?? false;
+
     // =========================================================================
     // DbSets — internos à Infrastructure (nunca expostos publicamente)
     // =========================================================================
 
-    /// <summary>Tabela de contas — filtrada globalmente por tenant_id.</summary>
+    /// <summary>Tabela de contas — filtrada globalmente por tenant_id e bu_id.</summary>
     internal DbSet<Account> Accounts => Set<Account>();
 
     /// <summary>Tabela de contatos — filtrada globalmente por tenant_id.</summary>
@@ -64,21 +80,23 @@ public sealed class AccountManagementDbContext : DbContext
     // =========================================================================
 
     /// <summary>
-    /// Construtor principal usado em runtime.
-    /// O filtro global estará ativo com o <paramref name="tenantContext"/> fornecido.
+    /// Construtor principal usado em runtime com isolamento de tenant e BU.
+    /// Os filtros globais estarão ativos com os contextos fornecidos.
     /// </summary>
     public AccountManagementDbContext(
         DbContextOptions<AccountManagementDbContext> options,
-        InfrastructureTenantContext tenantContext)
+        InfrastructureTenantContext tenantContext,
+        InfrastructureBuScopeContext buScopeContext)
         : base(options)
     {
         _tenantContext = tenantContext;
+        _buScopeContext = buScopeContext;
     }
 
     /// <summary>
-    /// Construtor para migrations, tooling e setup de testes sem filtro de tenant.
+    /// Construtor para migrations, tooling e setup de testes sem filtros.
     /// O filtro global usa <c>tenant_id == Guid.Empty</c> — nenhum dado real satisfaz
-    /// esta condição; use <c>dbSet.IgnoreQueryFilters()</c> para bypassar o filtro
+    /// esta condição; use <c>dbSet.IgnoreQueryFilters()</c> para bypassar os filtros
     /// quando necessário em testes de infraestrutura.
     /// </summary>
     public AccountManagementDbContext(
@@ -86,6 +104,7 @@ public sealed class AccountManagementDbContext : DbContext
         : base(options)
     {
         _tenantContext = null;
+        _buScopeContext = null;
     }
 
     // =========================================================================
@@ -112,8 +131,17 @@ public sealed class AccountManagementDbContext : DbContext
         // Em runtime: CurrentTenantId = TenantId do JWT autenticado → filtra por tenant.
         // Em tooling/migrations: CurrentTenantId = Guid.Empty → sem dados satisfazem.
         // Para setup de testes: use IgnoreQueryFilters() ou CreateDbContextNoFilter() na fixture.
+        //
+        // Filtro de BU (ADR-0009): aplica adicionalmente o escopo de BU do usuário.
+        // Fail-closed: escopo vazio + não-tenant-wide ⇒ nenhuma conta visível.
+        // Tenant-wide: ignora restrição de BU (mas preserva restrição de tenant — ADR-0001).
         modelBuilder.Entity<Account>()
-            .HasQueryFilter(a => a.TenantId == CurrentTenantId);
+            .HasQueryFilter(a =>
+                a.TenantId == CurrentTenantId
+                && (CurrentIsTenantWide || CurrentBuIds.Contains(a.BuId)));
+
+        // Contacts: filtro por tenant_id. O isolamento por BU é herdado da conta-mãe
+        // (contacts são sempre acessados via a conta, cujo filtro já aplica BU — ADR-0009).
         modelBuilder.Entity<Contact>()
             .HasQueryFilter(c => c.TenantId == CurrentTenantId);
     }

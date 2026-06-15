@@ -27,26 +27,39 @@ public sealed class AccountTests
     [Fact(DisplayName = "I1: Account.Create com nome vazio lança AccountNameRequiredException")]
     public void Create_WithEmptyName_ThrowsAccountNameRequiredException()
     {
-        var act = () => Account.Create(TenantId, AccountName.Create("test"), null, null, Normalizer);
+        var buId = Guid.NewGuid();
+        var act = () => Account.Create(TenantId, buId, AccountName.Create("test"), null, null, Normalizer);
 
         // Sobrescreve para testar diretamente com nome inválido
         // (AccountName já valida; aqui testamos que Account.Create delega ao VO)
-        var act2 = () => Account.Create(TenantId, null!, null, null, Normalizer);
+        var act2 = () => Account.Create(TenantId, buId, null!, null, null, Normalizer);
 
         act2.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact(DisplayName = "I4: Account.Create com buId vazio lança ArgumentException")]
+    public void Create_WithEmptyBuId_ThrowsArgumentException()
+    {
+        var name = AccountName.Create("Empresa X");
+
+        var act = () => Account.Create(TenantId, Guid.Empty, name, null, null, Normalizer);
+
+        act.Should().Throw<ArgumentException>().WithParameterName("buId");
     }
 
     [Fact(DisplayName = "I1: Account.Create com nome válido cria conta com NormalizedName")]
     public void Create_WithValidName_CreatesAccountWithNormalizedName()
     {
         var name = AccountName.Create("PAG.AI Ltda");
+        var buId = Guid.NewGuid();
 
-        var account = Account.Create(TenantId, name, null, null, Normalizer);
+        var account = Account.Create(TenantId, buId, name, null, null, Normalizer);
 
         account.Should().NotBeNull();
         account.Name.Should().Be(name);
         account.NormalizedName.Value.Should().Be(Normalizer.Normalize("PAG.AI Ltda"));
         account.TenantId.Should().Be(TenantId);
+        account.BuId.Should().Be(buId);
     }
 
     [Fact(DisplayName = "I1: Account.Create gera AccountCreated domain event")]
@@ -54,7 +67,7 @@ public sealed class AccountTests
     {
         var name = AccountName.Create("Azim Corp");
 
-        var account = Account.Create(TenantId, name, null, null, Normalizer);
+        var account = Account.Create(TenantId, Guid.NewGuid(), name, null, null, Normalizer);
 
         account.DomainEvents.Should().ContainSingle(e =>
             e is AccountManagement.Domain.Accounts.Events.AccountCreated);
@@ -226,7 +239,7 @@ public sealed class AccountTests
         var name = AccountName.Create("Reconstituída");
 
         var account = Account.Reconstitute(
-            id, TenantId, name,
+            id, TenantId, Guid.NewGuid(), name,
             NormalizedName.Create(Normalizer.Normalize("Reconstituída")),
             website: null, notes: null,
             createdAt: DateTimeOffset.UtcNow,
@@ -244,6 +257,6 @@ public sealed class AccountTests
     private static Account CreateAccount(string name)
     {
         var accountName = AccountName.Create(name);
-        return Account.Create(TenantId, accountName, website: null, notes: null, Normalizer);
+        return Account.Create(TenantId, Guid.NewGuid(), accountName, website: null, notes: null, Normalizer);
     }
 }

@@ -28,6 +28,10 @@ namespace AccountManagement.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<Guid>("BuId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bu_id");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -63,6 +67,9 @@ namespace AccountManagement.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "NormalizedName")
                         .HasDatabaseName("idx_accounts_tenant_normalized_name");
+
+                    b.HasIndex("TenantId", "BuId")
+                        .HasDatabaseName("idx_accounts_tenant_bu");
 
                     b.ToTable("accounts", (string)null, t =>
                         {

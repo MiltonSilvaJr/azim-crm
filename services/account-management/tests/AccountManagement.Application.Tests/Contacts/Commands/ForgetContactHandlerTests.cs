@@ -38,7 +38,7 @@ public sealed class ForgetContactHandlerTests
     {
         var normalizer = new NameNormalizer();
         var account = Account.Create(
-            _tenantId, AccountName.Create("Empresa Teste"), null, null, normalizer);
+            _tenantId, Guid.NewGuid(), AccountName.Create("Empresa Teste"), null, null, normalizer);
         account.AddContact(
             ContactInfo.Create("Carlos Lima", Email.Create("carlos@empresa.com")),
             role: "Gerente");

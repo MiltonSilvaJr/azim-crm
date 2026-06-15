@@ -63,6 +63,7 @@ public sealed class NoPiiInLogsTests
             Name: "Empresa XPTO",
             Website: null,
             Notes: null,
+            BuId: null,
             ConfirmCreateDespiteSimilar: false);
 
         // Act
@@ -99,6 +100,7 @@ public sealed class NoPiiInLogsTests
             Name: "Empresa Teste",
             Website: null,
             Notes: null,
+            BuId: null,
             ConfirmCreateDespiteSimilar: false);
 
         // Act
@@ -127,6 +129,7 @@ public sealed class NoPiiInLogsTests
             Name: "Empresa Falha",
             Website: null,
             Notes: null,
+            BuId: null,
             ConfirmCreateDespiteSimilar: false);
 
         // Act — handler lança exceção (simula falha de infra)
