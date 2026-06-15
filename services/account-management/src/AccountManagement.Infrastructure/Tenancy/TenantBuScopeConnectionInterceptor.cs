@@ -67,11 +67,19 @@ internal sealed class TenantBuScopeConnectionInterceptor : DbConnectionIntercept
             ? "true"
             : "false";
 
+        // Usa SET (escopo de sessão) e não SET LOCAL (escopo de transação).
+        // SET LOCAL só tem efeito dentro de uma transação ativa — quando o interceptor
+        // é chamado em ConnectionOpened, a transação ainda não foi iniciada pelo EF Core,
+        // portanto SET LOCAL seria descartado no início da transação implícita do SaveChanges.
+        // SET de sessão é seguro aqui porque cada request HTTP tem sua própria conexão
+        // (connection pool + scoped lifetime do DbContext).
+        // Em PostgreSQL, GUCs sem default (app.*) retornam '' ao fim da sessão — sem risco
+        // de vazamento entre sessões distintas do pool.
         await using var cmd = connection.CreateCommand();
         cmd.CommandText = $"""
-            SET LOCAL "app.current_tenant" = '{tenantId}';
-            SET LOCAL "app.current_bu_scope" = '{buScope}';
-            SET LOCAL "app.bu_tenant_wide" = '{isTenantWide}';
+            SET "app.current_tenant" = '{tenantId}';
+            SET "app.current_bu_scope" = '{buScope}';
+            SET "app.bu_tenant_wide" = '{isTenantWide}';
             """;
 
         await cmd.ExecuteNonQueryAsync(cancellationToken);
