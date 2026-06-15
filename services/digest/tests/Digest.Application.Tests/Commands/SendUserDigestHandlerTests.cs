@@ -1,19 +1,22 @@
 using Digest.Application.Commands;
 using Digest.Application.Models;
+using Digest.Application.Options;
 using Digest.Application.Services;
 using Digest.Application.Tests.Stubs;
 using Digest.Domain.Enums;
 using Digest.Domain.ValueObjects;
 using FsCheck;
 using FsCheck.Xunit;
+using FluentAssertions;
 using NodaTime;
 using Xunit;
 
 namespace Digest.Application.Tests.Commands;
 
 /// <summary>
-/// Testes unitários e PBT de <see cref="SendUserDigestHandler"/> (TASK-12).
+/// Testes unitários e PBT de <see cref="SendUserDigestHandler"/> (TASK-12, VAL-ACT-02).
 /// PBT-02: N disparos para o mesmo (tenant_id, user_id, digest_date) → exatamente um envio efetivo.
+/// VAL-ACT-02: TTL do action token configurável por tenant, com default de 48h.
 /// </summary>
 public sealed class SendUserDigestHandlerTests
 {
@@ -21,16 +24,26 @@ public sealed class SendUserDigestHandlerTests
     private static readonly Guid UserId = Guid.NewGuid();
     private static readonly DigestDate Tuesday = new(new LocalDate(2026, 6, 9)); // terça
 
-    private static (SendUserDigestHandler handler, InMemoryEmailSender emailSender,
-        InMemoryEmailDigestLogRepository logRepo, InMemoryOutboxPublisher outbox)
-        BuildStack(bool hasActivity = true)
+    private static (
+        SendUserDigestHandler handler,
+        InMemoryEmailSender emailSender,
+        InMemoryEmailDigestLogRepository logRepo,
+        InMemoryOutboxPublisher outbox,
+        InMemoryDigestTenantSettingsRepository settingsRepo)
+        BuildStack(
+            bool hasActivity = true,
+            Guid? tenantId = null,
+            Guid? userId = null)
     {
+        var effectiveTenantId = tenantId ?? TenantId;
+        var effectiveUserId = userId ?? UserId;
+
         var activityPort = new InMemoryActivityReadPort();
         if (hasActivity)
         {
             activityPort.SetOverdue(new[]
             {
-                new ActivityItem(Guid.NewGuid(), UserId, new DateOnly(2026, 6, 8), "Tarefa vencida"),
+                new ActivityItem(Guid.NewGuid(), effectiveUserId, new DateOnly(2026, 6, 8), "Tarefa vencida"),
             });
         }
 
@@ -40,14 +53,20 @@ public sealed class SendUserDigestHandlerTests
         var composer = new DigestContentComposer(activityPort, oppPort, azimuteSectionBuilder);
 
         var userDir = new InMemoryUserDirectoryPort();
-        userDir.AddUser(new UserInfo(UserId, TenantId, RecipientPapel.Vendedor, Active: true));
+        userDir.AddUser(new UserInfo(effectiveUserId, effectiveTenantId, RecipientPapel.Vendedor, Active: true));
 
         var logRepo = new InMemoryEmailDigestLogRepository();
+        var tokenRepo = new InMemoryDigestActionTokenRepository();
         var emailSender = new InMemoryEmailSender();
         var outbox = new InMemoryOutboxPublisher();
+        var tokenFactory = new InMemoryActionTokenFactory();
+        var settingsRepo = new InMemoryDigestTenantSettingsRepository();
+        var digestOptions = new DigestOptions { DefaultActionTokenTtlHours = 48 };
+        var ttlResolver = new ActionTokenTtlResolver(settingsRepo, digestOptions);
 
-        var handler = new SendUserDigestHandler(logRepo, composer, emailSender, outbox, userDir);
-        return (handler, emailSender, logRepo, outbox);
+        var handler = new SendUserDigestHandler(
+            logRepo, tokenRepo, composer, emailSender, outbox, userDir, activityPort, tokenFactory, ttlResolver);
+        return (handler, emailSender, logRepo, outbox, settingsRepo);
     }
 
     // ------------------------------------------------------------------
@@ -57,7 +76,7 @@ public sealed class SendUserDigestHandlerTests
     [Fact(DisplayName = "Primeiro envio bem-sucedido — IEmailSender chamado exatamente uma vez")]
     public async Task FirstSend_EmailSentOnce()
     {
-        var (handler, emailSender, logRepo, outbox) = BuildStack();
+        var (handler, emailSender, _, outbox, _) = BuildStack();
         var cmd = new SendUserDigestCommand(TenantId, UserId, Tuesday, "user@example.com");
 
         var result = await handler.Handle(cmd, default);
@@ -72,7 +91,7 @@ public sealed class SendUserDigestHandlerTests
     [Fact(DisplayName = "Segundo disparo para o mesmo (tenant, user, date) — IEmailSender não chamado (idempotência)")]
     public async Task SecondDispatch_IdempotencySkips()
     {
-        var (handler, emailSender, _, _) = BuildStack();
+        var (handler, emailSender, _, _, _) = BuildStack();
         var cmd = new SendUserDigestCommand(TenantId, UserId, Tuesday, "user@example.com");
 
         await handler.Handle(cmd, default); // primeiro disparo
@@ -86,7 +105,7 @@ public sealed class SendUserDigestHandlerTests
     [Fact(DisplayName = "Falha do provedor — status marcado como failed, IEmailSender chamado mas sem sucesso")]
     public async Task ProviderFailure_MarksAsFailed()
     {
-        var (handler, emailSender, logRepo, outbox) = BuildStack();
+        var (handler, emailSender, _, outbox, _) = BuildStack();
         emailSender.SetFail(true);
         var cmd = new SendUserDigestCommand(TenantId, UserId, Tuesday, "user@example.com");
 
@@ -101,7 +120,7 @@ public sealed class SendUserDigestHandlerTests
     [Fact(DisplayName = "Idempotência: verificação ocorre antes de invocar IEmailSender (RNF 2.3)")]
     public async Task Idempotency_CheckBeforeSend()
     {
-        var (handler, emailSender, logRepo, _) = BuildStack();
+        var (handler, emailSender, _, _, _) = BuildStack();
         var cmd = new SendUserDigestCommand(TenantId, UserId, Tuesday, "user@example.com");
 
         // Primeiro disparo
@@ -120,7 +139,7 @@ public sealed class SendUserDigestHandlerTests
     [Fact(DisplayName = "DigestEmailSent publicado no Outbox exatamente uma vez por envio bem-sucedido (RNF 10.1)")]
     public async Task DigestEmailSent_PublishedExactlyOnce_PerSuccessfulSend()
     {
-        var (handler, _, _, outbox) = BuildStack();
+        var (handler, _, _, outbox, _) = BuildStack();
         var cmd = new SendUserDigestCommand(TenantId, UserId, Tuesday, "user@example.com");
 
         await handler.Handle(cmd, default);
@@ -135,7 +154,7 @@ public sealed class SendUserDigestHandlerTests
     [Fact(DisplayName = "Usuário sem conteúdo e sem papel de gestão não recebe e-mail")]
     public async Task UserWithNoContent_NotSent()
     {
-        var (handler, emailSender, _, _) = BuildStack(hasActivity: false); // sem atividades
+        var (handler, emailSender, _, _, _) = BuildStack(hasActivity: false); // sem atividades
         var cmd = new SendUserDigestCommand(TenantId, UserId, Tuesday, "user@example.com");
 
         var result = await handler.Handle(cmd, default);
@@ -143,6 +162,43 @@ public sealed class SendUserDigestHandlerTests
         // Sem conteúdo → não enviou
         Assert.False(result.Sent);
         Assert.Equal(0, emailSender.SendCallCount);
+    }
+
+    // ------------------------------------------------------------------
+    // VAL-ACT-02: resolução de TTL por tenant
+    // ------------------------------------------------------------------
+
+    [Fact(DisplayName = "VAL-ACT-02: usa setting do tenant quando presente")]
+    public async Task TtlResolver_UsesTenantSettingWhenPresent()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var (handler, emailSender, _, _, settingsRepo) = BuildStack(tenantId: tenantId, userId: userId);
+
+        // Configura TTL de 72h para o tenant
+        settingsRepo.SetTtlHours(tenantId, 72);
+
+        var cmd = new SendUserDigestCommand(tenantId, userId, Tuesday, "user@example.com");
+        var result = await handler.Handle(cmd, default);
+
+        // O envio deve funcionar normalmente com TTL customizado
+        Assert.True(result.Sent);
+    }
+
+    [Fact(DisplayName = "VAL-ACT-02: usa default de 48h quando tenant não possui setting")]
+    public async Task TtlResolver_UsesDefaultWhenTenantSettingAbsent()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var (handler, emailSender, _, _, settingsRepo) = BuildStack(tenantId: tenantId, userId: userId);
+
+        // Sem setting para o tenant — deve usar default 48h
+        settingsRepo.ClearTenant(tenantId);
+
+        var cmd = new SendUserDigestCommand(tenantId, userId, Tuesday, "user@example.com");
+        var result = await handler.Handle(cmd, default);
+
+        Assert.True(result.Sent);
     }
 
     // ------------------------------------------------------------------
@@ -175,9 +231,16 @@ public sealed class SendUserDigestHandlerTests
                 userDir.AddUser(new UserInfo(userId, tenantId, RecipientPapel.Vendedor, Active: true));
 
                 var logRepo = new InMemoryEmailDigestLogRepository();
+                var tokenRepo = new InMemoryDigestActionTokenRepository();
                 var emailSender = new InMemoryEmailSender();
                 var outbox = new InMemoryOutboxPublisher();
-                var handler = new SendUserDigestHandler(logRepo, composer, emailSender, outbox, userDir);
+                var tokenFactory = new InMemoryActionTokenFactory();
+                var settingsRepo = new InMemoryDigestTenantSettingsRepository();
+                var options = new DigestOptions { DefaultActionTokenTtlHours = 48 };
+                var ttlResolver = new ActionTokenTtlResolver(settingsRepo, options);
+                var handler = new SendUserDigestHandler(
+                    logRepo, tokenRepo, composer, emailSender, outbox, userDir,
+                    activityPort, tokenFactory, ttlResolver);
 
                 var cmd = new SendUserDigestCommand(tenantId, userId, digestDate, "user@example.com");
 

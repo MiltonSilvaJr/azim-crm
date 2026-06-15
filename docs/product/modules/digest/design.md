@@ -1,8 +1,8 @@
 # DIG — Digest
 **Design Técnico**
 
-- Versão: 0.1.0
-- Data: 2026-06-11
+- Versão: 0.2.0
+- Data: 2026-06-15
 - Status: Rascunho para revisão
 - Referência base: docs/product/modules/digest/requirements.md v0.1.0
 - ADRs aplicáveis: ADR-0001 (isolamento multi-tenant em defesa em profundidade — Aceito); ADR-0004 (outbox/idempotência — Fase 1, a formalizar); ADR-0006 (token de link autenticado do digest — Fase 1, a formalizar); ADR-0008 (scheduling por Cloud Scheduler UTC + seleção por fuso IANA — Fase 1, a formalizar); ADR-0005 (provider de e-mail via `IEmailSender` — Fase 0, a formalizar); ADR-0007 (stack de observabilidade GCP — a formalizar, VAL-TRD-07)
@@ -12,6 +12,7 @@
 
 | Versão | Data | Status | Descrição da alteração |
 |--------|------|--------|------------------------|
+| 0.2.0 | 2026-06-15 | Rascunho para revisão | VAL-ACT-02: TTL do `digest_action_token` passa a ser configurável por tenant via `digest_tenant_settings`. Default global de 48h mantido em `DigestOptions.DefaultActionTokenTtlHours`. `DigestActionToken.Issue` recebe `TimeSpan ttl` em vez do `const` fixo. Adicionados: `IDigestTenantSettingsRepository`, `ActionTokenTtlResolver`, migration `20260615000000_AddDigestTenantSettings`. |
 | 0.1.0 | 2026-06-11 | Rascunho para revisão | Criação inicial do design a partir do requirements.md v0.1.0 (Req 1..11, RNF 1..10, PBT-01..06), README do módulo, TRD (§7.3, §9.3/9.6, §15, §17, §19.3) e data-model (§BC-06, §BC-13). Resolve VAL-TRD-13 (DD-001), VAL-DIGEST-02/01 (DD-005/DD-006), VAL-DIGEST-04 (DD-003) e VAL-TRD-05/VAL-DIGEST-03 (DD-004). Isolamento por ADR-0001 (DD-002). |
 
 ## 1. Visão Geral
@@ -34,7 +35,7 @@ Criticidade **Tier 1**: falha é visível ao usuário toda manhã; entregabilida
 | Req 4 Digest de pendências (ter–sex) | `DigestContentComposer`; portas de leitura de atividades/oportunidades | 4.1, 5.3, 6.4, DD-001 |
 | Req 5 Azimute da semana (segunda) | `AzimuteSectionBuilder`; `IForecastReadPort`; degradação graciosa de metas | 4.1, 5.3, DD-010, PBT-04, PBT-06 |
 | Req 6 Consumo via read model dos módulos donos | Portas de leitura (`IActivityReadPort`, `IOpportunityReadPort`, `IForecastReadPort`, `IUserDirectoryPort`); sem escrita externa | 3, 6.4, DD-001 |
-| Req 7 Token de ação de um clique | `DigestActionToken` (entidade), `ActionTokenFactory`, `token_hash`, `expires_at` | 4.2, 6.1, 7, DD-004, DD-007, PBT-05 |
+| Req 7 Token de ação de um clique | `DigestActionToken` (entidade), `ActionTokenFactory`, `token_hash`, `expires_at`; TTL configurável por tenant via `digest_tenant_settings` + `ActionTokenTtlResolver` (VAL-ACT-02) | 4.2, 6.1, 7, DD-004, DD-007, PBT-05 |
 | Req 8 Envio via `IEmailSender` + registro | `SendUserDigestHandler`; `EmailDigestLog`; mapeamento de `SendResult` | 5.1, 5.3, 6.2, 12 |
 | Req 9 Idempotência por usuário e data | Reserva `scheduled` + UNIQUE (`tenant_id`,`user_id`,`digest_date`) | 4.1, 6.5, 7, DD-008, PBT-02 |
 | Req 10 Opt-out individual | `IUserDigestPreferencePort` (dono: organization, DD-003); avaliado na seleção | 5.2, DD-003 |
@@ -47,7 +48,7 @@ Criticidade **Tier 1**: falha é visível ao usuário toda manhã; entregabilida
 | RNF 6 Observabilidade do worker | Logs estruturados, métricas `digest_*`, traces, alertas | 11 |
 | RNF 7 Segurança do trigger e do token | OIDC/WIF no trigger; token de 256 bits, `token_hash`, anti-enumeração | 6.1, 7, 10, DD-007, PBT-05 |
 | RNF 8 Execução assíncrona obrigatória | Trigger responde 202; processamento desacoplado da `azim-api` | 5.1, 6.3, DD-005 |
-| RNF 9 Retenção e minimização de logs | `email_digest_logs` 90 dias; purge de `digest_action_tokens` pós-`expires_at` | 6.1, 7, DD-004 |
+| RNF 9 Retenção e minimização de logs | `email_digest_logs` 90 dias; purge de `digest_action_tokens` pós-`expires_at` (TTL configurável por tenant, default 48h — VAL-ACT-02) | 6.1, 7, DD-004 |
 | RNF 10 Auditoria do envio | `DigestEmailSent` append-only via Outbox, sem PII | 6.6, 9, 12, DD-009 |
 | PBT-01 Seleção por fuso neutra a DST | Teste de propriedade sobre `TenantEligibility` | 4.3, 13, PBT-01 |
 | PBT-02 Idempotência sob retentativas | Teste de propriedade sobre reserva + UNIQUE | 6.5, 13, DD-008 |
@@ -316,6 +317,7 @@ CREATE POLICY p_email_digest_logs_tenant ON email_digest_logs
   WITH CHECK (tenant_id = current_setting('app.current_tenant')::uuid);
 
 -- digest_action_tokens — token de 1 clique; persiste apenas o HASH (DD-007)
+-- expires_at = created_at + TTL (configurável por tenant via digest_tenant_settings; default 48h — DD-004, VAL-ACT-02)
 CREATE TABLE digest_action_tokens (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id       UUID NOT NULL,
@@ -336,6 +338,22 @@ ALTER TABLE digest_action_tokens FORCE ROW LEVEL SECURITY;
 CREATE POLICY p_digest_action_tokens_tenant ON digest_action_tokens
   USING (tenant_id = current_setting('app.current_tenant')::uuid)
   WITH CHECK (tenant_id = current_setting('app.current_tenant')::uuid);
+
+-- digest_tenant_settings — TTL configurável por tenant (VAL-ACT-02, decisão de produto 2026-06-15)
+-- Quando ausente, o default global de 48h é aplicado pela camada Application (DigestOptions).
+CREATE TABLE digest_tenant_settings (
+  tenant_id               UUID PRIMARY KEY,
+  action_token_ttl_hours  INTEGER NOT NULL,
+  created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT ck_digest_tenant_settings_ttl CHECK (action_token_ttl_hours > 0)
+);
+
+ALTER TABLE digest_tenant_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE digest_tenant_settings FORCE ROW LEVEL SECURITY;
+CREATE POLICY p_digest_tenant_settings_tenant ON digest_tenant_settings
+  USING (tenant_id = NULLIF(current_setting('app.current_tenant', TRUE), '')::uuid)
+  WITH CHECK (tenant_id = NULLIF(current_setting('app.current_tenant', TRUE), '')::uuid);
 ```
 
 Notas:

@@ -11,6 +11,29 @@ Versionamento: [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ### Adicionado
 
+- **VAL-ACT-02 — TTL do action token configurável por tenant (2026-06-15):**
+  `DigestActionToken.Issue` passa a receber `TimeSpan ttl` em vez do `const ExpiryHours = 48`.
+  Novo conceito de configuração por tenant: tabela `digest_tenant_settings` (EF Core + migration
+  `20260615000000_AddDigestTenantSettings`) com RLS `NULLIF/::uuid` fail-closed (ADR-0001).
+  `IDigestTenantSettingsRepository` (Application) + `DigestTenantSettingsRepository` (Infrastructure).
+  `DigestOptions` (IOptions, seção `Digest:DefaultActionTokenTtlHours = 48`) como fallback global.
+  `ActionTokenTtlResolver` (Application): resolve TTL efetivo = setting do tenant ou default.
+  `SendUserDigestHandler` integra emissão de tokens com TTL configurável.
+  Testes: 4 unitários em Domain (TTL custom, TTL ≤ 0 rejeitado, `IsExpired` com TTL curto),
+  5 unitários em `ActionTokenTtlResolverTests`, 5 de integração em `DigestTenantSettingsRepositoryTests`
+  (Testcontainers + RLS), 2 unitários de handler (tenant com setting / sem setting).
+
+### Alterado
+
+- **`DigestActionToken.Issue`:** assinatura estendida com parâmetro `TimeSpan ttl` (obrigatório,
+  positivo). Propriedades passam de `get`-only para `private set` para compatibilidade com
+  hidratação EF Core 9 via construtor sem parâmetros. `const ExpiryHours` removido.
+- **`SendUserDigestHandler`:** adicionadas dependências `IDigestActionTokenRepository`,
+  `IActivityReadPort`, `IActionTokenFactory` e `ActionTokenTtlResolver`. Handler passa a emitir
+  tokens de ação com TTL resolvido antes do envio de e-mail.
+- **`DigestDbContext`:** novo `DbSet<DigestTenantSettings>` (internal) e Global Query Filter por
+  tenant_id para `digest_tenant_settings`.
+
 - **Onda 1 — Bootstrap (TASK-01):** solution `Digest.slnx` com 10 projetos Clean Architecture
   (.NET 10): `Digest.Domain`, `Digest.Application`, `Digest.Infrastructure`, `Digest.Api`,
   `Digest.Contracts` e cinco projetos de teste. Referências entre camadas conforme design §3.1.

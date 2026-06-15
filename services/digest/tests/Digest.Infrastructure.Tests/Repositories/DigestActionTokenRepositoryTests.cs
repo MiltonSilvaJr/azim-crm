@@ -50,7 +50,7 @@ public sealed class DigestActionTokenRepositoryTests
         var actionToken = await CreateTokenFactory()
             .IssueAsync(tenantId, userId, activityId, ActionType.Complete);
 
-        var entity = DigestActionToken.Issue(tenantId, userId, activityId, ActionType.Complete, actionToken);
+        var entity = DigestActionToken.Issue(tenantId, userId, activityId, ActionType.Complete, actionToken, TimeSpan.FromHours(48));
 
         await using var ctx = _fixture.CreateDbContext(tenantId);
         var repo = new DigestActionTokenRepository(ctx);
@@ -87,7 +87,7 @@ public sealed class DigestActionTokenRepositoryTests
         var actionToken = await CreateTokenFactory()
             .IssueAsync(tenantId, userId, activityId, ActionType.Reschedule);
 
-        var entity = DigestActionToken.Issue(tenantId, userId, activityId, ActionType.Reschedule, actionToken);
+        var entity = DigestActionToken.Issue(tenantId, userId, activityId, ActionType.Reschedule, actionToken, TimeSpan.FromHours(48));
 
         await using var ctx = _fixture.CreateDbContext(tenantId);
         var repo = new DigestActionTokenRepository(ctx);
@@ -131,7 +131,7 @@ public sealed class DigestActionTokenRepositoryTests
         var actionToken = await CreateTokenFactory()
             .IssueAsync(tenantA, userId, activityId, ActionType.Complete);
 
-        var entity = DigestActionToken.Issue(tenantA, userId, activityId, ActionType.Complete, actionToken);
+        var entity = DigestActionToken.Issue(tenantA, userId, activityId, ActionType.Complete, actionToken, TimeSpan.FromHours(48));
 
         // Persiste com tenant A
         await using var ctxA = _fixture.CreateDbContext(tenantA);
@@ -157,8 +157,8 @@ public sealed class DigestActionTokenRepositoryTests
             .IssueAsync(tenantId, userId, activityId, ActionType.Complete);
 
         // Duas entidades com o mesmo token_hash (mesmo ActionToken reutilizado — cenário de bug)
-        var entity1 = DigestActionToken.Issue(tenantId, userId, activityId, ActionType.Complete, actionToken);
-        var entity2 = DigestActionToken.Issue(tenantId, userId, Guid.NewGuid(), ActionType.Complete, actionToken);
+        var entity1 = DigestActionToken.Issue(tenantId, userId, activityId, ActionType.Complete, actionToken, TimeSpan.FromHours(48));
+        var entity2 = DigestActionToken.Issue(tenantId, userId, Guid.NewGuid(), ActionType.Complete, actionToken, TimeSpan.FromHours(48));
 
         await using var ctx1 = _fixture.CreateDbContext(tenantId);
         var repo1 = new DigestActionTokenRepository(ctx1);
