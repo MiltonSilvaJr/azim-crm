@@ -15,12 +15,13 @@ namespace AccountManagement.Domain.Accounts;
 ///   <see cref="NameNormalizer"/> e recalculado a cada alteração (Req 1.1, Req 4.2).
 /// - I3: todo <see cref="Contact"/> carrega o mesmo <see cref="TenantId"/> e
 ///   o <see cref="Id"/> do root (Req 5.1).
+/// - I4: <see cref="BuId"/> é obrigatório e imutável após criação (ADR-0009, VAL-ACC-03).
 ///
-/// A conta é compartilhada por todo o tenant — sem <c>bu_id</c> (Req 2.3).
+/// Contas são segmentadas por Business Unit — <c>bu_id</c> obrigatório (ADR-0009, Req 2.3 revisado).
 /// Domain events são acumulados na coleção <see cref="DomainEvents"/> e despachados
 /// via Outbox após commit (DD-007).
 ///
-/// Mapeia: design §4.1, Req 1..5, Req 7, PBT-03.
+/// Mapeia: design §4.1, Req 1..5, Req 7, PBT-03, ADR-0009.
 /// </summary>
 public sealed class Account
 {
@@ -36,6 +37,12 @@ public sealed class Account
 
     /// <summary>Tenant ao qual a conta pertence. Imutável após criação.</summary>
     public Guid TenantId { get; private set; }
+
+    /// <summary>
+    /// Business Unit dona da conta. Imutável após criação (I4 — ADR-0009).
+    /// Uma conta pertence a exatamente uma BU dentro de seu tenant.
+    /// </summary>
+    public Guid BuId { get; private set; }
 
     /// <summary>Nome da conta (Req 1.5).</summary>
     public AccountName Name { get; private set; }
@@ -79,6 +86,7 @@ public sealed class Account
     private Account(
         Guid id,
         Guid tenantId,
+        Guid buId,
         AccountName name,
         NormalizedName normalizedName,
         string? website,
@@ -88,6 +96,7 @@ public sealed class Account
     {
         Id = id;
         TenantId = tenantId;
+        BuId = buId;
         Name = name;
         NormalizedName = normalizedName;
         Website = website;
@@ -104,9 +113,10 @@ public sealed class Account
     /// Cria uma nova conta, calculando a forma normalizada do nome.
     /// Gera o evento <see cref="AccountCreated"/>.
     ///
-    /// Mapeia: design §4.1, Req 1, ACC-ERR-001.
+    /// Mapeia: design §4.1, Req 1, ACC-ERR-001, ADR-0009.
     /// </summary>
     /// <param name="tenantId">Tenant proprietário da conta.</param>
+    /// <param name="buId">Business Unit dona da conta — obrigatório e imutável (I4, ADR-0009).</param>
     /// <param name="name">Nome validado da conta (I1).</param>
     /// <param name="website">Website opcional.</param>
     /// <param name="notes">Observações opcionais.</param>
@@ -115,8 +125,12 @@ public sealed class Account
     /// <exception cref="ArgumentNullException">
     /// Lançada quando <paramref name="name"/> ou <paramref name="normalizer"/> é nulo.
     /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Lançada quando <paramref name="buId"/> é <see cref="Guid.Empty"/> (I4).
+    /// </exception>
     public static Account Create(
         Guid tenantId,
+        Guid buId,
         AccountName name,
         string? website,
         string? notes,
@@ -125,11 +139,18 @@ public sealed class Account
         ArgumentNullException.ThrowIfNull(name, nameof(name));
         ArgumentNullException.ThrowIfNull(normalizer, nameof(normalizer));
 
+        if (buId == Guid.Empty)
+            throw new ArgumentException(
+                "O identificador de Business Unit (buId) não pode ser vazio. " +
+                "Toda conta deve pertencer a exatamente uma BU (ADR-0009, I4).",
+                nameof(buId));
+
         var now = DateTimeOffset.UtcNow;
         var normalizedName = normalizer.NormalizeName(name.Value);
         var account = new Account(
             id: Guid.NewGuid(),
             tenantId: tenantId,
+            buId: buId,
             name: name,
             normalizedName: normalizedName,
             website: website,
@@ -154,6 +175,7 @@ public sealed class Account
     public static Account Reconstitute(
         Guid id,
         Guid tenantId,
+        Guid buId,
         AccountName name,
         NormalizedName normalizedName,
         string? website,
@@ -163,7 +185,7 @@ public sealed class Account
         IEnumerable<Contact> contacts)
     {
         var account = new Account(
-            id, tenantId, name, normalizedName,
+            id, tenantId, buId, name, normalizedName,
             website, notes, createdAt, updatedAt);
         account._contacts.AddRange(contacts);
         return account;

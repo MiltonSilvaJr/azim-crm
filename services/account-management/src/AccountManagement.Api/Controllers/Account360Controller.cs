@@ -31,16 +31,19 @@ public sealed class Account360Controller : ControllerBase
     private readonly ISender _sender;
     private readonly TenantContext _tenantContext;
     private readonly UserContext _userContext;
+    private readonly BuScopeContext _buScopeContext;
 
     /// <summary>Inicializa o controller.</summary>
     public Account360Controller(
         ISender sender,
         TenantContext tenantContext,
-        UserContext userContext)
+        UserContext userContext,
+        BuScopeContext buScopeContext)
     {
         _sender = sender;
         _tenantContext = tenantContext;
         _userContext = userContext;
+        _buScopeContext = buScopeContext;
     }
 
     // =========================================================================
@@ -92,31 +95,35 @@ public sealed class Account360Controller : ControllerBase
         if (Guid.TryParse(User.FindFirstValue("tenant_id"), out var tenantId))
             _tenantContext.SetTenant(tenantId);
 
+        var role = User.FindFirstValue("role") ?? "Viewer";
         if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-        {
-            var role = User.FindFirstValue("role") ?? "Viewer";
             _userContext.SetUser(userId, role);
-        }
+
+        // Escopo de BU a partir dos claims (ADR-0009)
+        var isTenantWide = role is "TenantAdmin" or "Gestor";
+        var buIdsRaw = User.FindFirstValue("bu_ids") ?? string.Empty;
+        var buIds = buIdsRaw
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(s => Guid.TryParse(s, out var g) ? (Guid?)g : null)
+            .Where(g => g.HasValue)
+            .Select(g => g!.Value)
+            .ToList()
+            .AsReadOnly();
+
+        _buScopeContext.SetScope(buIds, isTenantWide);
     }
 
     /// <summary>
-    /// Extrai o conjunto de BUs autorizadas do JWT.
-    /// Claim <c>bu_ids</c> deve conter GUIDs separados por vírgula.
-    /// Quando ausente, retorna conjunto vazio (sem oportunidades — seguro por default).
+    /// Extrai o conjunto de BUs autorizadas do BuScopeContext (já populado via claims).
     /// </summary>
     private IReadOnlySet<Guid> ExtractAuthorizedBuIds()
     {
-        var buIdsClaim = User.FindFirstValue("bu_ids");
-        if (string.IsNullOrWhiteSpace(buIdsClaim))
+        if (!_buScopeContext.IsInitialized)
             return new HashSet<Guid>();
 
-        var buIds = new HashSet<Guid>();
-        foreach (var part in buIdsClaim.Split(','))
-        {
-            if (Guid.TryParse(part.Trim(), out var buId))
-                buIds.Add(buId);
-        }
-        return buIds;
+        return _buScopeContext.IsTenantWide == true
+            ? new HashSet<Guid>() // tenant-wide: passa conjunto vazio (handler interpreta como all)
+            : _buScopeContext.BuIds?.ToHashSet() ?? new HashSet<Guid>();
     }
 
     private static Account360Response MapToResponse(Account360View view)
@@ -124,6 +131,7 @@ public sealed class Account360Controller : ControllerBase
         var account = new AccountResponse(
             Id: view.Account.Id,
             TenantId: view.Account.TenantId,
+            BuId: view.Account.BuId,
             Name: view.Account.Name.Value,
             NormalizedName: view.Account.NormalizedName.Value,
             Website: view.Account.Website,

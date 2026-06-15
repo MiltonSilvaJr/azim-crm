@@ -35,16 +35,19 @@ public sealed class ContactsController : ControllerBase
     private readonly ISender _sender;
     private readonly TenantContext _tenantContext;
     private readonly UserContext _userContext;
+    private readonly BuScopeContext _buScopeContext;
 
     /// <summary>Inicializa o controller com o sender MediatR e contextos de request.</summary>
     public ContactsController(
         ISender sender,
         TenantContext tenantContext,
-        UserContext userContext)
+        UserContext userContext,
+        BuScopeContext buScopeContext)
     {
         _sender = sender;
         _tenantContext = tenantContext;
         _userContext = userContext;
+        _buScopeContext = buScopeContext;
     }
 
     // =========================================================================
@@ -213,11 +216,22 @@ public sealed class ContactsController : ControllerBase
         if (Guid.TryParse(User.FindFirstValue("tenant_id"), out var tenantId))
             _tenantContext.SetTenant(tenantId);
 
+        var role = User.FindFirstValue("role") ?? "Viewer";
         if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-        {
-            var role = User.FindFirstValue("role") ?? "Viewer";
             _userContext.SetUser(userId, role);
-        }
+
+        // Escopo de BU a partir dos claims (ADR-0009)
+        var isTenantWide = role is "TenantAdmin" or "Gestor";
+        var buIdsRaw = User.FindFirstValue("bu_ids") ?? string.Empty;
+        var buIds = buIdsRaw
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(s => Guid.TryParse(s, out var g) ? (Guid?)g : null)
+            .Where(g => g.HasValue)
+            .Select(g => g!.Value)
+            .ToList()
+            .AsReadOnly();
+
+        _buScopeContext.SetScope(buIds, isTenantWide);
     }
 
     /// <summary>
