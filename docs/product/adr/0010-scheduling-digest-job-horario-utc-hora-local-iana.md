@@ -11,13 +11,18 @@ informed:
   - Times de notificação e infraestrutura
 ---
 
-# ADR-0006 — Scheduling do digest por job horário UTC com hora local IANA por tenant
+# ADR-0010 — Scheduling do digest por job horário UTC com hora local IANA por tenant
 
 - **Status:** Aceito
 - **Data:** 2026-06-11
 - **Autores:** @MiltonSilvaJr
 - **Supersede:** —
 - **Substituído por:** —
+
+> **Nota de renumeração (2026-06-15):** este ADR foi originalmente registrado como **ADR-0006**.
+> O número 0006 foi liberado e reatribuído ao ADR de *ownership do `digest_action_token`* (token de
+> link autenticado), que o corpus de especificação do digest/activity-management já referenciava como
+> "ADR-0006". A decisão e a data deste ADR permanecem inalteradas — apenas o número mudou.
 
 ## Contexto e Problema
 

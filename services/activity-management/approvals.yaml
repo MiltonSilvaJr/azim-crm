@@ -6,7 +6,7 @@
 module: activity-management
 version: 0.1.1
 updated_at: 2026-06-15
-status: decided  # VAL-ACT-02 implementado (PR #18); VAL-ACT-01 → ADR-0006 e VAL-TRD-05 → confirmação de infra (não-código)
+status: decided  # VAL-ACT-02 implementado (PR #18); VAL-ACT-01 formalizado em ADR-0006 (2026-06-15); VAL-TRD-05 → confirmação de infra (não-código)
 
 # ============================================================
 # VAL-ACT-01 — Fronteira do BC digest/activity (DD-001, BC-04/BC-06)
@@ -16,7 +16,7 @@ status: decided  # VAL-ACT-02 implementado (PR #18); VAL-ACT-01 → ADR-0006 e V
   category: architecture_decision
   priority: blocker_for_go_live
   status: decided
-  decision: "activity-management é owner exclusivo; BC-06 (Digest) é apenas consumidor via IDigestActionTokenPort"
+  decision: "Tabela única em banco compartilhado; digest (BC-06) é owner exclusivo do schema/migration (emite + expira/purga); activity-management (BC-04) consome (grava used_at). Formalizado em ADR-0006."
   description: >
     A tabela digest_action_tokens referencia activities(id) via FK, mas
     é descrita como pertencente ao BC-06 (Digest). Na implementação atual
@@ -33,12 +33,13 @@ status: decided  # VAL-ACT-02 implementado (PR #18); VAL-ACT-01 → ADR-0006 e V
     em digest_action_tokens e rollout incremental.
   required_approver: arquitetura
   required_action: >
-    Arquiteto responsável deve registrar a decisão em ADR-0006
-    (token de link autenticado — atualmente 'a confirmar') e confirmar
-    qual bounded context é owner de digest_action_tokens em produção.
+    FEITO (2026-06-15): decisão registrada em ADR-0006 (ownership do
+    digest_action_token — tabela compartilhada). Pendente: alinhamento de
+    código (unificar para 1 banco; remover a DDL de digest_action_tokens do
+    activity-management, que passa a só consumir) — ver ADR-0006 §Conformidade.
   technical_reference: >
-    design.md §10, data-model.md §BC-04/§BC-06, tasks.md TASK-14,
-    ADR-0006 (a confirmar), DD-003
+    ADR-0006 (ownership do digest_action_token), design.md §10,
+    data-model.md §BC-04/§BC-06, tasks.md TASK-14, DD-003
   risk_if_not_resolved: >
     Conflito de ownership de schema em produção — dois serviços podem
     tentar aplicar migrations na mesma tabela; possível corrupção de dados
@@ -46,13 +47,18 @@ status: decided  # VAL-ACT-02 implementado (PR #18); VAL-ACT-01 → ADR-0006 e V
   approved_by: "Milton Antonio (Arquitetura/Owner)"
   approved_at: "2026-06-15"
   notes: >
-    DECISÃO (2026-06-15): activity-management é owner exclusivo de
-    digest_action_tokens; o módulo digest consome via IDigestActionTokenPort.
-    Bate com a implementação atual (Ondas 1-6) — sem migração de schema.
-    Ação pendente: registrar formalmente em ADR-0006 (atualmente 'a confirmar').
-    RE-05 (tasks.md §8): risco de conflito de schema identificado em Onda 4.
-    Em desenvolvimento o schema é isolado (Testcontainers); em produção
-    usar schema isolado por módulo (owner = activity-management).
+    DECISÃO (2026-06-15, formalizada em ADR-0006): digest_action_tokens é
+    uma tabela ÚNICA em banco COMPARTILHADO. O digest (BC-06) é owner
+    exclusivo do schema/migration — emite (INSERT, com expires_at = TTL por
+    tenant, VAL-ACT-02) e expira/purga. O activity-management (BC-04) é
+    consumidor: valida por token_hash e grava used_at (UPDATE ... WHERE
+    used_at IS NULL). RLS por tenant nos dois lados (ADR-0001).
+    CORREÇÃO: a redação anterior ("activity-management é owner; digest
+    consome") estava invertida — após o PR #18 quem emite/owna o ciclo é o
+    digest. RE-05 (conflito de migrations) resolvido por owner único (digest).
+    ALINHAMENTO DE CÓDIGO PENDENTE (ADR-0006 §Conformidade): hoje o código usa
+    DOIS bancos (azim_digest ≠ activity_management) e ambos criam a tabela —
+    converge p/ 1 banco e remove a DDL do activity-management em tarefa dedicada.
 
 # ============================================================
 # VAL-ACT-02 — TTL do token de digest (Req 7.3, RNF 5)
@@ -241,8 +247,8 @@ dod_checklist:
   - item: "approvals.yaml com VAL-ACT-01, VAL-ACT-02, VAL-TRD-05 registrados (TASK-24)"
     status: "[X]"
   # Decisões humanas tomadas (2026-06-15)
-  - item: "VAL-ACT-01 DECIDIDO — activity-management owner; Digest consome. Pendente: ADR-0006"
-    status: "[X] decidido — implementação já condiz"
+  - item: "VAL-ACT-01 FORMALIZADO em ADR-0006 — tabela compartilhada; digest owner de schema, activity consome. Pendente: alinhamento de código (1 banco)"
+    status: "[X] decidido e formalizado (ADR-0006) — alinhamento de código pendente"
   - item: "VAL-ACT-02 IMPLEMENTADO (PR #18) — TTL configurável por tenant no módulo digest (digest_tenant_settings)"
     status: "[X] implementado"
   - item: "VAL-TRD-05 DECIDIDO — single-region southamerica-east1. Pendente: confirmação Platform Eng"
@@ -255,7 +261,7 @@ traceability_summary:
   total_tasks: 24
   completed: 24
   pending_implementation: 0  # VAL-ACT-02 implementado em PR #18 (módulo digest)
-  pending_human_approval: 0  # VAL-ACT-01/02/TRD-05 decididos em 2026-06-15 (ADR-0006 + infra ainda formalizam)
+  pending_human_approval: 0  # VAL-ACT-01 formalizado em ADR-0006; VAL-ACT-02 implementado (PR #18); VAL-TRD-05 → confirmação de infra
   pbts_implemented: 5        # PBT-01..PBT-05
   pbts_min_cases: 500        # todas as Property rodando MaxTest = 500
   waves_completed: 6         # Onda 1..6 encerradas

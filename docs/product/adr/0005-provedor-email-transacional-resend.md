@@ -20,7 +20,7 @@ informed:
 
 ## Contexto e Problema
 
-O Azim CRM envia **e-mails transacionais** (convites, notificações, digest — ver ADR-0006). É
+O Azim CRM envia **e-mails transacionais** (convites, notificações, digest — ver ADR-0010). É
 preciso escolher um **provedor de envio** e definir como isolá-lo do domínio para que a escolha não
 contamine o código de negócio nem dificulte uma eventual troca. A entregabilidade depende de
 **autenticação de domínio** (SPF/DKIM/DMARC) corretamente configurada.
@@ -87,4 +87,4 @@ produção antes da autenticação de domínio validada.
 ## Referências
 
 - Design — notification-delivery **DD-001** — `docs/product/modules/notification-delivery/design.md`
-- ADR-0006 — Scheduling do digest (consumidor de envio de e-mail)
+- ADR-0010 — Scheduling do digest (consumidor de envio de e-mail)

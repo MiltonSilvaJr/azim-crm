@@ -15,7 +15,7 @@ da escolha — inclusive o porquê das alternativas rejeitadas.
 
 ## Próximo número livre
 
-`0009`
+`0011`
 
 ## Tabela mestra
 
@@ -26,6 +26,8 @@ da escolha — inclusive o porquê das alternativas rejeitadas.
 | [0003](./0003-numeracao-sequencial-atomica-oportunidade-por-tenant.md) | Numeração sequencial atômica de oportunidade por tenant (AZ-NNNN) | Aceito | 2026-06-11 | @MiltonSilvaJr |
 | [0004](./0004-outbox-transacional-idempotencia-eventos-dominio.md) | Outbox transacional e idempotência para eventos de domínio | Aceito | 2026-06-11 | @MiltonSilvaJr |
 | [0005](./0005-provedor-email-transacional-resend.md) | Provedor de e-mail transacional: Resend atrás da ACL IEmailSender | Aceito | 2026-06-11 | @MiltonSilvaJr |
-| [0006](./0006-scheduling-digest-job-horario-utc-hora-local-iana.md) | Scheduling do digest por job horário UTC com hora local IANA por tenant | Aceito | 2026-06-11 | @MiltonSilvaJr |
+| [0006](./0006-ownership-digest-action-token-tabela-compartilhada.md) | Ownership do `digest_action_token`: tabela compartilhada com owner único de schema | Aceito | 2026-06-15 | @MiltonSilvaJr |
 | [0007](./0007-stack-observabilidade-gcp.md) | Stack de observabilidade: GCP Cloud Logging, Monitoring e Trace | Aceito | 2026-06-11 | @MiltonSilvaJr |
 | [0008](./0008-suporte-multimoeda-brl-usd-eur.md) | Suporte a multimoeda (BRL, USD, EUR) com Money = amount_cents + currency | Aceito | 2026-06-11 | @MiltonSilvaJr |
+| [0009](./0009-segmentacao-contas-por-business-unit.md) | Segmentação de contas por Business Unit (visibilidade por BU sobre o isolamento de tenant) | Aceito | 2026-06-15 | @MiltonSilvaJr |
+| [0010](./0010-scheduling-digest-job-horario-utc-hora-local-iana.md) | Scheduling do digest por job horário UTC com hora local IANA por tenant (renumerado de ADR-0006) | Aceito | 2026-06-11 | @MiltonSilvaJr |
