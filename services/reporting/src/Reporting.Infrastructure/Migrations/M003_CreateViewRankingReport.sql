@@ -17,7 +17,8 @@ SELECT
     o.created_at,
     o.stage_category,
     o.valor_total          AS total_cents,
-    o.forecast_ponderado   AS weighted_forecast_cents
+    o.forecast_ponderado   AS weighted_forecast_cents,
+    o.currency
 FROM opportunities o
 LEFT JOIN users u ON u.id = o.owner_id;
 

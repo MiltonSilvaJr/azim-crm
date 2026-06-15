@@ -15,7 +15,8 @@ SELECT
     o.origin_channel_id    AS channel_id,
     oc.name                AS channel_name,
     o.created_at,
-    o.valor_total          AS total_cents
+    o.valor_total          AS total_cents,
+    o.currency
 FROM opportunities o
 LEFT JOIN origin_channels oc ON oc.id = o.origin_channel_id;
 

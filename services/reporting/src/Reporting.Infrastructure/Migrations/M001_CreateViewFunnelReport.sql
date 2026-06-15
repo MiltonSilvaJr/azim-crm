@@ -22,7 +22,8 @@ SELECT
     s.category      AS stage_category,
     o.created_at,
     o.valor_total          AS total_cents,
-    o.forecast_ponderado   AS weighted_forecast_cents
+    o.forecast_ponderado   AS weighted_forecast_cents,
+    o.currency
 FROM opportunities o
 JOIN stages s ON s.id = o.stage_id;
 

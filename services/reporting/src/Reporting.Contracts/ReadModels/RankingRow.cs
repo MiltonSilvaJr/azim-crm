@@ -7,6 +7,7 @@ namespace Reporting.Contracts.ReadModels;
 /// <see cref="DisplayName"/> é <c>null</c> quando <c>PiiMinimizationPolicy</c> determina omissão (DD-008, RNF 4).
 /// Quando <c>null</c>, o campo é omitido da serialização JSON (<c>JsonIgnoreCondition.WhenWritingNull</c>).
 /// Valores monetários em centavos inteiros (DD-007).
+/// <see cref="Currency"/> é o código ISO-4217 da moeda das oportunidades do responsável (ADR-0008).
 /// Mapeia: Req 2, design §5.2, TASK-08, TASK-20.
 /// </summary>
 public sealed record RankingRow(
@@ -15,4 +16,5 @@ public sealed record RankingRow(
     string? DisplayName,
     int WonCount,
     long WonValueCents,
-    long PipelineForecastCents);
+    long PipelineForecastCents,
+    string Currency = "BRL");
