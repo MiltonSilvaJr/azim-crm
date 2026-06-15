@@ -28,7 +28,7 @@ public sealed class SearchAccountsHandlerTests
     private Account BuildAccount(string name)
     {
         var normalizer = new NameNormalizer();
-        return Account.Create(_tenantId, AccountName.Create(name), null, null, normalizer);
+        return Account.Create(_tenantId, Guid.NewGuid(), AccountName.Create(name), null, null, normalizer);
     }
 
     [Fact(DisplayName = "SearchAccounts: retorna página paginada restrita ao tenant")]
@@ -94,7 +94,7 @@ public sealed class SearchSimilarAccountsHandlerTests
         // Arrange
         var normalizer = new NameNormalizer();
         var existingAccount = Account.Create(
-            _tenantId, AccountName.Create("Pag AI"), null, null, normalizer);
+            _tenantId, Guid.NewGuid(), AccountName.Create("Pag AI"), null, null, normalizer);
 
         _repository.SearchSimilarAsync(
                 Arg.Is<NormalizedName>(n => n.Value == "pag ai"),

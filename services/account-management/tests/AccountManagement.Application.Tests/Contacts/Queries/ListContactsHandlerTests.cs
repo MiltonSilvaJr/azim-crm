@@ -29,7 +29,7 @@ public sealed class ListContactsHandlerTests
     {
         var normalizer = new NameNormalizer();
         var account = Account.Create(
-            _tenantId, AccountName.Create("Empresa Teste"), null, null, normalizer);
+            _tenantId, Guid.NewGuid(), AccountName.Create("Empresa Teste"), null, null, normalizer);
         account.AddContact(ContactInfo.Create("Ana Costa"), role: "Diretora");
         account.AddContact(ContactInfo.Create("Rui Mendes"), role: "Gerente");
         account.ClearDomainEvents();

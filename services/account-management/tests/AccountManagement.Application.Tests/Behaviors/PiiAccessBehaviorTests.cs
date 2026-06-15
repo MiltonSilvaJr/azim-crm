@@ -110,7 +110,7 @@ public sealed class PiiAccessBehaviorTests
         var behavior = new PiiAccessBehavior<CreateAccountCommand, object>(userContext);
         var request = new CreateAccountCommand(
             TenantId: Guid.NewGuid(), Name: "Empresa", Website: null, Notes: null,
-            ConfirmCreateDespiteSimilar: false);
+            BuId: null, ConfirmCreateDespiteSimilar: false);
 
         var nextCalled = false;
         Task<object> Next(CancellationToken ct)

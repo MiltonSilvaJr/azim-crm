@@ -4,6 +4,7 @@ using AccountManagement.Infrastructure.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Testcontainers.PostgreSql;
+using System.Collections.ObjectModel;
 
 namespace AccountManagement.Infrastructure.Tests.Persistence;
 
@@ -73,8 +74,8 @@ public sealed class PostgresFixture : IAsyncLifetime
     }
 
     /// <summary>
-    /// Cria opções de DbContext para um tenant específico.
-    /// O contexto terá o filtro global ativo para o tenant informado.
+    /// Cria opções de DbContext para um tenant específico com visão tenant-wide de BU.
+    /// O contexto terá filtro de tenant ativo; filtro de BU bypassed (tenant-wide = true).
     /// </summary>
     public AccountManagementDbContext CreateDbContext(Guid tenantId)
     {
@@ -82,11 +83,38 @@ public sealed class PostgresFixture : IAsyncLifetime
         var tenantCtx = new TenantContext();
         tenantCtx.SetTenant(tenantId);
         var infraTenantCtx = new InfrastructureTenantContext(tenantCtx);
-        return new AccountManagementDbContext(options, infraTenantCtx);
+
+        // Visão tenant-wide: vê todas as BUs do tenant (comportamento padrão para testes existentes)
+        var buScopeCtx = new BuScopeContext();
+        buScopeCtx.SetScope(Array.Empty<Guid>(), isTenantWide: true);
+        var infraBuScopeCtx = new InfrastructureBuScopeContext(buScopeCtx);
+
+        return new AccountManagementDbContext(options, infraTenantCtx, infraBuScopeCtx);
     }
 
     /// <summary>
-    /// Cria um DbContext sem filtro de tenant (para setup de dados de teste).
+    /// Cria um DbContext para um tenant com escopo de BU específico.
+    /// Fail-closed: apenas contas das BUs informadas são visíveis.
+    /// </summary>
+    public AccountManagementDbContext CreateDbContextWithBuScope(
+        Guid tenantId,
+        IReadOnlyCollection<Guid> buIds,
+        bool isTenantWide = false)
+    {
+        var options = CreateDbContextOptions();
+        var tenantCtx = new TenantContext();
+        tenantCtx.SetTenant(tenantId);
+        var infraTenantCtx = new InfrastructureTenantContext(tenantCtx);
+
+        var buScopeCtx = new BuScopeContext();
+        buScopeCtx.SetScope(buIds, isTenantWide);
+        var infraBuScopeCtx = new InfrastructureBuScopeContext(buScopeCtx);
+
+        return new AccountManagementDbContext(options, infraTenantCtx, infraBuScopeCtx);
+    }
+
+    /// <summary>
+    /// Cria um DbContext sem filtros (para setup de dados de teste).
     /// </summary>
     public AccountManagementDbContext CreateDbContextNoFilter()
     {

@@ -50,9 +50,9 @@ public sealed class DbContextSchemaTests
         Assert.Contains("normalized_name", columns);
         Assert.Contains("website", columns);
         Assert.Contains("notes", columns);
+        Assert.Contains("bu_id", columns); // ADR-0009 — bu_id adicionado na migration 20260615000003
         Assert.Contains("created_at", columns);
         Assert.Contains("updated_at", columns);
-        Assert.DoesNotContain("bu_id", columns); // Req 2.3 — sem bu_id
     }
 
     [Fact]
@@ -169,14 +169,14 @@ public sealed class DbContextSchemaTests
 
         await using var insertB = setupConn.CreateCommand();
         insertB.CommandText = $@"
-            INSERT INTO accounts (id, tenant_id, name, normalized_name, created_at, updated_at)
-            VALUES ('{Guid.NewGuid()}', '{tenantB}', 'Empresa B', 'empresa b', now(), now())";
+            INSERT INTO accounts (id, tenant_id, bu_id, name, normalized_name, created_at, updated_at)
+            VALUES ('{Guid.NewGuid()}', '{tenantB}', gen_random_uuid(), 'Empresa B', 'empresa b', now(), now())";
         await insertB.ExecuteNonQueryAsync();
 
         await using var insertA = setupConn.CreateCommand();
         insertA.CommandText = $@"
-            INSERT INTO accounts (id, tenant_id, name, normalized_name, created_at, updated_at)
-            VALUES ('{Guid.NewGuid()}', '{tenantA}', 'Empresa A', 'empresa a', now(), now())";
+            INSERT INTO accounts (id, tenant_id, bu_id, name, normalized_name, created_at, updated_at)
+            VALUES ('{Guid.NewGuid()}', '{tenantA}', gen_random_uuid(), 'Empresa A', 'empresa a', now(), now())";
         await insertA.ExecuteNonQueryAsync();
 
         // Query com contexto de tenantA: não deve retornar Empresa B

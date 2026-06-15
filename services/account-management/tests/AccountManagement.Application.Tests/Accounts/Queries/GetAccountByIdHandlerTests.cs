@@ -31,7 +31,7 @@ public sealed class GetAccountByIdHandlerTests
         // Arrange
         var normalizer = new NameNormalizer();
         var account = Account.Create(
-            _tenantId, AccountName.Create("Empresa Teste"), null, null, normalizer);
+            _tenantId, Guid.NewGuid(), AccountName.Create("Empresa Teste"), null, null, normalizer);
 
         _repository.GetByIdAsync(account.Id, Arg.Any<CancellationToken>())
             .Returns(account);

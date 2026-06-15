@@ -39,7 +39,7 @@ public sealed class GetAccount360HandlerTests
     {
         var normalizer = new NameNormalizer();
         var account = Account.Create(
-            _tenantId, AccountName.Create("Empresa 360"), null, null, normalizer);
+            _tenantId, Guid.NewGuid(), AccountName.Create("Empresa 360"), null, null, normalizer);
         account.AddContact(ContactInfo.Create("Ana Lima"), role: "Gerente");
         account.ClearDomainEvents();
         return account;

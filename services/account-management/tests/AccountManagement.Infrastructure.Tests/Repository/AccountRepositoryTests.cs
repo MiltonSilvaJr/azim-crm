@@ -218,10 +218,11 @@ public sealed class AccountRepositoryTests
     // Helpers
     // =========================================================================
 
-    private Account CreateTestAccount(Guid tenantId, string name)
+    private Account CreateTestAccount(Guid tenantId, string name, Guid? buId = null)
     {
         return Account.Create(
             tenantId: tenantId,
+            buId: buId ?? Guid.NewGuid(),
             name: AccountName.Create(name),
             website: null,
             notes: null,

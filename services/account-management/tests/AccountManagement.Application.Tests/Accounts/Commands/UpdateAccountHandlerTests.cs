@@ -34,6 +34,7 @@ public sealed class UpdateAccountHandlerTests
         var normalizer = new NameNormalizer();
         return Account.Create(
             _tenantId,
+            Guid.NewGuid(),
             AccountName.Create(name),
             website: null,
             notes: null,

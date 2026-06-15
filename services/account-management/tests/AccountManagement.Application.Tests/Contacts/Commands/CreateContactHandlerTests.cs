@@ -33,7 +33,7 @@ public sealed class CreateContactHandlerTests
     {
         var normalizer = new NameNormalizer();
         return Account.Create(
-            _tenantId, AccountName.Create("Empresa Teste"), null, null, normalizer);
+            _tenantId, Guid.NewGuid(), AccountName.Create("Empresa Teste"), null, null, normalizer);
     }
 
     [Fact(DisplayName = "CreateContact: contato criado com sucesso e ContactLinked emitido com maskedDelta")]

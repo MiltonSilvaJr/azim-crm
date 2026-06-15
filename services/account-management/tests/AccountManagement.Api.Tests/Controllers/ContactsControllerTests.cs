@@ -52,6 +52,7 @@ public sealed class ContactsControllerTests : IClassFixture<TestWebApplicationFa
     {
         var account = Account.Create(
             TestWebApplicationFactory.DefaultTenantId,
+            Guid.NewGuid(),
             AccountName.Create("Test Corp"),
             null, null, Normalizer);
         account.AddContact(
@@ -104,6 +105,7 @@ public sealed class ContactsControllerTests : IClassFixture<TestWebApplicationFa
         // Arrange
         var account = Account.Create(
             TestWebApplicationFactory.DefaultTenantId,
+            Guid.NewGuid(),
             AccountName.Create("Corp"), null, null, Normalizer);
         account.AddContact(ContactInfo.Create("Maria", null, null), null);
         var contacts = account.Contacts;
@@ -343,6 +345,7 @@ public sealed class ContactsControllerTests : IClassFixture<TestWebApplicationFa
         // Arrange
         var account = Account.Create(
             TestWebApplicationFactory.DefaultTenantId,
+            Guid.NewGuid(),
             AccountName.Create("Corp"), null, null, Normalizer);
         account.AddContact(ContactInfo.Create(originalName, null, null), null);
         var contact = account.Contacts[0];

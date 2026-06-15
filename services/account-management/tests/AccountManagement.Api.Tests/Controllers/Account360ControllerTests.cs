@@ -42,6 +42,7 @@ public sealed class Account360ControllerTests : IClassFixture<TestWebApplication
     private static Account BuildAccount() =>
         Account.Create(
             TestWebApplicationFactory.DefaultTenantId,
+            Guid.NewGuid(),
             AccountName.Create("Azim Corp"),
             null, null, Normalizer);
 

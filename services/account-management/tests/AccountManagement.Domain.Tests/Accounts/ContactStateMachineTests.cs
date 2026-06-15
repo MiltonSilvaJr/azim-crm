@@ -114,7 +114,7 @@ public sealed class ContactStateMachineTests
             TenantId, NormalizedName.Create("azim crm"));
 
         var account = Account.Reconstitute(
-            Guid.NewGuid(), TenantId,
+            Guid.NewGuid(), TenantId, Guid.NewGuid(),
             AccountName.Create("Azim CRM"),
             NormalizedName.Create("azim crm"),
             null, null,
@@ -131,7 +131,7 @@ public sealed class ContactStateMachineTests
 
         var otherTenant = Guid.NewGuid();
         var account = Account.Reconstitute(
-            Guid.NewGuid(), otherTenant,
+            Guid.NewGuid(), otherTenant, Guid.NewGuid(),
             AccountName.Create("Azim CRM"),
             NormalizedName.Create("azim crm"),
             null, null,
@@ -147,7 +147,7 @@ public sealed class ContactStateMachineTests
             TenantId, NormalizedName.Create("azim crm"));
 
         var account = Account.Reconstitute(
-            Guid.NewGuid(), TenantId,
+            Guid.NewGuid(), TenantId, Guid.NewGuid(),
             AccountName.Create("Outra Empresa"),
             NormalizedName.Create("outra empresa"),
             null, null,
@@ -162,7 +162,7 @@ public sealed class ContactStateMachineTests
         var spec = new AccountManagement.Domain.Accounts.Specifications.TenantScopeSpecification(TenantId);
 
         var account = Account.Reconstitute(
-            Guid.NewGuid(), TenantId,
+            Guid.NewGuid(), TenantId, Guid.NewGuid(),
             AccountName.Create("Azim"),
             NormalizedName.Create("azim"),
             null, null,
@@ -177,7 +177,7 @@ public sealed class ContactStateMachineTests
         var spec = new AccountManagement.Domain.Accounts.Specifications.TenantScopeSpecification(TenantId);
 
         var account = Account.Reconstitute(
-            Guid.NewGuid(), Guid.NewGuid(),
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
             AccountName.Create("Outra"),
             NormalizedName.Create("outra"),
             null, null,
@@ -192,6 +192,6 @@ public sealed class ContactStateMachineTests
 
     private static Account CreateAccount(string name)
     {
-        return Account.Create(TenantId, AccountName.Create(name), null, null, Normalizer);
+        return Account.Create(TenantId, Guid.NewGuid(), AccountName.Create(name), null, null, Normalizer);
     }
 }
