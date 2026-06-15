@@ -39,8 +39,11 @@ public static class DependencyInjection
         IConfiguration          configuration)
     {
         // ── DbContext + interceptor de tenant ────────────────────────────────
+        // ADR-0006: activity-management e digest compartilham o MESMO banco físico.
+        // A tabela digest_action_tokens é criada pelo digest; este serviço é somente consumidor.
+        // Em produção, ambos os serviços apontam para o banco compartilhado "azim_shared".
         var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? "Host=localhost;Database=activity_management_dev;Username=app;Password=app";
+            ?? "Host=localhost;Database=azim_shared;Username=app;Password=app";
 
         services.AddSingleton<TenantConnectionInterceptor>();
 

@@ -8,14 +8,18 @@ using Microsoft.EntityFrameworkCore;
 /// Implementação de <see cref="IDigestActionTokenPort"/> que consulta e consome
 /// <c>digest_action_tokens</c> via EF Core com Global Query Filter de tenant ativo.
 ///
-/// Design:
-/// - Consulta exclusivamente por <c>token_hash</c> — o token em claro nunca transita aqui.
-/// - Retorna <c>null</c> quando o token não existe ou é de outro tenant (anti-enumeração — Req 7.6).
+/// Design (ADR-0006):
+/// - A tabela é owned pelo digest (BC-06); este adapter é somente consumidor.
+/// - Consulta exclusivamente por <c>token_hash</c> (BYTEA, SHA-256, 32 bytes) —
+///   o token em claro nunca transita aqui.
+/// - Retorna <c>null</c> quando o token não existe ou é de outro tenant
+///   (anti-enumeração — Req 7.6).
 /// - <see cref="MarkUsedAsync"/> usa UPDATE com cláusula <c>WHERE used_at IS NULL</c>
 ///   garantindo idempotência e uso único sem condição de corrida.
 /// - RLS do PostgreSQL + Global Query Filter formam as duas camadas de isolamento (ADR-0001).
+/// - <c>activity_id</c> é NOT NULL (referência lógica, DD-001).
 ///
-/// Mapeia: TASK-17, DD-003, RNF 5, design §6.4, Req 7.
+/// Mapeia: TASK-17, DD-003, DD-007, ADR-0006, RNF 5, design §6.4, Req 7.
 /// </summary>
 internal sealed class DigestActionTokenAdapter : IDigestActionTokenPort
 {
@@ -29,13 +33,16 @@ internal sealed class DigestActionTokenAdapter : IDigestActionTokenPort
 
     /// <inheritdoc/>
     public async Task<DigestActionTokenData?> FindByHashAsync(
-        string            tokenHash,
+        byte[]            tokenHash,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(tokenHash);
+        ArgumentNullException.ThrowIfNull(tokenHash);
+        if (tokenHash.Length == 0)
+            throw new ArgumentException("token_hash não pode ser vazio.", nameof(tokenHash));
 
         // Global Query Filter garante que apenas tokens do tenant ativo são retornados.
         // Retorna null para tokens de outro tenant (indistinguível de inexistente — Req 7.6).
+        // Comparação BYTEA via SequenceEqual no EF Core / Npgsql (traduzido para = no PostgreSQL).
         var token = await _db.DigestActionTokens
             .AsNoTracking()
             .Where(t => t.TokenHash == tokenHash)
