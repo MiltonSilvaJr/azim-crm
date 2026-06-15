@@ -25,6 +25,7 @@ public static class ForecastCalculator
             contractValue.TotalInCents * probability.Value,
             100);
 
-        return new Money(forecastCents);
+        // Herda a moeda do contrato (ADR-0008)
+        return new Money(forecastCents, contractValue.Currency);
     }
 }

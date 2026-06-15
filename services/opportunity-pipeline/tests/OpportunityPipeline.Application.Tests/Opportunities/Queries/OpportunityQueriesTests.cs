@@ -46,7 +46,7 @@ public sealed class OpportunityQueriesTests
         return Opportunity.Create(
             tenantId, buId, Guid.NewGuid(), actorId, null,
             stage, channel, "Opp Query Test",
-            new ContractValue(new Money(100000), new Money(5000), 12),
+            new ContractValue(new Money(100000, "BRL"), new Money(5000, "BRL"), 12),
             new Probability(80), expectedCloseDate, null,
             new OpportunityNumber("AZ-0001"), actorId, DateTimeOffset.UtcNow);
     }
@@ -199,7 +199,7 @@ public sealed class OpportunityQueriesTests
         var opp = Opportunity.Create(
             _tenantId, _buId, Guid.NewGuid(), _actorId, partnerId,
             stage, partnerChannel, "Opp Com Comissão",
-            new ContractValue(new Money(100000), new Money(0), 0), // total = 100000
+            new ContractValue(new Money(100000, "BRL"), new Money(0, "BRL"), 0), // total = 100000
             new Probability(80), null, null,
             new OpportunityNumber("AZ-0002"), _actorId, DateTimeOffset.UtcNow);
 

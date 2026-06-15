@@ -103,8 +103,10 @@ public sealed class UpdateOpportunityHandler(
         bool updateContract = command.ValorSetupCents.HasValue || command.ValorMensalCents.HasValue || command.DuracaoMeses.HasValue;
         if (updateContract)
         {
-            var newSetup = command.ValorSetupCents.HasValue ? new Money(command.ValorSetupCents.Value) : opportunity.ContractValue.Setup;
-            var newMensal = command.ValorMensalCents.HasValue ? new Money(command.ValorMensalCents.Value) : opportunity.ContractValue.Mensal;
+            // Moeda imutável — herda sempre do ContractValue existente (ADR-0008)
+            var currency = opportunity.ContractValue.Currency;
+            var newSetup = command.ValorSetupCents.HasValue ? new Money(command.ValorSetupCents.Value, currency) : opportunity.ContractValue.Setup;
+            var newMensal = command.ValorMensalCents.HasValue ? new Money(command.ValorMensalCents.Value, currency) : opportunity.ContractValue.Mensal;
             var newMeses = command.DuracaoMeses ?? opportunity.ContractValue.DuracaoMeses;
 
             opportunity.UpdateContractValue(new ContractValue(newSetup, newMensal, newMeses), now);

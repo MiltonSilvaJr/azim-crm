@@ -50,8 +50,8 @@ public sealed class UpdateGoalByIdCommandHandler : IRequestHandler<UpdateGoalByI
         if (!authResult.IsAllowed)
             throw new AppException("GF-ERR-006", "Operação não permitida.", 403);
 
-        // Passo 4: atualiza valor_meta
-        var novoValor = Money.Of(command.ValorMeta);
+        // Passo 4: atualiza valor_meta (mantém a moeda existente da meta — ADR-0008)
+        var novoValor = Money.Of(command.ValorMeta, goal.ValorMeta.Currency);
         goal.ChangeValorMeta(novoValor);
 
         // Passo 5: persiste (outbox via repositório)
@@ -69,6 +69,7 @@ public sealed class UpdateGoalByIdCommandHandler : IRequestHandler<UpdateGoalByI
             Year: goal.Period.Year,
             Month: goal.Period.Month,
             ValorMeta: goal.ValorMeta.Cents,
+            Currency: goal.ValorMeta.Currency,
             CreatedAt: goal.CreatedAt,
             UpdatedAt: goal.UpdatedAt);
     }

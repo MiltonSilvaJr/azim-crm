@@ -15,10 +15,12 @@ namespace Reporting.Domain.Tests.ValueObjects;
 /// - Cents como <c>long</c> inteiro, sem <c>float</c>/<c>double</c>.
 /// - <c>Add</c> e <c>Subtract</c> exatos em inteiros.
 /// - Rejeição de valor negativo na construção.
+/// - Rejeição de moeda inválida na construção (ADR-0008).
+/// - <c>Add</c>/<c>Subtract</c> lançam em mismatch de moeda (ADR-0008).
 /// - PBT-02: para qualquer lista de centavos inteiros não-negativos,
 ///   a soma via <c>Money</c> é exatamente igual à soma aritmética em <c>long</c>.
 ///
-/// Mapeia: TASK-03, design §4.3, DD-007, PBT-02.
+/// Mapeia: TASK-03, design §4.3, DD-007, PBT-02, ADR-0008.
 /// </summary>
 public sealed class MoneyTests
 {
@@ -52,6 +54,7 @@ public sealed class MoneyTests
         var zero = Money.Zero;
 
         zero.Cents.Should().Be(0L);
+        zero.Currency.Should().Be("BRL");
     }
 
     // -------------------------------------------------------------------------
@@ -76,6 +79,98 @@ public sealed class MoneyTests
         var act = () => Money.FromCents(cents);
 
         act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    // -------------------------------------------------------------------------
+    // Multimoeda: validação de Currency (ADR-0008)
+    // -------------------------------------------------------------------------
+
+    [Theory(DisplayName = "Money com moeda suportada deve construir sem exceção (ADR-0008)")]
+    [InlineData("BRL")]
+    [InlineData("USD")]
+    [InlineData("EUR")]
+    public void Money_WithSupportedCurrency_ShouldConstruct(string currency)
+    {
+        var act = () => Money.FromCents(1_000L, currency);
+
+        act.Should().NotThrow();
+        var money = Money.FromCents(1_000L, currency);
+        money.Currency.Should().Be(currency);
+    }
+
+    [Theory(DisplayName = "Money com moeda inválida deve lançar (ADR-0008)")]
+    [InlineData("GBP")]
+    [InlineData("JPY")]
+    [InlineData("XYZ")]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Money_WithInvalidCurrency_ShouldThrow(string currency)
+    {
+        var act = () => Money.FromCents(1_000L, currency);
+
+        act.Should().Throw<ArgumentOutOfRangeException>()
+            .WithMessage("*currency*");
+    }
+
+    [Fact(DisplayName = "Money.FromCents sem currency default é BRL (retrocompatibilidade, ADR-0008)")]
+    public void Money_FromCentsWithoutCurrency_DefaultsToBrl()
+    {
+        var money = Money.FromCents(500L);
+
+        money.Currency.Should().Be("BRL");
+    }
+
+    [Theory(DisplayName = "SupportedCurrencies contém exatamente BRL, USD e EUR (ADR-0008)")]
+    [InlineData("BRL")]
+    [InlineData("USD")]
+    [InlineData("EUR")]
+    public void Money_SupportedCurrencies_ContainsBrlUsdEur(string currency)
+    {
+        Money.SupportedCurrencies.Should().Contain(currency);
+        Money.SupportedCurrencies.Should().HaveCount(3);
+    }
+
+    // -------------------------------------------------------------------------
+    // Mismatch de moeda em operações (ADR-0008)
+    // -------------------------------------------------------------------------
+
+    [Fact(DisplayName = "Money.Add com moedas diferentes deve lançar InvalidOperationException (ADR-0008)")]
+    public void Money_Add_WithCurrencyMismatch_ShouldThrow()
+    {
+        var brl = Money.FromCents(1_000L, "BRL");
+        var usd = Money.FromCents(1_000L, "USD");
+
+        var act = () => brl.Add(usd);
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*BRL*USD*");
+    }
+
+    [Fact(DisplayName = "Money.Subtract com moedas diferentes deve lançar InvalidOperationException (ADR-0008)")]
+    public void Money_Subtract_WithCurrencyMismatch_ShouldThrow()
+    {
+        var usd = Money.FromCents(2_000L, "USD");
+        var eur = Money.FromCents(1_000L, "EUR");
+
+        var act = () => usd.Subtract(eur);
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*USD*EUR*");
+    }
+
+    [Theory(DisplayName = "Money.Add mesma moeda não lança (ADR-0008)")]
+    [InlineData("BRL")]
+    [InlineData("USD")]
+    [InlineData("EUR")]
+    public void Money_Add_WithSameCurrency_ShouldNotThrow(string currency)
+    {
+        var a = Money.FromCents(100L, currency);
+        var b = Money.FromCents(200L, currency);
+
+        var result = a.Add(b);
+
+        result.Cents.Should().Be(300L);
+        result.Currency.Should().Be(currency);
     }
 
     // -------------------------------------------------------------------------

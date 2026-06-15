@@ -21,7 +21,8 @@ SELECT
     o.created_at,
     o.stage_category,
     c.comissao_calculada AS commission_cents,
-    c.is_snapshot
+    c.is_snapshot,
+    o.currency
 FROM opportunity_partner_commissions c
 JOIN opportunities o ON o.id = c.opportunity_id
 JOIN partners p      ON p.id = c.partner_id;

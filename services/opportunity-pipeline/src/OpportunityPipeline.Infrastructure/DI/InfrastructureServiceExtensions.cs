@@ -11,6 +11,7 @@ using OpportunityPipeline.Infrastructure.Audit;
 using OpportunityPipeline.Infrastructure.Numbering;
 using OpportunityPipeline.Infrastructure.Outbox;
 using OpportunityPipeline.Infrastructure.Persistence;
+using OpportunityPipeline.Infrastructure.Persistence.Interceptors;
 using OpportunityPipeline.Infrastructure.Persistence.Repositories;
 using OpportunityPipeline.Infrastructure.ReadPorts;
 using OpportunityPipeline.Infrastructure.Scheduling;
@@ -46,6 +47,8 @@ public static class InfrastructureServiceExtensions
                 npgsql.EnableRetryOnFailure(3);
             });
             opts.AddInterceptors(new RlsConnectionInterceptor(tenantContext, logger));
+            // Reconstrói Money de comissões com a currency correta após materialização (ADR-0008)
+            opts.AddInterceptors(new CommissionCurrencyMaterializationInterceptor());
         });
 
         // IUnitOfWork implementado pelo DbContext (scoped)

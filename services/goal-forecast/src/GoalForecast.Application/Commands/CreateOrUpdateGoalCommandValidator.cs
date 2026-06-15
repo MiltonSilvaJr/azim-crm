@@ -70,5 +70,11 @@ public sealed class CreateOrUpdateGoalCommandValidator
                 .WithErrorCode("GF-ERR-003")
                 .WithMessage("Escopo inconsistente: OwnerId não deve ser informado no escopo BU.");
         });
+
+        // Validação de currency ISO-4217 (ADR-0008)
+        RuleFor(c => c.Currency)
+            .Must(c => c == "BRL" || c == "USD" || c == "EUR")
+            .WithErrorCode("GF-ERR-001")
+            .WithMessage("Valor de meta inválido: Currency deve ser BRL, USD ou EUR (ADR-0008).");
     }
 }

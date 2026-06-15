@@ -41,6 +41,12 @@ public sealed record CreateOrUpdateGoalCommand : IRequest<CreateOrUpdateGoalResu
 
     /// <summary>Valor da meta em centavos inteiros não-negativos.</summary>
     public required long ValorMeta { get; init; }
+
+    /// <summary>
+    /// Código ISO-4217 da moeda da meta (ADR-0008).
+    /// Padrão BRL para retrocompatibilidade.
+    /// </summary>
+    public string Currency { get; init; } = "BRL";
 }
 
 /// <summary>

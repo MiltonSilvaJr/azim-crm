@@ -28,7 +28,7 @@ public sealed class OpportunityCreateTests
         new(Guid.NewGuid(), "Parceiro", IsPartnerChannel: true);
 
     private static ContractValue DefaultContractValue() =>
-        new(new Money(10000L), Money.Zero, 0);
+        new(new Money(10000L, "BRL"), Money.Zero("BRL"), 0);
 
     private static Probability DefaultProbability() => new(20);
 
@@ -159,5 +159,18 @@ public sealed class OpportunityCreateTests
             DefaultNumber(), CreatedBy, Now);
 
         act.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact(DisplayName = "ADR-0008: Create — Currency da oportunidade reflete ContractValue")]
+    public void Create_Currency_ReflectsContractValue()
+    {
+        var cv = new ContractValue(new Money(10000L, "USD"), Money.Zero("USD"), 0);
+        var opp = Opportunity.Create(
+            TenantId, BuId, AccountId, OwnerId, null,
+            DefaultStage(), DirectChannel(), "Teste USD",
+            cv, DefaultProbability(), null, null,
+            DefaultNumber(), CreatedBy, Now);
+
+        opp.Currency.Should().Be("USD");
     }
 }

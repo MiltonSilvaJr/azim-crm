@@ -102,7 +102,9 @@ public sealed class SetPartnerCommissionHandler(
             throw new AppValidationException("partner_id", "OP-ERR-015: Parceiro não encontrado.", "OP-ERR-015");
 
         // Obtém defaults do parceiro para pré-preenchimento
-        Money? valorFixo = command.ValorFixoCents > 0 ? new Money(command.ValorFixoCents) : null;
+        // ValorFixo na mesma moeda da oportunidade (ADR-0008)
+        var commissionCurrency = opportunity.ContractValue.Currency;
+        Money? valorFixo = command.ValorFixoCents > 0 ? new Money(command.ValorFixoCents, commissionCurrency) : null;
         var pctSetup = command.PctSetup;
         var pctRecorrente = command.PctRecorrente;
 

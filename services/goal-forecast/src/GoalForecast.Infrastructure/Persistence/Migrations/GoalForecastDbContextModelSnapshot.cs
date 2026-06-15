@@ -40,16 +40,33 @@ partial class GoalForecastDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("timestamp with time zone")
                 .HasColumnName("updated_at");
 
-            b.Property<long>("ValorMeta")
-                .HasColumnType("bigint")
-                .HasColumnName("valor_meta");
-
             b.HasKey("Id");
 
             b.HasIndex("TenantId")
                 .HasDatabaseName("ix_goals_tenant");
 
             b.ToTable("goals");
+
+            b.OwnsOne("GoalForecast.Domain.ValueObjects.Money", "ValorMeta", b1 =>
+            {
+                b1.Property<Guid>("GoalId")
+                    .HasColumnType("uuid");
+
+                b1.Property<long>("Cents")
+                    .HasColumnType("bigint")
+                    .HasColumnName("valor_meta");
+
+                b1.Property<string>("Currency")
+                    .IsRequired()
+                    .HasMaxLength(3)
+                    .HasDefaultValue("BRL")
+                    .HasColumnType("character varying(3)")
+                    .HasColumnName("currency");
+
+                b1.HasKey("GoalId");
+                b1.ToTable("goals");
+                b1.WithOwner().HasForeignKey("GoalId");
+            });
 
             b.OwnsOne("GoalForecast.Domain.ValueObjects.GoalScope", "Scope", b1 =>
             {
@@ -89,6 +106,7 @@ partial class GoalForecastDbContextModelSnapshot : ModelSnapshot
 
             b.Navigation("Period").IsRequired();
             b.Navigation("Scope").IsRequired();
+            b.Navigation("ValorMeta").IsRequired();
         });
 #pragma warning restore 612, 618
     }

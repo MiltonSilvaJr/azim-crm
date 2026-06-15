@@ -26,6 +26,13 @@ internal sealed class OpportunityPartnerCommissionConfiguration : IEntityTypeCon
         builder.Property(c => c.SnapshotAt).HasColumnName("snapshot_at");
         builder.Property(c => c.CreatedAt).HasColumnName("created_at").IsRequired();
 
+        // Moeda da comissão — herdada da oportunidade (ADR-0008)
+        builder.Property(c => c.Currency)
+            .HasColumnName("currency")
+            .IsRequired()
+            .HasMaxLength(3)
+            .HasDefaultValue("BRL");
+
         // CommissionTerms — owned type
         builder.OwnsOne(c => c.Terms, terms =>
         {
@@ -50,8 +57,8 @@ internal sealed class OpportunityPartnerCommissionConfiguration : IEntityTypeCon
             terms.Property(t => t.ValorFixo)
                 .HasColumnName("valor_fixo")
                 .HasConversion(
-                    v => v != null ? v.AmountInCents : 0L,
-                    v => new Money(v));
+                    v => v != null ? v.AmountInCents : (long?)null,
+                    v => v.HasValue ? new Money(v.Value, "BRL") : null);
 
             terms.Property(t => t.MesesComissionados)
                 .HasColumnName("meses_comissionados")
@@ -59,22 +66,24 @@ internal sealed class OpportunityPartnerCommissionConfiguration : IEntityTypeCon
         });
 
         // CommissionCalculation — owned type
+        // Os conversores usam "BRL" como placeholder; CommissionCurrencyMaterializationInterceptor
+        // recria os Money com a currency real de OpportunityPartnerCommission.Currency (ADR-0008).
         builder.OwnsOne(c => c.Calculation, calc =>
         {
             calc.Property(r => r.ComissaoSetup)
                 .HasColumnName("comissao_setup_cents")
                 .IsRequired()
-                .HasConversion(v => v.AmountInCents, v => new Money(v));
+                .HasConversion(v => v.AmountInCents, v => new Money(v, "BRL"));
 
             calc.Property(r => r.ComissaoRecorrente)
                 .HasColumnName("comissao_recorrente_cents")
                 .IsRequired()
-                .HasConversion(v => v.AmountInCents, v => new Money(v));
+                .HasConversion(v => v.AmountInCents, v => new Money(v, "BRL"));
 
             calc.Property(r => r.ComissaoTotal)
                 .HasColumnName("comissao_calculada")
                 .IsRequired()
-                .HasConversion(v => v.AmountInCents, v => new Money(v));
+                .HasConversion(v => v.AmountInCents, v => new Money(v, "BRL"));
         });
 
         // Índices

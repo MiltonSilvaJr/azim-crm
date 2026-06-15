@@ -58,6 +58,12 @@ public sealed class Opportunity
     /// <summary>Valor contratual (setup, mensal, meses — INV-8).</summary>
     public ContractValue ContractValue { get; private set; } = null!;
 
+    /// <summary>
+    /// Moeda da oportunidade (ISO-4217: BRL, USD, EUR). Imutável após criação (ADR-0008).
+    /// Derivada do ContractValue; persistida como coluna própria para facilitar queries.
+    /// </summary>
+    public string Currency => ContractValue.Currency;
+
     /// <summary>Probabilidade de fechamento (INV-9).</summary>
     public Probability Probability { get; private set; } = null!;
 
@@ -476,13 +482,15 @@ public sealed class Opportunity
         }
         else
         {
+            // Herda a moeda da oportunidade (ADR-0008)
             _commissions.Add(new OpportunityPartnerCommission(
                 id: Guid.NewGuid(),
                 tenantId: TenantId,
                 opportunityId: Id,
                 partnerId: partnerId,
                 terms: terms,
-                calculation: calc));
+                calculation: calc,
+                currency: ContractValue.Currency));
         }
 
         UpdatedAt = now;

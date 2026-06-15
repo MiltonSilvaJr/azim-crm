@@ -47,9 +47,11 @@ public sealed record GetGoalAggregateQuery : IRequest<GoalAggregateResult>, IHas
 
 /// <summary>
 /// Resultado da agregação derivada. Valor em centavos inteiros, nunca persistido (DD-003).
+/// Currency ISO-4217 explícita (ADR-0008).
 /// </summary>
 public sealed record GoalAggregateResult(
     string Granularity,
     int Year,
     int? Quarter,
-    long ValorMetaAgregado);
+    long ValorMetaAgregado,
+    string Currency = "BRL");

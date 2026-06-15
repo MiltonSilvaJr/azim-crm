@@ -35,13 +35,15 @@ public static class NetForecastCalculator
         var comissaoPonderadaCents = NbrRounding.RoundHalfToEven(
             commissionCalculation.ComissaoTotal.AmountInCents * probability.Value,
             100);
-        var comissaoPonderada = new Money(comissaoPonderadaCents);
+        // Herda a moeda do contrato (ADR-0008)
+        var currency = contractValue.Currency;
+        var comissaoPonderada = new Money(comissaoPonderadaCents, currency);
 
         // forecast_liquido = forecast_ponderado − comissao_ponderada
         // Garante não-negativo: comissao_ponderada ≤ forecast_ponderado por construção matemática
         var forecastLiquidoCents = Math.Max(0L,
             forecastPonderado.AmountInCents - comissaoPonderada.AmountInCents);
-        var forecastLiquido = new Money(forecastLiquidoCents);
+        var forecastLiquido = new Money(forecastLiquidoCents, currency);
 
         return new NetForecastResult(forecastPonderado, comissaoPonderada, forecastLiquido);
     }

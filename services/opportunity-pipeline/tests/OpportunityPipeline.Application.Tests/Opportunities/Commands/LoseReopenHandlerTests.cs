@@ -41,7 +41,7 @@ public sealed class LoseReopenHandlerTests
         return Opportunity.Create(
             tenantId, buId, Guid.NewGuid(), actorId, null,
             stage, channel, "Teste Lose/Reopen",
-            new ContractValue(new Money(5000), new Money(0), 0),
+            new ContractValue(new Money(5000, "BRL"), new Money(0, "BRL"), 0),
             new Probability(50), null, null,
             new OpportunityNumber("AZ-0001"), actorId, DateTimeOffset.UtcNow);
     }
@@ -161,7 +161,7 @@ public sealed class LoseReopenHandlerTests
         var opp = Opportunity.Create(
             _tenantId, _buId, Guid.NewGuid(), _actorId, partnerId,
             stage, partnerChannel, "Opp com Comissão",
-            new ContractValue(new Money(50000), new Money(0), 0),
+            new ContractValue(new Money(50000, "BRL"), new Money(0, "BRL"), 0),
             new Probability(70), null, null,
             new OpportunityNumber("AZ-0001"), _actorId, DateTimeOffset.UtcNow);
 

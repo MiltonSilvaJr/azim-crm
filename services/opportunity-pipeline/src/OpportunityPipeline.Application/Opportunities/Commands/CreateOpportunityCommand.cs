@@ -37,6 +37,9 @@ public sealed record CreateOpportunityCommand : IRequest<CreateOpportunityResult
     public long ValorMensalCents { get; init; }
     public int DuracaoMeses { get; init; }
 
+    /// <summary>Moeda ISO-4217 (BRL, USD, EUR). Default BRL (ADR-0008).</summary>
+    public string Currency { get; init; } = "BRL";
+
     // Probabilidade (null = usar default do estágio)
     public int? Probabilidade { get; init; }
 
@@ -82,6 +85,10 @@ public sealed class CreateOpportunityValidator : AbstractValidator<CreateOpportu
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("OP-ERR-001: title é obrigatório.")
             .MaximumLength(500);
+
+        RuleFor(x => x.Currency)
+            .Must(c => Money.SupportedCurrencies.Contains(c))
+            .WithMessage("currency deve ser BRL, USD ou EUR (ADR-0008).");
 
         RuleFor(x => x.ValorSetupCents)
             .GreaterThanOrEqualTo(0).WithMessage("valor_setup não pode ser negativo.");
@@ -160,10 +167,11 @@ public sealed class CreateOpportunityHandler(
         var probabilityValue = command.Probabilidade ?? stage.DefaultProbability;
         var probability = new Probability(probabilityValue);
 
-        // ContractValue
+        // ContractValue — moeda explícita (ADR-0008)
+        var currency = command.Currency;
         var contractValue = new ContractValue(
-            new Money(command.ValorSetupCents),
-            new Money(command.ValorMensalCents),
+            new Money(command.ValorSetupCents, currency),
+            new Money(command.ValorMensalCents, currency),
             command.DuracaoMeses);
 
         // Cria agregado

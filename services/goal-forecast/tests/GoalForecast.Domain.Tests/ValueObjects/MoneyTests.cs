@@ -9,10 +9,10 @@ using Xunit;
 namespace GoalForecast.Domain.Tests.ValueObjects;
 
 /// <summary>
-/// Testes do objeto de valor <see cref="Money"/> (centavos inteiros).
+/// Testes do objeto de valor <see cref="Money"/> (centavos inteiros + moeda ISO-4217).
 /// Cobre TASK-03: igualdade por valor, Add/Subtract exatos, rejeição de
-/// valor negativo, proibição de double/float e PBT-05 (round-trip).
-/// Mapeia: Req 1.2, RNF 4, PBT-05, DEC-011, design §4.3.
+/// valor negativo, validação de moeda (ADR-0008), mismatch de moeda e PBT-05 (round-trip).
+/// Mapeia: Req 1.2, RNF 4, PBT-05, DEC-011, ADR-0008, design §4.3.
 /// </summary>
 public sealed class MoneyTests
 {
@@ -20,12 +20,13 @@ public sealed class MoneyTests
     // Construção e invariantes básicas
     // =========================================================================
 
-    [Fact(DisplayName = "Money.Of(0) cria Money.Zero")]
+    [Fact(DisplayName = "Money.Of(0) cria Money.Zero em BRL")]
     public void Of_WithZero_CreatesZero()
     {
         var money = Money.Of(0L);
 
         money.Cents.Should().Be(0L);
+        money.Currency.Should().Be("BRL");
         money.Should().Be(Money.Zero);
     }
 
@@ -35,6 +36,25 @@ public sealed class MoneyTests
         var money = Money.Of(1590L);
 
         money.Cents.Should().Be(1590L);
+        money.Currency.Should().Be("BRL");
+    }
+
+    [Fact(DisplayName = "Money.Of(valor, 'USD') cria Money em USD (ADR-0008)")]
+    public void Of_WithCurrency_CreatesMoneyInGivenCurrency()
+    {
+        var money = Money.Of(5000L, "USD");
+
+        money.Cents.Should().Be(5000L);
+        money.Currency.Should().Be("USD");
+    }
+
+    [Fact(DisplayName = "Money.Of(valor, 'EUR') cria Money em EUR (ADR-0008)")]
+    public void Of_WithEur_CreatesMoneyInEur()
+    {
+        var money = Money.Of(9900L, "EUR");
+
+        money.Cents.Should().Be(9900L);
+        money.Currency.Should().Be("EUR");
     }
 
     [Fact(DisplayName = "Money.Of(valor negativo) lança DomainException GF-ERR-001")]
@@ -55,18 +75,91 @@ public sealed class MoneyTests
             .Which.ErrorCode.Should().Be("GF-ERR-001");
     }
 
+    [Fact(DisplayName = "Money.Of(valor, moeda inválida) lança DomainException GF-ERR-001 (ADR-0008)")]
+    public void Of_WithInvalidCurrency_ThrowsDomainException()
+    {
+        var act = () => Money.Of(100L, "GBP");
+
+        act.Should().Throw<DomainException>()
+            .Which.ErrorCode.Should().Be("GF-ERR-001");
+    }
+
+    [Fact(DisplayName = "Money.Of(valor, null) lança DomainException GF-ERR-001 (ADR-0008)")]
+    public void Of_WithNullCurrency_ThrowsDomainException()
+    {
+        var act = () => Money.Of(100L, null!);
+
+        act.Should().Throw<DomainException>()
+            .Which.ErrorCode.Should().Be("GF-ERR-001");
+    }
+
+    [Fact(DisplayName = "Money.Of(valor, string vazia) lança DomainException GF-ERR-001 (ADR-0008)")]
+    public void Of_WithEmptyCurrency_ThrowsDomainException()
+    {
+        var act = () => Money.Of(100L, "");
+
+        act.Should().Throw<DomainException>()
+            .Which.ErrorCode.Should().Be("GF-ERR-001");
+    }
+
+    // =========================================================================
+    // Zero por moeda (ADR-0008)
+    // =========================================================================
+
+    [Fact(DisplayName = "Money.Zero é BRL e Cents=0 (retrocompatibilidade)")]
+    public void Zero_IsBrlAndZeroCents()
+    {
+        Money.Zero.Cents.Should().Be(0L);
+        Money.Zero.Currency.Should().Be("BRL");
+    }
+
+    [Fact(DisplayName = "Money.ZeroIn('USD') cria zero em USD (ADR-0008)")]
+    public void Zero_WithUsd_CreatesZeroInUsd()
+    {
+        var z = Money.ZeroIn("USD");
+
+        z.Cents.Should().Be(0L);
+        z.Currency.Should().Be("USD");
+    }
+
+    [Fact(DisplayName = "Money.ZeroIn('EUR') cria zero em EUR (ADR-0008)")]
+    public void Zero_WithEur_CreatesZeroInEur()
+    {
+        var z = Money.ZeroIn("EUR");
+
+        z.Cents.Should().Be(0L);
+        z.Currency.Should().Be("EUR");
+    }
+
+    [Fact(DisplayName = "Money.Zero é igual a Money.Of(0) em BRL")]
+    public void Zero_EqualsOf0()
+    {
+        Money.Zero.Should().Be(Money.Of(0L));
+        Money.Zero.Cents.Should().Be(0L);
+    }
+
     // =========================================================================
     // Igualdade por valor
     // =========================================================================
 
-    [Fact(DisplayName = "Dois Money com mesmo Cents são iguais (igualdade por valor)")]
-    public void Equality_SameCents_AreEqual()
+    [Fact(DisplayName = "Dois Money com mesmo Cents e Currency são iguais (igualdade por valor)")]
+    public void Equality_SameCentsAndCurrency_AreEqual()
     {
-        var a = Money.Of(500L);
-        var b = Money.Of(500L);
+        var a = Money.Of(500L, "BRL");
+        var b = Money.Of(500L, "BRL");
 
         a.Should().Be(b);
         (a == b).Should().BeTrue();
+    }
+
+    [Fact(DisplayName = "Money BRL e USD com mesmo Cents não são iguais (ADR-0008)")]
+    public void Equality_SameCentsDifferentCurrency_AreNotEqual()
+    {
+        var a = Money.Of(500L, "BRL");
+        var b = Money.Of(500L, "USD");
+
+        a.Should().NotBe(b);
+        (a != b).Should().BeTrue();
     }
 
     [Fact(DisplayName = "Dois Money com Cents diferentes não são iguais")]
@@ -79,15 +172,8 @@ public sealed class MoneyTests
         (a != b).Should().BeTrue();
     }
 
-    [Fact(DisplayName = "Money.Zero é igual a Money.Of(0)")]
-    public void Zero_EqualsOf0()
-    {
-        Money.Zero.Should().Be(Money.Of(0L));
-        Money.Zero.Cents.Should().Be(0L);
-    }
-
     // =========================================================================
-    // Add
+    // Add (mesma moeda)
     // =========================================================================
 
     [Fact(DisplayName = "Add retorna soma exata em centavos inteiros")]
@@ -99,6 +185,31 @@ public sealed class MoneyTests
         var result = a.Add(b);
 
         result.Cents.Should().Be(1590L);
+        result.Currency.Should().Be("BRL");
+    }
+
+    [Fact(DisplayName = "Add USD+USD retorna soma em USD (ADR-0008)")]
+    public void Add_UsdPlusUsd_ReturnsSumInUsd()
+    {
+        var a = Money.Of(300L, "USD");
+        var b = Money.Of(200L, "USD");
+
+        var result = a.Add(b);
+
+        result.Cents.Should().Be(500L);
+        result.Currency.Should().Be("USD");
+    }
+
+    [Fact(DisplayName = "Add BRL+USD lança DomainException GF-ERR-001 (ADR-0008 mismatch)")]
+    public void Add_BrlPlusUsd_ThrowsDomainException()
+    {
+        var a = Money.Of(100L, "BRL");
+        var b = Money.Of(100L, "USD");
+
+        var act = () => a.Add(b);
+
+        act.Should().Throw<DomainException>()
+            .Which.ErrorCode.Should().Be("GF-ERR-001");
     }
 
     [Fact(DisplayName = "Add(Money.Zero) retorna mesmo valor")]
@@ -119,7 +230,7 @@ public sealed class MoneyTests
     }
 
     // =========================================================================
-    // Subtract
+    // Subtract (mesma moeda)
     // =========================================================================
 
     [Fact(DisplayName = "Subtract retorna diferença exata em centavos inteiros")]
@@ -131,14 +242,30 @@ public sealed class MoneyTests
         var result = a.Subtract(b);
 
         result.Cents.Should().Be(1000L);
+        result.Currency.Should().Be("BRL");
     }
 
-    [Fact(DisplayName = "Subtract a si mesmo resulta em Money.Zero")]
-    public void Subtract_Self_ReturnsZero()
+    [Fact(DisplayName = "Subtract BRL-USD lança DomainException GF-ERR-001 (ADR-0008 mismatch)")]
+    public void Subtract_BrlMinusUsd_ThrowsDomainException()
     {
-        var money = Money.Of(500L);
+        var a = Money.Of(500L, "BRL");
+        var b = Money.Of(100L, "USD");
 
-        money.Subtract(money).Should().Be(Money.Zero);
+        var act = () => a.Subtract(b);
+
+        act.Should().Throw<DomainException>()
+            .Which.ErrorCode.Should().Be("GF-ERR-001");
+    }
+
+    [Fact(DisplayName = "Subtract a si mesmo resulta em Money.Zero na mesma moeda")]
+    public void Subtract_Self_ReturnsZeroInSameCurrency()
+    {
+        var money = Money.Of(500L, "USD");
+
+        var result = money.Subtract(money);
+
+        result.Cents.Should().Be(0L);
+        result.Currency.Should().Be("USD");
     }
 
     [Fact(DisplayName = "Subtract(Money.Zero) retorna mesmo valor")]
@@ -172,6 +299,7 @@ public sealed class MoneyTests
         _ = original.Add(Money.Of(50L));
 
         original.Cents.Should().Be(100L);
+        original.Currency.Should().Be("BRL");
     }
 
     [Fact(DisplayName = "Subtract não modifica o receptor (imutabilidade)")]
@@ -181,6 +309,30 @@ public sealed class MoneyTests
         _ = original.Subtract(Money.Of(50L));
 
         original.Cents.Should().Be(200L);
+        original.Currency.Should().Be("BRL");
+    }
+
+    // =========================================================================
+    // SupportedCurrencies (ADR-0008)
+    // =========================================================================
+
+    [Theory(DisplayName = "SupportedCurrencies contém BRL, USD e EUR (ADR-0008)")]
+    [InlineData("BRL")]
+    [InlineData("USD")]
+    [InlineData("EUR")]
+    public void SupportedCurrencies_ContainsMvpCurrencies(string currency)
+    {
+        Money.SupportedCurrencies.Should().Contain(currency);
+    }
+
+    [Theory(DisplayName = "Moedas fora do MVP não são suportadas (ADR-0008)")]
+    [InlineData("GBP")]
+    [InlineData("JPY")]
+    [InlineData("CHF")]
+    [InlineData("ARS")]
+    public void SupportedCurrencies_DoesNotContainNonMvpCurrencies(string currency)
+    {
+        Money.SupportedCurrencies.Should().NotContain(currency);
     }
 
     // =========================================================================
@@ -212,6 +364,17 @@ public sealed class MoneyTests
         var mb = Money.Of(b);
         var sum = ma.Add(mb);
         return Prop.ToProperty(sum.Cents == a + b);
+    }
+
+    /// <summary>
+    /// PBT ADR-0008: Money.Of(v, currency).Currency preserva a moeda exatamente.
+    /// </summary>
+    [Property(Arbitrary = new[] { typeof(NonNegativeLongSmallArbitrary) }, MaxTest = 100,
+        DisplayName = "PBT ADR-0008: Money.Of(v, currency).Currency preserva a moeda")]
+    public Property Pbt_CurrencyRoundTrip_BRL(long cents)
+    {
+        var m = Money.Of(cents, "BRL");
+        return Prop.ToProperty(m.Currency == "BRL" && m.Cents == cents);
     }
 }
 

@@ -20,7 +20,8 @@ SELECT
          THEN o.valor_total
          ELSE 0
     END                                   AS realized_cents,
-    g.goal_cents
+    g.goal_cents,
+    o.currency
 FROM opportunities o
 LEFT JOIN goals g
     ON  g.tenant_id = o.tenant_id

@@ -60,12 +60,13 @@ public sealed class ReportingReadRepository : IReportingReadRepository
                 stage_category  AS {nameof(FunnelRow.Category)},
                 COUNT(*)::int   AS {nameof(FunnelRow.Count)},
                 COALESCE(SUM(total_cents), 0)::bigint             AS {nameof(FunnelRow.TotalCents)},
-                COALESCE(SUM(weighted_forecast_cents), 0)::bigint AS {nameof(FunnelRow.WeightedForecastCents)}
+                COALESCE(SUM(weighted_forecast_cents), 0)::bigint AS {nameof(FunnelRow.WeightedForecastCents)},
+                currency        AS {nameof(FunnelRow.Currency)}
             FROM vw_funnel_report
             WHERE tenant_id = @tenantId
             {whereClause}
-            GROUP BY stage_id, stage_name, stage_category
-            ORDER BY stage_category, stage_name
+            GROUP BY stage_id, stage_name, stage_category, currency
+            ORDER BY stage_category, stage_name, currency
             """;
 
         var rows = await connection.QueryAsync<FunnelRow>(sql, parameters);
@@ -94,14 +95,15 @@ public sealed class ReportingReadRepository : IReportingReadRepository
                 month                           AS {nameof(ForecastRow.Month)},
                 COALESCE(SUM(weighted_forecast_cents), 0)::bigint AS {nameof(ForecastRow.WeightedForecastCents)},
                 COALESCE(SUM(realized_cents), 0)::bigint          AS {nameof(ForecastRow.RealizedCents)},
-                MAX(goal_cents)::bigint                           AS {nameof(ForecastRow.GoalCents)}
+                MAX(goal_cents)::bigint                           AS {nameof(ForecastRow.GoalCents)},
+                currency                        AS {nameof(ForecastRow.Currency)}
             FROM vw_forecast_report
             WHERE tenant_id = @tenantId
               AND closed_at >= @from
               AND closed_at <= @to
             {whereClause}
-            GROUP BY bu_id, year, month
-            ORDER BY bu_id, year, month
+            GROUP BY bu_id, year, month, currency
+            ORDER BY bu_id, year, month, currency
             """;
 
         var rows = await connection.QueryAsync<ForecastRow>(sql, parameters);
@@ -130,12 +132,13 @@ public sealed class ReportingReadRepository : IReportingReadRepository
                 MAX(display_name)                         AS {nameof(RankingRow.DisplayName)},
                 COUNT(*) FILTER (WHERE stage_category = 'won')::int AS {nameof(RankingRow.WonCount)},
                 COALESCE(SUM(total_cents) FILTER (WHERE stage_category = 'won'), 0)::bigint AS {nameof(RankingRow.WonValueCents)},
-                COALESCE(SUM(weighted_forecast_cents) FILTER (WHERE stage_category = 'open'), 0)::bigint AS {nameof(RankingRow.PipelineForecastCents)}
+                COALESCE(SUM(weighted_forecast_cents) FILTER (WHERE stage_category = 'open'), 0)::bigint AS {nameof(RankingRow.PipelineForecastCents)},
+                currency                                  AS {nameof(RankingRow.Currency)}
             FROM vw_ranking_report
             WHERE tenant_id = @tenantId
             {whereClause}
-            GROUP BY owner_id
-            ORDER BY {nameof(RankingRow.WonValueCents)} DESC
+            GROUP BY owner_id, currency
+            ORDER BY {nameof(RankingRow.WonValueCents)} DESC, currency
             """;
 
         var rows = await connection.QueryAsync<RankingRow>(sql, parameters);
@@ -164,13 +167,14 @@ public sealed class ReportingReadRepository : IReportingReadRepository
                 MAX(channel_name)                   AS {nameof(ChannelRow.ChannelName)},
                 COUNT(*)::int                       AS {nameof(ChannelRow.Count)},
                 COALESCE(SUM(total_cents), 0)::bigint AS {nameof(ChannelRow.TotalCents)},
-                0::int                              AS {nameof(ChannelRow.PercentBasisPoints)}
+                0::int                              AS {nameof(ChannelRow.PercentBasisPoints)},
+                currency                            AS {nameof(ChannelRow.Currency)}
             FROM vw_channel_report
             WHERE tenant_id = @tenantId
               AND channel_id IS NOT NULL
             {whereClause}
-            GROUP BY channel_id
-            ORDER BY {nameof(ChannelRow.TotalCents)} DESC
+            GROUP BY channel_id, currency
+            ORDER BY {nameof(ChannelRow.TotalCents)} DESC, currency
             """;
 
         var rows = await connection.QueryAsync<ChannelRow>(sql, parameters);
@@ -195,15 +199,16 @@ public sealed class ReportingReadRepository : IReportingReadRepository
         // Não agrega aqui para que PBT-01 seja validado no handler (design §5.3, Req 4.2).
         var sql = $"""
             SELECT
-                partner_id      AS {nameof(CommissionRow.PartnerId)},
-                partner_name    AS {nameof(CommissionRow.PartnerName)},
+                partner_id       AS {nameof(CommissionRow.PartnerId)},
+                partner_name     AS {nameof(CommissionRow.PartnerName)},
                 commission_cents AS {nameof(CommissionRow.CommissionCents)},
-                is_snapshot     AS {nameof(CommissionRow.IsSnapshot)},
-                stage_category  AS {nameof(CommissionRow.StageCategory)}
+                is_snapshot      AS {nameof(CommissionRow.IsSnapshot)},
+                stage_category   AS {nameof(CommissionRow.StageCategory)},
+                currency         AS {nameof(CommissionRow.Currency)}
             FROM vw_commission_report
             WHERE tenant_id = @tenantId
             {whereClause}
-            ORDER BY partner_id, is_snapshot
+            ORDER BY partner_id, currency, is_snapshot
             """;
 
         var rows = await connection.QueryAsync<CommissionRow>(sql, parameters);

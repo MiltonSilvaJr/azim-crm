@@ -16,7 +16,8 @@ namespace Reporting.Application.Tests.Queries.Commission;
 /// <summary>
 /// Testes do handler de comissões — TASK-10, ST-01.
 /// Inclui PBT-01 (snapshot imutável) e PBT-02 (conservação de soma em centavos).
-/// Mapeia: Req 4, Req 4.2, Req 4.3, PBT-01, PBT-02, RN-007, DD-007.
+/// ADR-0008: agrupamento por (PartnerId, Currency) — NUNCA soma moedas distintas.
+/// Mapeia: Req 4, Req 4.2, Req 4.3, PBT-01, PBT-02, RN-007, DD-007, ADR-0008.
 /// </summary>
 public sealed class GetCommissionReportQueryHandlerTests
 {
@@ -46,9 +47,9 @@ public sealed class GetCommissionReportQueryHandlerTests
 
         repo.GetCommissionsAsync(scope, ValidPeriod, null, Arg.Any<CancellationToken>())
             .Returns([
-                new CommissionRow(PartnerId1, "Parceiro A", 10_000L, IsSnapshot: true,  "won"),
-                new CommissionRow(PartnerId1, "Parceiro A", 5_000L,  IsSnapshot: false, "open"),
-                new CommissionRow(PartnerId1, "Parceiro A", 3_000L,  IsSnapshot: false, "won")
+                new CommissionRow(PartnerId1, "Parceiro A", 10_000L, IsSnapshot: true,  "won",  "BRL"),
+                new CommissionRow(PartnerId1, "Parceiro A", 5_000L,  IsSnapshot: false, "open", "BRL"),
+                new CommissionRow(PartnerId1, "Parceiro A", 3_000L,  IsSnapshot: false, "won",  "BRL")
             ]);
 
         var result = await handler.Handle(query, CancellationToken.None);
@@ -68,9 +69,9 @@ public sealed class GetCommissionReportQueryHandlerTests
 
         repo.GetCommissionsAsync(scope, ValidPeriod, null, Arg.Any<CancellationToken>())
             .Returns([
-                new CommissionRow(PartnerId1, "Parceiro A", 10_000L, IsSnapshot: true,  "won"),
-                new CommissionRow(PartnerId1, "Parceiro A",  5_000L, IsSnapshot: false, "open"),
-                new CommissionRow(PartnerId1, "Parceiro A",  3_000L, IsSnapshot: false, "won")
+                new CommissionRow(PartnerId1, "Parceiro A", 10_000L, IsSnapshot: true,  "won",  "BRL"),
+                new CommissionRow(PartnerId1, "Parceiro A",  5_000L, IsSnapshot: false, "open", "BRL"),
+                new CommissionRow(PartnerId1, "Parceiro A",  3_000L, IsSnapshot: false, "won",  "BRL")
             ]);
 
         var result = await handler.Handle(query, CancellationToken.None);
@@ -78,6 +79,54 @@ public sealed class GetCommissionReportQueryHandlerTests
         var row = result.Rows.Single(r => r.PartnerId == PartnerId1);
         row.ProjectedCents.Should().Be(5_000L,
             because: "apenas isSnapshot=false E category=open conta para o projetado (Req 4.3)");
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // ADR-0008: agrupamento por (PartnerId, Currency)
+    // ──────────────────────────────────────────────────────────────
+
+    [Fact(DisplayName = "ADR-0008: mesmo parceiro em moedas diferentes gera linhas separadas")]
+    public async Task Handle_SamePartner_DifferentCurrencies_ProducesSeparateRows()
+    {
+        var repo    = Substitute.For<IReportingReadRepository>();
+        var scope   = ScopeTenantAdmin();
+        var handler = MakeHandler(repo);
+        var query   = new GetCommissionReportQuery(ValidPeriod, null, scope);
+
+        repo.GetCommissionsAsync(scope, ValidPeriod, null, Arg.Any<CancellationToken>())
+            .Returns([
+                new CommissionRow(PartnerId1, "Parceiro A", 10_000L, IsSnapshot: true, "won", "BRL"),
+                new CommissionRow(PartnerId1, "Parceiro A",  8_000L, IsSnapshot: true, "won", "USD")
+            ]);
+
+        var result = await handler.Handle(query, CancellationToken.None);
+
+        result.Rows.Should().HaveCount(2,
+            because: "mesmo parceiro em moedas diferentes não pode ser somado (ADR-0008)");
+
+        var brlRow = result.Rows.Single(r => r.PartnerId == PartnerId1 && r.Currency == "BRL");
+        var usdRow = result.Rows.Single(r => r.PartnerId == PartnerId1 && r.Currency == "USD");
+
+        brlRow.ConsolidatedCents.Should().Be(10_000L);
+        usdRow.ConsolidatedCents.Should().Be(8_000L);
+    }
+
+    [Fact(DisplayName = "ADR-0008: Currency propagada corretamente para CommissionPartnerRow")]
+    public async Task Handle_Currency_PropagatedToPartnerRow()
+    {
+        var repo    = Substitute.For<IReportingReadRepository>();
+        var scope   = ScopeTenantAdmin();
+        var handler = MakeHandler(repo);
+        var query   = new GetCommissionReportQuery(ValidPeriod, null, scope);
+
+        repo.GetCommissionsAsync(scope, ValidPeriod, null, Arg.Any<CancellationToken>())
+            .Returns([
+                new CommissionRow(PartnerId1, "Parceiro A", 5_000L, IsSnapshot: true, "won", "EUR")
+            ]);
+
+        var result = await handler.Handle(query, CancellationToken.None);
+
+        result.Rows.Single().Currency.Should().Be("EUR");
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -99,7 +148,7 @@ public sealed class GetCommissionReportQueryHandlerTests
         // O handler NÃO reimplementa a fórmula: apenas soma os valores autoritativos
         repo.GetCommissionsAsync(scope, ValidPeriod, null, Arg.Any<CancellationToken>())
             .Returns([
-                new CommissionRow(PartnerId1, "Parceiro A", snapshotValue, IsSnapshot: true, "won")
+                new CommissionRow(PartnerId1, "Parceiro A", snapshotValue, IsSnapshot: true, "won", "BRL")
             ]);
 
         var result = await handler.Handle(query, CancellationToken.None);
@@ -120,7 +169,7 @@ public sealed class GetCommissionReportQueryHandlerTests
                 var expectedConsolidated = snapshotValues.Sum();
 
                 var rawRows = snapshotValues
-                    .Select(v => new CommissionRow(PartnerId1, "P1", v, IsSnapshot: true, "won"))
+                    .Select(v => new CommissionRow(PartnerId1, "P1", v, IsSnapshot: true, "won", "BRL"))
                     .ToList();
 
                 var result = GetCommissionReportQueryHandler.AggregateByPartner(rawRows);
@@ -146,9 +195,9 @@ public sealed class GetCommissionReportQueryHandlerTests
                 var projected  = Enumerable.Range(1, n).Select(i => (long)(i * 300)).ToList();
 
                 var rawRows = snapshots
-                    .Select(v => new CommissionRow(PartnerId1, "P1", v, IsSnapshot: true, "won"))
+                    .Select(v => new CommissionRow(PartnerId1, "P1", v, IsSnapshot: true, "won", "BRL"))
                     .Concat(projected
-                        .Select(v => new CommissionRow(PartnerId1, "P1", v, IsSnapshot: false, "open")))
+                        .Select(v => new CommissionRow(PartnerId1, "P1", v, IsSnapshot: false, "open", "BRL")))
                     .ToList();
 
                 var result = GetCommissionReportQueryHandler.AggregateByPartner(rawRows);
@@ -177,9 +226,9 @@ public sealed class GetCommissionReportQueryHandlerTests
 
         repo.GetCommissionsAsync(scope, ValidPeriod, null, Arg.Any<CancellationToken>())
             .Returns([
-                new CommissionRow(PartnerId1, "Parceiro A", 10_000L, IsSnapshot: true,  "won"),
-                new CommissionRow(PartnerId2, "Parceiro B", 20_000L, IsSnapshot: true,  "won"),
-                new CommissionRow(PartnerId2, "Parceiro B",  5_000L, IsSnapshot: false, "open")
+                new CommissionRow(PartnerId1, "Parceiro A", 10_000L, IsSnapshot: true,  "won",  "BRL"),
+                new CommissionRow(PartnerId2, "Parceiro B", 20_000L, IsSnapshot: true,  "won",  "BRL"),
+                new CommissionRow(PartnerId2, "Parceiro B",  5_000L, IsSnapshot: false, "open", "BRL")
             ]);
 
         var result = await handler.Handle(query, CancellationToken.None);
@@ -200,8 +249,8 @@ public sealed class GetCommissionReportQueryHandlerTests
 
         repo.GetCommissionsAsync(scope, ValidPeriod, null, Arg.Any<CancellationToken>())
             .Returns([
-                new CommissionRow(PartnerId1, "P1", 9_876_543L, IsSnapshot: true,  "won"),
-                new CommissionRow(PartnerId1, "P1", 1_234_567L, IsSnapshot: false, "open")
+                new CommissionRow(PartnerId1, "P1", 9_876_543L, IsSnapshot: true,  "won",  "BRL"),
+                new CommissionRow(PartnerId1, "P1", 1_234_567L, IsSnapshot: false, "open", "BRL")
             ]);
 
         var result = await handler.Handle(query, CancellationToken.None);
