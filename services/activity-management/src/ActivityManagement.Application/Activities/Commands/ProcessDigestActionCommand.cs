@@ -1,5 +1,7 @@
 namespace ActivityManagement.Application.Activities.Commands;
 
+using System.Security.Cryptography;
+using System.Text;
 using ActivityManagement.Application.Behaviors;
 using ActivityManagement.Application.Ports;
 using ActivityManagement.Domain.Activities.Repositories;
@@ -40,7 +42,7 @@ public sealed class ExpiredDigestTokenException : Exception
 /// Resultado do processamento da ação do digest.
 /// </summary>
 /// <param name="ActivityId">Atividade processada.</param>
-/// <param name="Action">Ação executada: <c>complete</c> ou <c>reschedule</c>.</param>
+/// <param name="Action">Ação executada: <c>Complete</c> ou <c>Reschedule</c>.</param>
 /// <param name="WasAlreadyProcessed">Verdadeiro quando token já havia sido consumido (idempotência).</param>
 public sealed record DigestActionResult(
     Guid    ActivityId,
@@ -49,19 +51,27 @@ public sealed record DigestActionResult(
 
 /// <summary>
 /// Command para processamento da ação de 1 clique via link do digest (Req 7, Req 8.5).
+///
 /// Fluxo:
-///   1. Localiza token por hash (anti-enumeração — PBT-03).
-///   2. Token inválido/inacessível → ACT-ERR-008 (indistinguível em forma de atividade inacessível).
-///   3. Token expirado → ACT-ERR-009 (HTTP 410).
-///   4. Token já usado → retorna 200 idempotente (MSG-029, DD-004).
-///   5. Token válido → processa ação (<c>complete</c> ou <c>reschedule</c>), marca <c>used_at</c>
+///   1. Converte o token em claro para hash SHA-256 (BYTEA, 32 bytes) — algoritmo idêntico
+///      ao do digest: SHA256(UTF-8(clearToken)) (ADR-0006, DD-007).
+///   2. Localiza token por hash no banco compartilhado (anti-enumeração — PBT-03).
+///   3. Token inválido/inacessível → ACT-ERR-008 (indistinguível em forma de atividade inacessível).
+///   4. Token expirado → ACT-ERR-009 (HTTP 410).
+///   5. Token já usado → retorna 200 idempotente (MSG-029, DD-004).
+///   6. Token válido → processa ação (<c>Complete</c> ou <c>Reschedule</c>), marca <c>used_at</c>
 ///      na mesma transação (atomicidade — Req 7.3).
+///
 /// Não implementa <see cref="ITenantRequest"/> — autoridade vem do token (design §10).
-/// Mapeia: design §5.1, Req 7, Req 8.5, RNF 3, RNF 5, DD-003, DD-004, PBT-02, PBT-03, TASK-09.
+/// Mapeia: design §5.1, Req 7, Req 8.5, RNF 3, RNF 5, DD-003, DD-004, DD-007,
+///         ADR-0006, PBT-02, PBT-03, TASK-09.
 /// </summary>
-/// <param name="TokenHash">Hash do token opaco apresentado pelo usuário no link do digest.</param>
-/// <param name="NewDueAt">Nova data de vencimento; obrigatório quando ação for <c>reschedule</c>.</param>
-public sealed record ProcessDigestActionCommand(string TokenHash, DateTimeOffset? NewDueAt = null)
+/// <param name="ClearToken">
+/// Token em claro extraído do link do digest (Base64Url, 32 bytes aleatórios).
+/// Convertido para hash SHA-256 antes de qualquer acesso ao banco (DD-007).
+/// </param>
+/// <param name="NewDueAt">Nova data de vencimento; obrigatório quando ação for <c>Reschedule</c>.</param>
+public sealed record ProcessDigestActionCommand(string ClearToken, DateTimeOffset? NewDueAt = null)
     : IRequest<DigestActionResult>, ITransactionalCommand
 {
     /// <inheritdoc />
@@ -69,6 +79,17 @@ public sealed record ProcessDigestActionCommand(string TokenHash, DateTimeOffset
 
     internal void SetDomainEvents(IReadOnlyList<Domain.Activities.Events.DomainEvent> events)
         => DomainEvents = events;
+
+    /// <summary>
+    /// Computa o hash SHA-256 do token em claro — algoritmo canônico alinhado ao digest.
+    /// SHA256(UTF-8(clearToken)) → 32 bytes (BYTEA no PostgreSQL).
+    /// Idêntico a <c>ActionToken.ComputeHash</c> em <c>Digest.Domain.ValueObjects</c> (ADR-0006, DD-007).
+    /// </summary>
+    internal static byte[] ComputeTokenHash(string clearToken)
+    {
+        var bytes = Encoding.UTF8.GetBytes(clearToken);
+        return SHA256.HashData(bytes);
+    }
 }
 
 /// <summary>
@@ -107,13 +128,26 @@ internal sealed class ProcessDigestActionCommandHandler
     {
         var now = _clock.UtcNow;
 
-        // (1) Localiza token — null para inexistente/malformado/inacessível (anti-enumeração)
-        var token = await _tokenPort.FindByHashAsync(request.TokenHash, cancellationToken);
+        // (1) Converte token em claro → SHA-256 BYTEA (ADR-0006, DD-007)
+        //     Algoritmo idêntico ao do digest (ActionToken.ComputeHash):
+        //     SHA256(UTF-8(clearToken)) → 32 bytes.
+        byte[] tokenHash;
+        try
+        {
+            tokenHash = ProcessDigestActionCommand.ComputeTokenHash(request.ClearToken);
+        }
+        catch (Exception)
+        {
+            throw new InvalidDigestTokenException(); // ACT-ERR-008 — token malformado
+        }
+
+        // (2) Localiza token — null para inexistente/malformado/inacessível (anti-enumeração)
+        var token = await _tokenPort.FindByHashAsync(tokenHash, cancellationToken);
 
         if (token is null)
             throw new InvalidDigestTokenException(); // ACT-ERR-008
 
-        // (2) Expirado
+        // (3) Expirado
         if (token.ExpiresAt <= now)
         {
             _metrics.IncrementDigestTokenExpired();
@@ -123,30 +157,27 @@ internal sealed class ProcessDigestActionCommandHandler
             throw new ExpiredDigestTokenException(); // ACT-ERR-009
         }
 
-        // (3) Já usado → retorna sucesso idempotente (MSG-029, DD-004)
+        // (4) Já usado → retorna sucesso idempotente (MSG-029, DD-004)
         if (token.UsedAt.HasValue)
         {
             return new DigestActionResult(
-                ActivityId:         token.ActivityId ?? Guid.Empty,
-                Action:             token.Action,
+                ActivityId:          token.ActivityId,
+                Action:              token.Action,
                 WasAlreadyProcessed: true);
         }
 
-        // (4) Token válido → localiza atividade
-        if (token.ActivityId is null)
-            throw new InvalidDigestTokenException(); // token sem atividade vinculada → ACT-ERR-008
-
-        var activity = await _repository.FindByIdAsync(token.ActivityId.Value, cancellationToken)
+        // (5) Token válido → localiza atividade (activity_id é NOT NULL — ADR-0006)
+        var activity = await _repository.FindByIdAsync(token.ActivityId, cancellationToken)
             ?? throw new InvalidDigestTokenException(); // atividade inacessível → ACT-ERR-008 (anti-enumeração)
 
-        // (5) Executa ação
-        switch (token.Action.ToLowerInvariant())
+        // (6) Executa ação — casing canônico do digest: 'Complete' / 'Reschedule'
+        switch (token.Action)
         {
-            case "complete":
+            case "Complete":
                 activity.Complete(now, correlationId: Guid.NewGuid());
                 break;
 
-            case "reschedule":
+            case "Reschedule":
                 if (!request.NewDueAt.HasValue)
                     throw new InvalidOperationException("Nova data de vencimento é obrigatória para reagendamento.");
                 activity.Reschedule(DueDate.Create(request.NewDueAt.Value), now);
@@ -156,12 +187,12 @@ internal sealed class ProcessDigestActionCommandHandler
                 throw new InvalidDigestTokenException();
         }
 
-        // (6) Persiste atividade + marca token used_at na mesma transação (atomicidade — Req 7.3)
+        // (7) Persiste atividade + marca token used_at na mesma transação (atomicidade — Req 7.3)
         await _repository.SaveAsync(activity, cancellationToken);
         await _tokenPort.MarkUsedAsync(token.Id, now, cancellationToken);
         request.SetDomainEvents(activity.DomainEvents);
 
-        // (7) Auditoria: correlaciona token↔atividade (Req 7.8, RNF 2.4)
+        // (8) Auditoria: correlaciona token↔atividade (Req 7.8, RNF 2.4)
         await _auditPublisher.PublishAsync(new AuditEntry(
             TenantId:      token.TenantId,
             UserId:        null, // ação via token — sem JWT de usuário

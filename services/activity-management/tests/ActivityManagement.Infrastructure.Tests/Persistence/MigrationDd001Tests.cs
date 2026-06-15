@@ -43,12 +43,15 @@ public sealed class MigrationDd001Tests : IAsyncLifetime
                 updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
             );
 
+            -- ADR-0006: schema canônico do digest (BYTEA, activity_id NOT NULL)
+            -- Esta tabela existe no banco compartilhado e é criada pelo digest antes deste serviço.
             CREATE TABLE digest_action_tokens (
                 id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 tenant_id   UUID NOT NULL,
                 user_id     UUID NOT NULL,
-                action      VARCHAR(20) NOT NULL DEFAULT 'complete',
-                token_hash  TEXT NOT NULL,
+                activity_id UUID NOT NULL,
+                action      VARCHAR(20) NOT NULL DEFAULT 'Complete',
+                token_hash  BYTEA NOT NULL,
                 expires_at  TIMESTAMPTZ NOT NULL DEFAULT now() + INTERVAL '24 hours',
                 created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
             );
@@ -184,17 +187,23 @@ public sealed class MigrationDd001Tests : IAsyncLifetime
     [Fact]
     public async Task UniqueIndex_Prevents_Duplicate_Token_Hash()
     {
-        // Arrange
+        // Arrange: token_hash é BYTEA (SHA-256, 32 bytes) — ADR-0006, DD-007
+        // Usa decode(..., 'hex') para construir BYTEA de 32 bytes diretamente no SQL.
         await ApplyMigrationDd001Async();
-        await ExecuteAsync(@"
-            INSERT INTO digest_action_tokens (id, tenant_id, user_id, token_hash)
-            VALUES (gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), 'hash-abc123');
+
+        // 32 bytes em hex (64 chars) = hash SHA-256 simulado
+        const string hashHex = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
+        await ExecuteAsync($@"
+            INSERT INTO digest_action_tokens (id, tenant_id, user_id, activity_id, token_hash)
+            VALUES (gen_random_uuid(), gen_random_uuid(), gen_random_uuid(),
+                    gen_random_uuid(), decode('{hashHex}', 'hex'));
         ");
 
-        // Act + Assert: segundo insert com mesmo hash deve falhar
-        var act = async () => await ExecuteAsync(@"
-            INSERT INTO digest_action_tokens (id, tenant_id, user_id, token_hash)
-            VALUES (gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), 'hash-abc123');
+        // Act + Assert: segundo insert com mesmo hash deve falhar (UNIQUE BYTEA)
+        var act = async () => await ExecuteAsync($@"
+            INSERT INTO digest_action_tokens (id, tenant_id, user_id, activity_id, token_hash)
+            VALUES (gen_random_uuid(), gen_random_uuid(), gen_random_uuid(),
+                    gen_random_uuid(), decode('{hashHex}', 'hex'));
         ");
 
         await act.Should().ThrowAsync<PostgresException>()

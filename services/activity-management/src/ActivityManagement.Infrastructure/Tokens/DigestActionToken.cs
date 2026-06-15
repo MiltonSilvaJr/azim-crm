@@ -2,12 +2,15 @@ namespace ActivityManagement.Infrastructure.Tokens;
 
 /// <summary>
 /// Entidade de dados do token de ação do digest.
-/// Owned pelo digest (BC-06); activity-management lê e consome (DD-003).
-/// Armazena apenas o <see cref="TokenHash"/> — o token em claro só transita no link
-/// e nunca é persistido (RNF 5, design §7).
+/// Owned pelo digest (BC-06); activity-management lê e consome (DD-003, ADR-0006).
+/// O schema é criado exclusivamente pelo digest — esta entidade está mapeada com
+/// <c>ExcludeFromMigrations</c> para que o activity-management jamais emita DDL na tabela.
+/// Armazena apenas o <see cref="TokenHash"/> (SHA-256, 32 bytes BYTEA) —
+/// o token em claro só transita no link e nunca é persistido (RNF 5, DD-007).
+/// <see cref="ActivityId"/> é NOT NULL (referência lógica sem FK física — DD-001).
 /// RLS obrigatória: políticas <c>rls_digest_action_tokens_tenant</c> comparam
-/// <c>tenant_id = current_setting('app.current_tenant')::uuid</c> (ADR-0001).
-/// Mapeia: design §6.4, §7, DD-003, TASK-13.
+/// <c>tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid</c> (ADR-0001).
+/// Mapeia: design §6.4, §7, DD-003, DD-007, ADR-0006, TASK-13.
 /// </summary>
 public sealed class DigestActionToken
 {
@@ -20,18 +23,24 @@ public sealed class DigestActionToken
     /// <summary>Usuário para quem o token foi emitido.</summary>
     public Guid UserId { get; init; }
 
-    /// <summary>Atividade referenciada pelo token (nullable — link pode ser órfão).</summary>
-    public Guid? ActivityId { get; init; }
+    /// <summary>
+    /// Atividade referenciada pelo token.
+    /// NOT NULL — referência lógica sem FK física (DD-001, ADR-0006).
+    /// </summary>
+    public Guid ActivityId { get; init; }
 
-    /// <summary>Ação do token: <c>complete</c> ou <c>reschedule</c>.</summary>
+    /// <summary>
+    /// Ação do token: <c>Complete</c> ou <c>Reschedule</c>.
+    /// Casing canônico do enum <c>ActionType</c> do digest (BC-06).
+    /// </summary>
     public string Action { get; init; } = string.Empty;
 
     /// <summary>
-    /// Hash do token opaco (SHA-256 ou equivalente).
-    /// O token em claro nunca é persistido (DD-003, RNF 5).
+    /// Hash SHA-256 do token opaco (32 bytes, BYTEA no PostgreSQL).
+    /// O token em claro nunca é persistido (DD-007, RNF 5).
     /// Índice único <c>uq_digest_action_tokens_hash</c> garante unicidade.
     /// </summary>
-    public string TokenHash { get; init; } = string.Empty;
+    public byte[] TokenHash { get; init; } = [];
 
     /// <summary>Instante de expiração do token (TTL configurável, RNF 5.4).</summary>
     public DateTimeOffset ExpiresAt { get; init; }

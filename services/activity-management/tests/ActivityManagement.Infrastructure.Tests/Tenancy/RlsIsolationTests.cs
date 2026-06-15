@@ -227,14 +227,17 @@ public sealed class RlsIsolationTests : IAsyncLifetime
             updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
         );
 
+        -- ADR-0006: schema canônico do digest (BYTEA, activity_id NOT NULL)
         CREATE TABLE IF NOT EXISTS digest_action_tokens (
             id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             tenant_id   UUID NOT NULL,
             user_id     UUID NOT NULL,
-            token_hash  TEXT NOT NULL,
-            action      VARCHAR(20) NOT NULL DEFAULT 'complete',
+            activity_id UUID NOT NULL,
+            token_hash  BYTEA NOT NULL,
+            action      VARCHAR(20) NOT NULL DEFAULT 'Complete',
             expires_at  TIMESTAMPTZ NOT NULL DEFAULT now() + INTERVAL '24 hours',
-            created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+            created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+            CONSTRAINT uq_digest_action_tokens_hash UNIQUE (token_hash)
         );
 
         -- Índices obrigatórios

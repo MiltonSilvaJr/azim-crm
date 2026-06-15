@@ -192,6 +192,10 @@ partial class ActivityManagementDbContextModelSnapshot : ModelSnapshot
             b.ToTable("outbox_messages");
         });
 
+        // ADR-0006: digest_action_tokens é owned pelo digest (BC-06).
+        // Mapeada com ExcludeFromMigrations — o activity-management é somente consumidor.
+        // token_hash: BYTEA NOT NULL (SHA-256, 32 bytes).
+        // activity_id: UUID NOT NULL (referência lógica sem FK física — DD-001).
         modelBuilder.Entity("ActivityManagement.Infrastructure.Tokens.DigestActionToken", b =>
         {
             b.Property<Guid>("Id")
@@ -204,7 +208,7 @@ partial class ActivityManagementDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("character varying(20)")
                 .HasColumnName("action");
 
-            b.Property<Guid?>("ActivityId")
+            b.Property<Guid>("ActivityId")
                 .HasColumnType("uuid")
                 .HasColumnName("activity_id");
 
@@ -220,9 +224,9 @@ partial class ActivityManagementDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("uuid")
                 .HasColumnName("tenant_id");
 
-            b.Property<string>("TokenHash")
+            b.Property<byte[]>("TokenHash")
                 .IsRequired()
-                .HasColumnType("text")
+                .HasColumnType("bytea")
                 .HasColumnName("token_hash");
 
             b.Property<DateTimeOffset?>("UsedAt")
@@ -239,7 +243,7 @@ partial class ActivityManagementDbContextModelSnapshot : ModelSnapshot
                 .IsUnique()
                 .HasDatabaseName("uq_digest_action_tokens_hash");
 
-            b.ToTable("digest_action_tokens");
+            b.ToTable("digest_action_tokens", t => t.ExcludeFromMigrations());
         });
 #pragma warning restore 612, 618
     }
