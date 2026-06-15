@@ -16,7 +16,7 @@
 
 O módulo **account-management** (Bounded Context BC-02 — Subdomínio de Suporte; deployable `azim-api`) é responsável pela gestão de **contas** (empresas clientes) e **contatos** (pessoas físicas vinculadas a uma conta, contendo dados pessoais identificáveis — PII, do inglês *Personally Identifiable Information*).
 
-A conta é **pré-requisito** para a criação de oportunidades no módulo opportunity-pipeline e é **compartilhada por todo o tenant**, consolidando o relacionamento comercial mesmo quando a mesma empresa é negociada por múltiplas unidades de negócio (BUs, do inglês *Business Units*). A BU pertence à oportunidade, não à conta.
+A conta é **pré-requisito** para a criação de oportunidades no módulo opportunity-pipeline. Cada conta pertence a uma **Business Unit (BU)** específica (`bu_id` obrigatório — ADR-0009), e a visibilidade de uma conta é controlada pelo escopo de BU do usuário autenticado. Um usuário com acesso a múltiplas BUs enxerga todas as contas do seu conjunto de BUs autorizadas; um admin tenant-wide enxerga todas as contas do tenant.
 
 O módulo mantém o mecanismo de **deduplicação (dedupe)** por nome normalizado, exibindo alerta de "conta similar existe" no momento da criação, e expõe a **visão 360°** consolidada de uma conta. Por tratar de PII, o módulo está sujeito à **LGPD** (Lei nº 13.709/2018), com obrigações de mascaramento de dados pessoais em logs, controle de acesso por papel, direito ao esquecimento e base legal documentada.
 
@@ -107,10 +107,10 @@ Ver seção 9.
 
 **Critérios de Aceite:**
 
-- 2.1 Uma conta é visível por todo o tenant e não é restrita a uma BU específica.
-- 2.2 A mesma conta pode ser referenciada por oportunidades de múltiplas BUs sem que o registro da conta seja duplicado.
-- 2.3 A unidade de negócio é atributo da oportunidade, não da conta; a conta não armazena `bu_id`.
-- 2.4 Uma conta criada de forma inline durante a criação de uma oportunidade fica disponível na lista geral de contas do tenant para reaproveitamento por qualquer BU.
+- 2.1 Uma conta pertence a uma BU (bu_id) e é visível apenas para usuários com acesso a essa BU ou com escopo tenant-wide (ADR-0009).
+- 2.2 A mesma conta pode ser referenciada por oportunidades; o bu_id da conta e o bu_id da oportunidade podem ser distintos (cross-BU reference) sem duplicar o registro da conta.
+- 2.3 ~~A unidade de negócio é atributo da oportunidade, não da conta~~ — **revisado por ADR-0009**: `bu_id` é agora atributo da conta, obrigatório e imutável. O isolamento por BU é implementado via EF Global Query Filter + RLS PostgreSQL (VAL-ACC-03).
+- 2.4 Uma conta criada durante a criação de uma oportunidade herda a bu_id do contexto de BU do usuário; fica disponível para usuários com acesso à mesma BU.
 
 **Cross-ref:** Req 1, Req 6, Req 10, RN-012, opportunity-pipeline (referência a `account_id`)
 

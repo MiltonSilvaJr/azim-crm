@@ -34,7 +34,7 @@ O módulo é organizado em Clean Architecture (.NET, 5 projetos), com DDD tátic
 | Requisito | Elementos de design |
 |-----------|---------------------|
 | Req 1 — Criar conta com dedupe | `CreateAccountCommand`/Handler, `NameNormalizer` (objeto de valor `NormalizedName`), `SearchSimilarAccountsQuery`, evento `AccountCreated`, índice `idx_accounts_tenant_normalized_name`, erros ACC-ERR-001/002 (§5.1, §4.3, §7, §8) |
-| Req 2 — Conta única por tenant entre BUs | Agregado `Account` sem `bu_id`; filtro global por `tenant_id`; visibilidade no tenant (§4.1, §6.1, §14) |
+| Req 2 — Conta única por tenant entre BUs | Agregado `Account` com `bu_id` (ADR-0009); filtro global por `tenant_id` + BU scope; visibilidade controlada por BU (§4.1, §6.1, §14) |
 | Req 3 — Buscar contas | `SearchAccountsQuery`/Handler, índice de nome normalizado, contrato `GET /accounts` (§5.2, §8) |
 | Req 4 — Editar conta | `UpdateAccountCommand`/Handler, recálculo de `NormalizedName`, evento `AccountUpdated` (§5.1, §4.3) |
 | Req 5 — Contatos (PII) | Entidade `Contact`, objetos de valor `ContactInfo`/`Email`/`Phone`, `CreateContactCommand`/`UpdateContactCommand`, evento `ContactLinked`, erro ACC-ERR-004 (§4.2, §4.3, §5.1, §8) |
@@ -144,14 +144,15 @@ Dependências entre projetos (validadas por `Architecture.Tests`): `Api → Appl
 **Account (Aggregate Root)**
 
 - Identidade: `AccountId` (UUID).
-- Pertence a um `tenant_id`; **não** possui `bu_id` (Req 2.3) — a conta é compartilhada por todo o tenant.
+- Pertence a um `tenant_id` e a uma `bu_id` (ADR-0009); a segmentação por BU é aplicada na camada de persistência via EF Global Query Filter e RLS PostgreSQL.
 - Atributos: `AccountName name`, `NormalizedName normalizedName`, `website`, `notes`, auditoria temporal.
 - Contém a coleção de `Contact` (fronteira transacional do agregado: criar/editar/anonimizar contato passa pelo root).
 - Invariantes protegidas pelo root:
   - I1: nome não vazio (Req 1.5) → `AccountName` válido.
   - I2: `normalizedName` é sempre derivado de `name` via `NameNormalizer` e recalculado a cada alteração de nome (Req 1.1, Req 4.2).
   - I3: todo `Contact` adicionado carrega o mesmo `tenant_id` e o `account_id` do root (Req 5.1).
-- Factories: `Account.Create(tenantId, name, website, notes, normalizer)` e `Account.Reconstitute(...)`.
+  - I4: `bu_id` não pode ser `Guid.Empty`; é imutável após criação (ADR-0009).
+- Factories: `Account.Create(tenantId, buId, name, website, notes, normalizer)` e `Account.Reconstitute(...)`.
 - Métodos de comportamento: `Rename(newName, normalizer)`, `AddContact(...)`, `UpdateContact(...)`, `ForgetContact(contactId, requestedBy, clock)`.
 
 A fronteira do agregado mantém `Contact` sob o root porque a anonimização e o vínculo de contato são invariantes de consistência da conta (um contato não existe sem conta — Req 5.1). Repositório único: `IAccountRepository` (carrega o agregado com seus contatos sob demanda).
@@ -329,10 +330,11 @@ As portas de leitura são adaptadores no Infrastructure, implementando interface
 Convenções: `snake_case`, `tenant_id` obrigatório, timestamps `created_at`/`updated_at` (rule `database-naming.md`). Sem valores monetários neste módulo.
 
 ```sql
--- Contas (compartilhadas por todo o tenant; sem bu_id — Req 2.3)
+-- Contas — ADR-0009: bu_id NOT NULL; segmentação por BU via RLS e EF Global Query Filter
 accounts (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id       UUID NOT NULL,
+  bu_id           UUID NOT NULL,                 -- ADR-0009: segmentação por Business Unit
   name            TEXT NOT NULL,
   normalized_name TEXT NOT NULL,                 -- RN-014: dedupe e busca
   website         TEXT,
