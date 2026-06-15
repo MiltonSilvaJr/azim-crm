@@ -7,7 +7,7 @@
 module: account-management
 version: 0.1.1
 updated_at: 2026-06-15
-status: decided_pending_implementation  # decisões tomadas; VAL-ACC-03 exige implementação; VAL-ACC-01/02 aguardam ratificação jurídica
+status: decided  # VAL-ACC-03 implementado (PR #19); VAL-ACC-01/02 aguardam ratificação jurídica (não-código)
 
 # ============================================================
 # VAL-ACC-01 — Política de retenção e descarte de dados (RNF 4)
@@ -77,8 +77,10 @@ status: decided_pending_implementation  # decisões tomadas; VAL-ACC-03 exige im
   title: "Confirmação de regra de negócio: conta por tenant, não por BU"
   category: product_decision
   priority: blocker_for_go_live
-  status: decided
-  decision: "Segmentar contas por BU (Business Unit) — diverge do design/código atual (sem bu_id)"
+  status: implemented
+  decision: "Segmentar contas por BU (Business Unit)"
+  implemented_at: "2026-06-15"
+  implemented_by: "PR #19 + ADR-0009 (bu_id, RLS por BU, BuScopeContext)"
   description: >
     O design atual implementa contas (empresas clientes) como entidades do tenant
     completo, visíveis e acessíveis por qualquer usuário do tenant,
@@ -97,12 +99,15 @@ status: decided_pending_implementation  # decisões tomadas; VAL-ACC-03 exige im
   approved_by: "Milton Antonio (Product Owner)"
   approved_at: "2026-06-15"
   notes: >
-    DECISÃO (2026-06-15): contas serão SEGMENTADAS POR BU (não compartilhadas por
-    tenant). ⚠️ DIVERGE do design/código atual (Req 2.3, sem bu_id em accounts).
-    Ação de implementação pendente (escopo novo): adicionar bu_id em accounts +
-    migration; estender RLS/EF Global Query Filter para filtrar por BU além de
-    tenant_id; ajustar RBAC e endpoints; revisar requirements.md Req 2 e design §4.1;
-    novos testes de isolamento por BU. Recomendação técnica era manter por tenant no MVP.
+    DECISÃO (2026-06-15): contas SEGMENTADAS POR BU. Regras: 1 BU dona por conta
+    (bu_id NOT NULL); admin/gestor vê todas as BUs (tenant-wide), membro vê só a sua,
+    cross-BU configurável pelo Tenant Admin via memberships/grants; criação na BU do
+    criador (multi-BU exige bu_id no request).
+    IMPLEMENTADO (PR #19, governado pelo ADR-0009): bu_id no agregado Account; RLS
+    estendida (tenant + BU com bypass tenant-wide) + EF Global Query Filter; interceptor
+    TenantBuScope; ACC-ERR-010/011; design §4.1 e requirements Req 2 atualizados.
+    Corrigido no processo um bug real de RLS (SET LOCAL→SET no interceptor) e o fixture
+    de teste passou a usar appuser NOSUPERUSER (RLS de fato verificada). 310 testes verdes.
 
 # ============================================================
 # Confirmação de residência de dados (RNF 10)
@@ -180,8 +185,8 @@ dod_checklist:
     status: "[X] decidido — implementação já condiz"
   - item: "VAL-ACC-02 DECIDIDO — base legal = legítimo interesse (Art. 7, IX). Pendente: LIA + ROPA (jurídico)"
     status: "[X] decidido — implementação já condiz"
-  - item: "VAL-ACC-03 DECIDIDO — segmentar contas por BU. Pendente: implementar bu_id + RLS/RBAC por BU"
-    status: "[ ] decidido — exige implementação (diverge do código atual: sem bu_id)"
+  - item: "VAL-ACC-03 IMPLEMENTADO (PR #19, ADR-0009) — bu_id + RLS/Query Filter por BU + BuScopeContext"
+    status: "[X] implementado"
   - item: "String de conexão de produção confirmada em southamerica-east1"
     status: "[ ] PENDENTE — verificação de infra antes do deploy"
 
@@ -192,7 +197,7 @@ dod_checklist:
 traceability_summary:
   total_tasks: 18
   completed: 18
-  pending_implementation: 1  # VAL-ACC-03 (segmentação por BU) — escopo novo, diverge do código atual
+  pending_implementation: 0  # VAL-ACC-03 implementado em PR #19 (ADR-0009)
   pending_human_approval: 0  # VAL-ACC-01/02/03 decididos em 2026-06-15 (jurídico ainda ratifica 01/02)
   pbts_implemented: 5        # PBT-01..PBT-05
   pbts_as_ci_gate: 1         # PBT-04 em staging.yml

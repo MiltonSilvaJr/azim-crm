@@ -10,19 +10,21 @@ approvals:
       Confirmar que partner.name (nome do parceiro pessoa física ou razão social) deve
       ser tratado como PII/dado sensível, sujeito a mascaramento em logs, auditoria e
       payloads de evento (Outbox). Impacta DD-008, PartnerPiiMasker e gate CI PiiScan.
-    status: decided
+    status: implemented
     decision: "NÃO é PII — remover mascaramento de partner.name"
     requested_by: system
     requested_at: "2026-06-14"
     approved_by: "Milton Antonio (Product Owner)"
     approved_at: "2026-06-15"
+    implemented_at: "2026-06-15"
+    implemented_by: "PR #17 (refactor — name deixa de ser PII)"
     notes: |
-      DECISÃO (2026-06-15): partner.name NÃO será tratado como PII.
-      Ação de implementação pendente: remover mascaramento de name em
-      PartnerPiiMasker.MaskedName, atualizar design §4 e DD-008, e ajustar o
-      gate CI PiiScan para não exigir máscara em name.
-      ⚠️ Recomendação técnica era manter como PII (fail-safe p/ parceiro PF);
-      registrar ratificação jurídica de que o campo não conterá pessoa física.
+      DECISÃO (2026-06-15): partner.name NÃO é tratado como PII.
+      IMPLEMENTADO (PR #17): removido MaskName/MaskedName; MaskJson e ContainsPii
+      não tratam mais name (e-mail/telefone de contato seguem mascarados); gate
+      anti-PII e design §4/DD-008 atualizados. 348 testes verdes.
+      ⚠️ Pendência residual: registrar ratificação jurídica de que o campo não
+      conterá pessoa física (recomendação técnica original era manter como PII).
     references:
       - docs/product/modules/partner-management/design.md#§11
       - docs/product/modules/partner-management/tasks.md#TASK-27

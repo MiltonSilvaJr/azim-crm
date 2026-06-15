@@ -6,7 +6,7 @@
 module: activity-management
 version: 0.1.1
 updated_at: 2026-06-15
-status: decided_pending_implementation  # decisões tomadas; VAL-ACT-02 exige implementação; VAL-TRD-05 exige confirmação de infra
+status: decided  # VAL-ACT-02 implementado (PR #18); VAL-ACT-01 → ADR-0006 e VAL-TRD-05 → confirmação de infra (não-código)
 
 # ============================================================
 # VAL-ACT-01 — Fronteira do BC digest/activity (DD-001, BC-04/BC-06)
@@ -61,8 +61,10 @@ status: decided_pending_implementation  # decisões tomadas; VAL-ACT-02 exige im
   title: "Confirmação do TTL padrão do DigestActionToken (Req 7.3)"
   category: product_decision
   priority: blocker_for_go_live
-  status: decided
+  status: implemented
   decision: "TTL configurável por tenant (não valor fixo)"
+  implemented_at: "2026-06-15"
+  implemented_by: "PR #18 (digest — TTL configurável por tenant)"
   description: >
     O requisito 7.3 define que o link de digest expira após um período
     configurável pelo tenant. O design atual implementa TTL como campo
@@ -88,11 +90,13 @@ status: decided_pending_implementation  # decisões tomadas; VAL-ACT-02 exige im
   approved_by: "Milton Antonio (Product Owner)"
   approved_at: "2026-06-15"
   notes: >
-    DECISÃO (2026-06-15): TTL será CONFIGURÁVEL POR TENANT (não valor fixo).
-    Implementação atual usa expires_at via IOptions<DigestOptions> (global).
-    Ação de implementação pendente: persistir TTL em tenant_settings, expor
-    leitura/escrita por tenant e default de fallback no appsettings; cobrir
-    com testes. ⚠️ Recomendação técnica era valor fixo (48h) no MVP.
+    DECISÃO (2026-06-15): TTL CONFIGURÁVEL POR TENANT (não valor fixo).
+    IMPLEMENTADO (PR #18) no módulo digest (que cria o token): tabela
+    digest_tenant_settings (RLS fail-closed), IDigestTenantSettingsRepository +
+    ActionTokenTtlResolver (tenant override, senão default 48h via DigestOptions);
+    DigestActionToken.Issue recebe TimeSpan ttl. 262 testes verdes.
+    activity-management consome ExpiresAt como persistido — não alterado.
+    ⚠️ Recomendação técnica original era valor fixo (48h) no MVP.
 
 # ============================================================
 # VAL-TRD-05 — Confirmação de residência de dados em southamerica-east1
@@ -239,8 +243,8 @@ dod_checklist:
   # Decisões humanas tomadas (2026-06-15)
   - item: "VAL-ACT-01 DECIDIDO — activity-management owner; Digest consome. Pendente: ADR-0006"
     status: "[X] decidido — implementação já condiz"
-  - item: "VAL-ACT-02 DECIDIDO — TTL configurável por tenant. Pendente: implementar tenant_settings"
-    status: "[ ] decidido — exige implementação (diverge do código atual: IOptions global)"
+  - item: "VAL-ACT-02 IMPLEMENTADO (PR #18) — TTL configurável por tenant no módulo digest (digest_tenant_settings)"
+    status: "[X] implementado"
   - item: "VAL-TRD-05 DECIDIDO — single-region southamerica-east1. Pendente: confirmação Platform Eng"
     status: "[ ] decidido — exige confirmação de infra antes do deploy"
 
@@ -250,7 +254,7 @@ dod_checklist:
 traceability_summary:
   total_tasks: 24
   completed: 24
-  pending_implementation: 1  # VAL-ACT-02 (TTL configurável por tenant) — escopo novo
+  pending_implementation: 0  # VAL-ACT-02 implementado em PR #18 (módulo digest)
   pending_human_approval: 0  # VAL-ACT-01/02/TRD-05 decididos em 2026-06-15 (ADR-0006 + infra ainda formalizam)
   pbts_implemented: 5        # PBT-01..PBT-05
   pbts_min_cases: 500        # todas as Property rodando MaxTest = 500
