@@ -5,9 +5,9 @@
 # Mapeia: TASK-18, RNF 3, RNF 4, RNF 10, DD-001, VAL-ACC-01, VAL-ACC-02, VAL-ACC-03.
 
 module: account-management
-version: 0.1.0
-updated_at: 2026-06-13
-status: pending_human_approval
+version: 0.1.1
+updated_at: 2026-06-15
+status: decided_pending_implementation  # decisões tomadas; VAL-ACC-03 exige implementação; VAL-ACC-01/02 aguardam ratificação jurídica
 
 # ============================================================
 # VAL-ACC-01 — Política de retenção e descarte de dados (RNF 4)
@@ -32,9 +32,13 @@ status: pending_human_approval
         ser implementados antes do go-live.
   technical_reference: design.md §17 DD-001, requirements.md RNF 4
   risk_if_not_resolved: Não conformidade com LGPD Art. 18 (direito ao esquecimento)
-  approved_by: null
-  approved_at: null
-  notes: null
+  status_decision: "Anonimização in-place (MVP) — mantém DD-001"
+  approved_by: "Milton Antonio (Product Owner) — diretriz; ratificação jurídica formal pendente"
+  approved_at: "2026-06-15"
+  notes: >
+    DECISÃO (2026-06-15): mantém anonimização in-place (DD-001) — já implementado,
+    sem retrabalho. LGPD Art. 18 admite anonimização como forma válida. Pendente:
+    ratificação formal do jurídico antes do go-live.
 
 # ============================================================
 # VAL-ACC-02 — Base legal para tratamento de PII de contatos (RNF 3)
@@ -58,9 +62,13 @@ status: pending_human_approval
     (b) registrar no ROPA (se aplicável) antes do go-live.
   technical_reference: requirements.md RNF 3, design.md §10
   risk_if_not_resolved: Tratamento de PII sem base legal — não conformidade LGPD
-  approved_by: null
-  approved_at: null
-  notes: null
+  status_decision: "Legítimo interesse (Art. 7, IX) como base primária"
+  approved_by: "Milton Antonio (Product Owner) — diretriz; ratificação jurídica formal pendente"
+  approved_at: "2026-06-15"
+  notes: >
+    DECISÃO (2026-06-15): base legal primária = legítimo interesse (Art. 7, IX),
+    cobre prospects e clientes. Pendente: jurídico documentar o LIA (teste de
+    legítimo interesse) e registrar no ROPA antes do go-live.
 
 # ============================================================
 # VAL-ACC-03 — Conta compartilhada por tenant, não por BU (Req 2)
@@ -69,7 +77,8 @@ status: pending_human_approval
   title: "Confirmação de regra de negócio: conta por tenant, não por BU"
   category: product_decision
   priority: blocker_for_go_live
-  status: pending
+  status: decided
+  decision: "Segmentar contas por BU (Business Unit) — diverge do design/código atual (sem bu_id)"
   description: >
     O design atual implementa contas (empresas clientes) como entidades do tenant
     completo, visíveis e acessíveis por qualquer usuário do tenant,
@@ -85,9 +94,15 @@ status: pending_human_approval
   risk_if_not_resolved: >
     Conta de cliente de uma BU visível para vendedores de outra BU —
     possível conflito comercial ou exigência de segmentação por equipe.
-  approved_by: null
-  approved_at: null
-  notes: null
+  approved_by: "Milton Antonio (Product Owner)"
+  approved_at: "2026-06-15"
+  notes: >
+    DECISÃO (2026-06-15): contas serão SEGMENTADAS POR BU (não compartilhadas por
+    tenant). ⚠️ DIVERGE do design/código atual (Req 2.3, sem bu_id em accounts).
+    Ação de implementação pendente (escopo novo): adicionar bu_id em accounts +
+    migration; estender RLS/EF Global Query Filter para filtrar por BU além de
+    tenant_id; ajustar RBAC e endpoints; revisar requirements.md Req 2 e design §4.1;
+    novos testes de isolamento por BU. Recomendação técnica era manter por tenant no MVP.
 
 # ============================================================
 # Confirmação de residência de dados (RNF 10)
@@ -160,13 +175,13 @@ dod_checklist:
     status: "[X]"
   - item: "Residência de dados confirmada em southamerica-east1 (TASK-18)"
     status: "[X] documentado — confirmação de produção pendente"
-  # Itens pendentes de aprovação humana (bloqueadores de go-live)
-  - item: "VAL-ACC-01 aprovado pelo jurídico (política de retenção LGPD)"
-    status: "[ ] PENDENTE — bloqueador de go-live"
-  - item: "VAL-ACC-02 aprovado pelo jurídico (base legal LGPD)"
-    status: "[ ] PENDENTE — bloqueador de go-live"
-  - item: "VAL-ACC-03 confirmado pelo Product Owner"
-    status: "[ ] PENDENTE — bloqueador de go-live"
+  # Decisões humanas tomadas (2026-06-15)
+  - item: "VAL-ACC-01 DECIDIDO — anonimização in-place (MVP). Pendente: ratificação jurídica"
+    status: "[X] decidido — implementação já condiz"
+  - item: "VAL-ACC-02 DECIDIDO — base legal = legítimo interesse (Art. 7, IX). Pendente: LIA + ROPA (jurídico)"
+    status: "[X] decidido — implementação já condiz"
+  - item: "VAL-ACC-03 DECIDIDO — segmentar contas por BU. Pendente: implementar bu_id + RLS/RBAC por BU"
+    status: "[ ] decidido — exige implementação (diverge do código atual: sem bu_id)"
   - item: "String de conexão de produção confirmada em southamerica-east1"
     status: "[ ] PENDENTE — verificação de infra antes do deploy"
 
@@ -177,7 +192,7 @@ dod_checklist:
 traceability_summary:
   total_tasks: 18
   completed: 18
-  pending_implementation: 0
-  pending_human_approval: 3  # VAL-ACC-01, VAL-ACC-02, VAL-ACC-03
+  pending_implementation: 1  # VAL-ACC-03 (segmentação por BU) — escopo novo, diverge do código atual
+  pending_human_approval: 0  # VAL-ACC-01/02/03 decididos em 2026-06-15 (jurídico ainda ratifica 01/02)
   pbts_implemented: 5        # PBT-01..PBT-05
   pbts_as_ci_gate: 1         # PBT-04 em staging.yml

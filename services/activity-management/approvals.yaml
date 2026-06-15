@@ -4,9 +4,9 @@
 # VAL-ACT-01, VAL-ACT-02, VAL-TRD-05 são bloqueadores de go-live.
 
 module: activity-management
-version: 0.1.0
-updated_at: 2026-06-14
-status: pending_human_approval
+version: 0.1.1
+updated_at: 2026-06-15
+status: decided_pending_implementation  # decisões tomadas; VAL-ACT-02 exige implementação; VAL-TRD-05 exige confirmação de infra
 
 # ============================================================
 # VAL-ACT-01 — Fronteira do BC digest/activity (DD-001, BC-04/BC-06)
@@ -15,7 +15,8 @@ status: pending_human_approval
   title: "Confirmação de co-propriedade de digest_action_tokens entre BC-04 e BC-06"
   category: architecture_decision
   priority: blocker_for_go_live
-  status: pending
+  status: decided
+  decision: "activity-management é owner exclusivo; BC-06 (Digest) é apenas consumidor via IDigestActionTokenPort"
   description: >
     A tabela digest_action_tokens referencia activities(id) via FK, mas
     é descrita como pertencente ao BC-06 (Digest). Na implementação atual
@@ -42,12 +43,16 @@ status: pending_human_approval
     Conflito de ownership de schema em produção — dois serviços podem
     tentar aplicar migrations na mesma tabela; possível corrupção de dados
     ou duplicação de token no rollout multi-serviço.
-  approved_by: null
-  approved_at: null
+  approved_by: "Milton Antonio (Arquitetura/Owner)"
+  approved_at: "2026-06-15"
   notes: >
+    DECISÃO (2026-06-15): activity-management é owner exclusivo de
+    digest_action_tokens; o módulo digest consome via IDigestActionTokenPort.
+    Bate com a implementação atual (Ondas 1-6) — sem migração de schema.
+    Ação pendente: registrar formalmente em ADR-0006 (atualmente 'a confirmar').
     RE-05 (tasks.md §8): risco de conflito de schema identificado em Onda 4.
     Em desenvolvimento o schema é isolado (Testcontainers); em produção
-    usar schema isolado por módulo ou confirmar ownership antes da migration.
+    usar schema isolado por módulo (owner = activity-management).
 
 # ============================================================
 # VAL-ACT-02 — TTL do token de digest (Req 7.3, RNF 5)
@@ -56,7 +61,8 @@ status: pending_human_approval
   title: "Confirmação do TTL padrão do DigestActionToken (Req 7.3)"
   category: product_decision
   priority: blocker_for_go_live
-  status: pending
+  status: decided
+  decision: "TTL configurável por tenant (não valor fixo)"
   description: >
     O requisito 7.3 define que o link de digest expira após um período
     configurável pelo tenant. O design atual implementa TTL como campo
@@ -79,12 +85,14 @@ status: pending_human_approval
     Links de digest expirados antes do usuário utilizá-los (UX ruim)
     ou janelas de validade excessivamente longas (risco de segurança).
     Ambos os cenários impactam a taxa de conclusão via digest.
-  approved_by: null
-  approved_at: null
+  approved_by: "Milton Antonio (Product Owner)"
+  approved_at: "2026-06-15"
   notes: >
-    Implementação atual usa expires_at configurável via IOptions<DigestOptions>.
-    O valor padrão no appsettings.json pode ser ajustado sem mudança de código
-    após a confirmação do Product Owner.
+    DECISÃO (2026-06-15): TTL será CONFIGURÁVEL POR TENANT (não valor fixo).
+    Implementação atual usa expires_at via IOptions<DigestOptions> (global).
+    Ação de implementação pendente: persistir TTL em tenant_settings, expor
+    leitura/escrita por tenant e default de fallback no appsettings; cobrir
+    com testes. ⚠️ Recomendação técnica era valor fixo (48h) no MVP.
 
 # ============================================================
 # VAL-TRD-05 — Confirmação de residência de dados em southamerica-east1
@@ -93,7 +101,8 @@ status: pending_human_approval
   title: "Confirmação de residência de dados de atividades em southamerica-east1 (RNF 10)"
   category: infrastructure_compliance
   priority: blocker_for_go_live
-  status: pending
+  status: decided
+  decision: "Single-region southamerica-east1, sem réplica cross-region — aguarda confirmação formal de Platform Engineering"
   description: >
     O módulo activity-management armazena dados de atividades comerciais (title,
     description, due_at, completed_at) e tokens de digest com PII associado
@@ -118,9 +127,13 @@ status: pending_human_approval
     Dados de clientes armazenados fora do Brasil — não conformidade com
     LGPD (Art. 33) e possível violação de cláusulas contratuais de
     residência de dados com clientes enterprise.
-  approved_by: null
-  approved_at: null
-  notes: null
+  approved_by: "Milton Antonio (Product Owner) — diretriz; confirmação técnica pendente de Platform Engineering"
+  approved_at: "2026-06-15"
+  notes: >
+    DECISÃO (2026-06-15): single-region southamerica-east1, SEM réplica de leitura
+    cross-region (nenhuma sem ADR formal). Vale para os 13 módulos. Pendência de
+    Platform Engineering: confirmar instância Cloud SQL na região + registrar a
+    connection string no Secret Manager (injeção via Workload Identity) antes do deploy.
 
 # ============================================================
 # Configuração de produção
@@ -223,13 +236,13 @@ dod_checklist:
     status: "[X]"
   - item: "approvals.yaml com VAL-ACT-01, VAL-ACT-02, VAL-TRD-05 registrados (TASK-24)"
     status: "[X]"
-  # Itens pendentes de aprovação humana (bloqueadores de go-live)
-  - item: "VAL-ACT-01 aprovado por arquiteto (fronteira BC digest/activity)"
-    status: "[ ] PENDENTE — bloqueador de go-live"
-  - item: "VAL-ACT-02 confirmado pelo Product Owner (TTL do token)"
-    status: "[ ] PENDENTE — bloqueador de go-live"
-  - item: "VAL-TRD-05 confirmado por Platform Engineering (residência southamerica-east1)"
-    status: "[ ] PENDENTE — bloqueador de go-live"
+  # Decisões humanas tomadas (2026-06-15)
+  - item: "VAL-ACT-01 DECIDIDO — activity-management owner; Digest consome. Pendente: ADR-0006"
+    status: "[X] decidido — implementação já condiz"
+  - item: "VAL-ACT-02 DECIDIDO — TTL configurável por tenant. Pendente: implementar tenant_settings"
+    status: "[ ] decidido — exige implementação (diverge do código atual: IOptions global)"
+  - item: "VAL-TRD-05 DECIDIDO — single-region southamerica-east1. Pendente: confirmação Platform Eng"
+    status: "[ ] decidido — exige confirmação de infra antes do deploy"
 
 # ============================================================
 # Matriz de rastreabilidade (tasks.md §5 — resumo)
@@ -237,8 +250,8 @@ dod_checklist:
 traceability_summary:
   total_tasks: 24
   completed: 24
-  pending_implementation: 0
-  pending_human_approval: 3  # VAL-ACT-01, VAL-ACT-02, VAL-TRD-05
+  pending_implementation: 1  # VAL-ACT-02 (TTL configurável por tenant) — escopo novo
+  pending_human_approval: 0  # VAL-ACT-01/02/TRD-05 decididos em 2026-06-15 (ADR-0006 + infra ainda formalizam)
   pbts_implemented: 5        # PBT-01..PBT-05
   pbts_min_cases: 500        # todas as Property rodando MaxTest = 500
   waves_completed: 6         # Onda 1..6 encerradas
